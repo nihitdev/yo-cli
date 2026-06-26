@@ -1,0 +1,27 @@
+[package]
+name = "yoo"
+version = "0.1.0"
+edition = "2024"
+
+authors = ["Nihit"]
+description = "A tiny CLI that greets you before every coding session."
+license = "MIT"
+
+repository = "https://github.com/nihitdev/yoo"
+homepage = "https://github.com/nihitdev/yoo"
+documentation = "https://docs.rs/yoo"
+
+readme = "README.md"
+
+keywords = [
+    "cli",
+    "terminal",
+    "greeting",
+    "developer"
+]
+
+categories = [
+    "command-line-utilities"
+]
+
+[dependencies]
