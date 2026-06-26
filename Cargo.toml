@@ -7,8 +7,8 @@ authors = ["Nihit"]
 description = "A tiny CLI that greets you before every coding session."
 license = "MIT"
 
-repository = "https://github.com/nihitdev/yoo"
-homepage = "https://github.com/nihitdev/yoo"
+repository = "https://github.com/nihitdev/yo-cli"
+homepage = "https://github.com/nihitdev/yo-cli"
 documentation = "https://docs.rs/yoo"
 
 readme = "README.md"
