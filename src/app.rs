@@ -48,7 +48,11 @@ fn run(options: RunOptions) -> Result<(), Box<dyn Error>> {
     })?;
 
     let name = options.name.as_deref().unwrap_or(&config.name).trim();
-    let typing_speed_ms = if options.fast { 0 } else { config.typing_speed_ms };
+    let typing_speed_ms = if options.fast {
+        0
+    } else {
+        config.typing_speed_ms
+    };
     let ui = Ui::new(theme, !options.plain, typing_speed_ms);
 
     if config.show_art && !options.no_art {

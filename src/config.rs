@@ -1,8 +1,7 @@
 use std::{
     env,
     error::Error,
-    fmt, fs,
-    io,
+    fmt, fs, io,
     path::{Path, PathBuf},
 };
 
@@ -168,9 +167,7 @@ fn parse(contents: &str) -> Result<Config, ConfigError> {
 
 fn validate(config: &Config) -> Result<(), ConfigError> {
     if !matches!(config.theme.as_str(), "neon" | "ocean" | "mono") {
-        return Err(ConfigError::new(
-            "theme must be one of: neon, ocean, mono",
-        ));
+        return Err(ConfigError::new("theme must be one of: neon, ocean, mono"));
     }
 
     if config.typing_speed_ms > 250 {

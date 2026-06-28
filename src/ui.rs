@@ -71,7 +71,11 @@ impl Ui {
     }
 
     pub fn divider(&self) -> io::Result<()> {
-        self.write_line(&self.paint("────────────────────────────────────────", self.theme.muted(), false))
+        self.write_line(&self.paint(
+            "────────────────────────────────────────",
+            self.theme.muted(),
+            false,
+        ))
     }
 
     pub fn info(&self, icon: &str, label: &str, value: &str) -> io::Result<()> {

@@ -67,7 +67,10 @@ fn require_standalone(arguments: &[String], command: Command) -> Result<Command,
     if arguments.len() == 1 {
         Ok(command)
     } else {
-        Err(format!("`{}` cannot be combined with other options", arguments[0]))
+        Err(format!(
+            "`{}` cannot be combined with other options",
+            arguments[0]
+        ))
     }
 }
 
