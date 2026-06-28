@@ -1,7 +1,0 @@
-# Copy this to the location shown by: yoo config
-
-name = "Nihit"
-theme = "neon" # neon, ocean, or mono
-typing_speed_ms = 12
-show_art = true
-show_git = true

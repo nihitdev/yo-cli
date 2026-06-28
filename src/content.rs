@@ -17,15 +17,6 @@ const HYDRATION_REMINDERS: &[&str] = &[
     "Water first. Then infinite debugging power.",
 ];
 
-const TIPS: &[&str] = &[
-    "Commit small, meaningful changes before starting the next feature.",
-    "A tiny reproducible bug report beats a vague error description.",
-    "Write the test that would have caught your last bug.",
-    "When stuck, reduce the problem until it looks almost silly.",
-    "Make it work, make it clear, then make it fast.",
-    "A clean README is part of the project, not an afterthought.",
-];
-
 pub fn greeting(name: &str) -> String {
     choose(GREETINGS, 0xA3).replace("{name}", name)
 }
@@ -34,19 +25,20 @@ pub fn hydration_reminder() -> String {
     choose(HYDRATION_REMINDERS, 0xB7).to_owned()
 }
 
-pub fn tip() -> String {
-    choose(TIPS, 0xC1).to_owned()
-}
+pub fn random_index(length: usize, salt: u64) -> usize {
+    debug_assert!(length > 0, "random_index requires a non-empty list");
 
-fn choose<'a>(items: &'a [&'a str], salt: u64) -> &'a str {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos() as u64;
 
     let entropy = now ^ (u64::from(process::id()) << 16) ^ salt;
-    let index = (entropy as usize) % items.len();
-    items[index]
+    (entropy as usize) % length
+}
+
+fn choose<'a>(items: &'a [&'a str], salt: u64) -> &'a str {
+    items[random_index(items.len(), salt)]
 }
 
 #[cfg(test)]
@@ -61,6 +53,10 @@ mod tests {
     #[test]
     fn content_is_never_empty() {
         assert!(!hydration_reminder().is_empty());
-        assert!(!tip().is_empty());
+    }
+
+    #[test]
+    fn random_index_stays_within_bounds() {
+        assert!(random_index(3, 42) < 3);
     }
 }

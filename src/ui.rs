@@ -18,6 +18,12 @@ pub enum Theme {
     Neon,
     Ocean,
     Mono,
+    Dracula,
+    TokyoNight,
+    Gruvbox,
+    Nord,
+    RosePine,
+    Catppuccin,
 }
 
 impl Theme {
@@ -26,8 +32,28 @@ impl Theme {
             "neon" => Some(Self::Neon),
             "ocean" => Some(Self::Ocean),
             "mono" => Some(Self::Mono),
+            "dracula" => Some(Self::Dracula),
+            "tokyo-night" | "tokyonight" => Some(Self::TokyoNight),
+            "gruvbox" => Some(Self::Gruvbox),
+            "nord" => Some(Self::Nord),
+            "rose-pine" | "rosepine" => Some(Self::RosePine),
+            "catppuccin" => Some(Self::Catppuccin),
             _ => None,
         }
+    }
+
+    pub fn names() -> &'static [&'static str] {
+        &[
+            "neon",
+            "ocean",
+            "mono",
+            "dracula",
+            "tokyo-night",
+            "gruvbox",
+            "nord",
+            "rose-pine",
+            "catppuccin",
+        ]
     }
 
     fn accent(self) -> &'static str {
@@ -35,6 +61,12 @@ impl Theme {
             Self::Neon => "95",
             Self::Ocean => "96",
             Self::Mono => "37",
+            Self::Dracula => "95",
+            Self::TokyoNight => "94",
+            Self::Gruvbox => "93",
+            Self::Nord => "96",
+            Self::RosePine => "95",
+            Self::Catppuccin => "94",
         }
     }
 
@@ -43,6 +75,12 @@ impl Theme {
             Self::Neon => "92",
             Self::Ocean => "94",
             Self::Mono => "90",
+            Self::Dracula => "35",
+            Self::TokyoNight => "36",
+            Self::Gruvbox => "33",
+            Self::Nord => "36",
+            Self::RosePine => "35",
+            Self::Catppuccin => "36",
         }
     }
 }
@@ -126,10 +164,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parses_known_themes() {
+    fn parses_known_themes_and_aliases() {
         assert_eq!(Theme::parse("neon"), Some(Theme::Neon));
         assert_eq!(Theme::parse("OCEAN"), Some(Theme::Ocean));
-        assert_eq!(Theme::parse("mono"), Some(Theme::Mono));
+        assert_eq!(Theme::parse("tokyonight"), Some(Theme::TokyoNight));
+        assert_eq!(Theme::parse("rose-pine"), Some(Theme::RosePine));
         assert_eq!(Theme::parse("unknown"), None);
     }
 }

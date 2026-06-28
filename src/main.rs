@@ -2,7 +2,10 @@ mod app;
 mod args;
 mod config;
 mod content;
+mod doctor;
 mod git;
+mod timer;
+mod tips;
 mod ui;
 
 use std::{env, process};

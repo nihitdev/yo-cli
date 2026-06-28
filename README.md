@@ -1,21 +1,22 @@
 # yoo
 
-> A tiny Rust CLI that starts your coding session with good vibes, a useful tip, and a quick Git check.
+A tiny Rust CLI that starts your coding session with good vibes — now with project checks, local focus timers, themes, and YAML-powered tip packs.
+
+```bash
+cargo install yoo
+```
+
+```bash
+yoo --fast --name Nihit
+```
 
 ```text
-██╗   ██╗ ██████╗  ██████╗
-╚██╗ ██╔╝██╔═══██╗██╔═══██╗
- ╚████╔╝ ██║   ██║██║   ██║
-  ╚██╔╝  ██║   ██║██║   ██║
-   ██║   ╚██████╔╝╚██████╔╝
-   ╚═╝    ╚═════╝  ╚═════╝
-
 yoo — developer session starter
-YOOOOO, Nihit! 🔥
-💧 Hydration: Drink some water before the bug drinks your sanity.
+What are we shipping today, Nihit? 🚀
+💧 Hydration: Water first. Then infinite debugging power.
 
 ────────────────────────────────────────
-📁 Project: yoo
+📁 Project: yo-cli
 🌿 Git branch: main
 ✏️ Working tree: clean
 ────────────────────────────────────────
@@ -23,98 +24,117 @@ YOOOOO, Nihit! 🔥
 Go build something fun. 👋
 ```
 
-## Why yoo?
-
-`yoo` is deliberately small. It gives you a fun terminal welcome, reminds you to hydrate, shows the current project and Git state, and gives a short developer tip—without needing an account, network access, or third-party runtime dependencies.
-
-## Install
-
-```bash
-cargo install yoo
-```
-
-For local development:
-
-```bash
-git clone https://github.com/nihitdev/yo-cli
-cd yo-cli
-cargo run -- --fast
-```
-
 ## Commands
 
-```text
-yoo                         Run with your saved settings
-yoo init                    Create a starter config file
-yoo config                  Print the config-file location
-yoo --fast                  Skip typewriter animation
-yoo --no-art                Hide the ASCII logo for one run
-yoo --plain                 Disable terminal colours
-yoo --name Nihit            Use a name for one run
-yoo --theme ocean           Use neon, ocean, or mono for one run
-yoo --help                  Show all options
-yoo --version               Show the installed version
+```bash
+yoo                         # Start a session greeting
+yoo doctor                  # Check Rust, Cargo, Git, config, and the current project
+yoo session                 # Start the configured local coding timer
+yoo session 45              # Start a 45-minute local coding timer
+yoo tip                     # Print one tip from the configured pack
+yoo tip rust                # Print one tip from the Rust pack
+yoo tips                    # List built-in and local community tip packs
+yoo init                    # Create config.yaml and a sample community pack
+yoo config                  # Print the config file location
+yoo --fast --theme nord     # Skip animation and override theme once
 ```
 
-## Configuration
+`yoo session` is fully local: it does not connect to a server, create an account, or collect session data.
 
-Create a config file:
+## YAML configuration
+
+Run this once:
 
 ```bash
 yoo init
-yoo config
 ```
 
-Then edit the generated `config.toml`:
+`yoo` writes `config.yaml` to the normal config folder for your OS:
 
-```toml
-name = "Nihit"
-theme = "neon"
-typing_speed_ms = 12
-show_art = true
-show_git = true
+| OS | Path |
+| --- | --- |
+| Windows | `%APPDATA%\\yoo\\config.yaml` |
+| Linux | `~/.config/yoo/config.yaml` |
+| macOS | `~/Library/Application Support/yoo/config.yaml` |
+
+Example:
+
+```yaml
+version: 1
+
+profile:
+  name: Nihit
+
+appearance:
+  theme: tokyo-night
+  ascii: true
+  colors: true
+  typing_speed_ms: 12
+
+git:
+  show_branch: true
+  show_status: true
+
+tips:
+  enabled: true
+  pack: rust
+
+hydration:
+  enabled: true
+
+session:
+  default_minutes: 25
+  show_complete_message: true
 ```
+
+## Themes
+
+`neon`, `ocean`, `mono`, `dracula`, `tokyo-night`, `gruvbox`, `nord`, `rose-pine`, and `catppuccin`.
+
+```bash
+yoo --theme dracula
+yoo --theme tokyo-night
+yoo --theme catppuccin
+```
+
+## Tip packs
+
+Built-in packs:
+
+- `general`
+- `rust`
+- `git`
+- `linux`
+
+Run `yoo tips` to see all packs, including local community packs.
+
+Create your own YAML pack in the directory printed by:
+
+```bash
+yoo tips
+```
+
+Example:
+
+```yaml
+name: web
+description: Useful web-development reminders.
+tips:
+  - Test loading, error, and empty states.
+  - Check the browser console before guessing.
+```
+
+A local pack with the same name as a built-in pack replaces that built-in pack on your machine.
 
 ## Development
 
 ```bash
-cargo fmt --all -- --check
+cargo fmt
 cargo test
-cargo run -- --fast --name Nihit
+cargo clippy -- -D warnings
+cargo run -- doctor
 ```
-
-## Project structure
-
-```text
-.
-├── .github/workflows/ci.yml    # Builds and tests on GitHub Actions
-├── examples/config.toml        # Example user configuration
-├── src/
-│   ├── app.rs                  # Application flow
-│   ├── args.rs                 # Command-line argument parser
-│   ├── config.rs               # Tiny config loader and writer
-│   ├── content.rs              # Greetings, tips, reminders
-│   ├── git.rs                  # Safe Git branch/status lookup
-│   ├── main.rs                 # Binary entry point
-│   └── ui.rs                   # ANSI terminal UI
-├── CHANGELOG.md
-├── CONTRIBUTING.md
-├── LICENSE
-└── README.md
-```
-
-## Roadmap
-
-- [x] Custom names, themes, config, and Git status
-- [x] Unit tests and cross-platform CI
-- [ ] `yoo doctor` to check Git/Rust/project setup
-- [ ] Optional local coding-session timer
-- [ ] More themes and community tip packs
-
-## Contributing
-
-Found a bug, have a better greeting, or want to add a feature? Read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 or later (GPL-3.0-or-later).
+`yoo` is licensed under the GNU General Public License v3.0 or later (`GPL-3.0-or-later`). See [LICENSE](LICENSE).

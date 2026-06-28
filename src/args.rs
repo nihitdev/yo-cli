@@ -7,11 +7,20 @@ pub struct RunOptions {
     pub theme: Option<String>,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct SessionOptions {
+    pub minutes: Option<u64>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
     Run(RunOptions),
     Init,
     ConfigPath,
+    Doctor,
+    Session(SessionOptions),
+    Tip(Option<String>),
+    Tips,
     Help,
     Version,
 }
@@ -21,22 +30,20 @@ pub fn parse(arguments: &[String]) -> Result<Command, String> {
         return Ok(Command::Run(RunOptions::default()));
     }
 
-    if matches!(arguments[0].as_str(), "help" | "--help" | "-h") {
-        return require_standalone(arguments, Command::Help);
+    match arguments[0].as_str() {
+        "help" | "--help" | "-h" => require_standalone(arguments, Command::Help),
+        "init" | "--init" => require_standalone(arguments, Command::Init),
+        "config" | "--config" => require_standalone(arguments, Command::ConfigPath),
+        "doctor" => require_standalone(arguments, Command::Doctor),
+        "tips" => require_standalone(arguments, Command::Tips),
+        "tip" => parse_tip(&arguments[1..]),
+        "session" => parse_session(&arguments[1..]),
+        "--version" | "-V" => require_standalone(arguments, Command::Version),
+        _ => parse_run(arguments),
     }
+}
 
-    if matches!(arguments[0].as_str(), "init" | "--init") {
-        return require_standalone(arguments, Command::Init);
-    }
-
-    if matches!(arguments[0].as_str(), "config" | "--config") {
-        return require_standalone(arguments, Command::ConfigPath);
-    }
-
-    if matches!(arguments[0].as_str(), "--version" | "-V") {
-        return require_standalone(arguments, Command::Version);
-    }
-
+fn parse_run(arguments: &[String]) -> Result<Command, String> {
     let mut options = RunOptions::default();
     let mut index = 0;
 
@@ -61,6 +68,46 @@ pub fn parse(arguments: &[String]) -> Result<Command, String> {
     }
 
     Ok(Command::Run(options))
+}
+
+fn parse_session(arguments: &[String]) -> Result<Command, String> {
+    if arguments.is_empty() {
+        return Ok(Command::Session(SessionOptions::default()));
+    }
+
+    if arguments.len() == 1 {
+        return Ok(Command::Session(SessionOptions {
+            minutes: Some(parse_minutes(&arguments[0])?),
+        }));
+    }
+
+    if arguments.len() == 2 && arguments[0] == "--minutes" {
+        return Ok(Command::Session(SessionOptions {
+            minutes: Some(parse_minutes(&arguments[1])?),
+        }));
+    }
+
+    Err("usage: yoo session [MINUTES] or yoo session --minutes <MINUTES>".to_owned())
+}
+
+fn parse_tip(arguments: &[String]) -> Result<Command, String> {
+    match arguments {
+        [] => Ok(Command::Tip(None)),
+        [pack] if !pack.starts_with('-') => Ok(Command::Tip(Some(pack.trim().to_owned()))),
+        _ => Err("usage: yoo tip [PACK]".to_owned()),
+    }
+}
+
+fn parse_minutes(value: &str) -> Result<u64, String> {
+    let minutes = value
+        .parse::<u64>()
+        .map_err(|_| "minutes must be a whole number between 1 and 480".to_owned())?;
+
+    if !(1..=480).contains(&minutes) {
+        return Err("minutes must be between 1 and 480".to_owned());
+    }
+
+    Ok(minutes)
 }
 
 fn require_standalone(arguments: &[String], command: Command) -> Result<Command, String> {
@@ -96,23 +143,34 @@ USAGE:
   yoo <COMMAND>
 
 COMMANDS:
-  init              Create a starter config file
-  config            Print the config file location
-  help              Print this help message
+  init                    Create the default YAML config and a sample community tip pack
+  config                  Print the YAML config file location
+  doctor                  Check Rust, Cargo, Git, config, and current-project setup
+  session [MINUTES]       Start a local coding-session timer (default comes from config)
+  tip [PACK]              Print one random tip; PACK defaults to your configured pack
+  tips                    List built-in and locally installed community tip packs
+  help                    Print this help message
 
 OPTIONS:
-  --fast            Skip the typewriter animation
-  --no-art          Hide the ASCII logo for this run
-  --plain           Disable ANSI colours for this run
-  --name <NAME>     Use a name for this run only
-  --theme <THEME>   neon, ocean, or mono for this run only
-  -h, --help        Print help
-  -V, --version     Print version
+  --fast                  Skip the typewriter animation
+  --no-art                Hide the ASCII logo for this run
+  --plain                 Disable ANSI colours for this run
+  --name <NAME>           Use a name for this run only
+  --theme <THEME>         Override the theme for this run only
+  -h, --help              Print help
+  -V, --version           Print version
+
+THEMES:
+  neon, ocean, mono, dracula, tokyo-night, gruvbox, nord, rose-pine, catppuccin
 
 EXAMPLES:
   yoo
-  yoo --fast --theme ocean
-  yoo --name Nihit --no-art
+  yoo --fast --theme tokyo-night
+  yoo doctor
+  yoo session
+  yoo session 45
+  yoo tip rust
+  yoo tips
   yoo init
 "#
 }
@@ -148,14 +206,29 @@ mod tests {
     }
 
     #[test]
-    fn rejects_unknown_options() {
-        let arguments = values(&["--turbo"]);
+    fn parses_session_minutes() {
+        let arguments = values(&["session", "45"]);
+        assert_eq!(
+            parse(&arguments),
+            Ok(Command::Session(SessionOptions { minutes: Some(45) }))
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_session_minutes() {
+        let arguments = values(&["session", "0"]);
         assert!(parse(&arguments).is_err());
     }
 
     #[test]
-    fn init_must_be_standalone() {
-        let arguments = values(&["init", "--fast"]);
+    fn parses_tip_pack() {
+        let arguments = values(&["tip", "rust"]);
+        assert_eq!(parse(&arguments), Ok(Command::Tip(Some("rust".to_owned()))));
+    }
+
+    #[test]
+    fn rejects_unknown_options() {
+        let arguments = values(&["--turbo"]);
         assert!(parse(&arguments).is_err());
     }
 }

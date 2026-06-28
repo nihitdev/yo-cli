@@ -2,24 +2,32 @@
 
 Thanks for wanting to improve `yoo`.
 
+## Local setup
+
+```bash
+git clone https://github.com/nihitdev/yo-cli.git
+cd yo-cli
+cargo fmt
+cargo test
+cargo clippy -- -D warnings
+cargo run -- --fast --name YourName
+```
+
 ## Before opening a pull request
 
-1. Fork the repository and create a branch with a clear name.
-2. Keep each pull request focused on one improvement.
-3. Run the checks locally:
+- Keep each change focused.
+- Add or update tests for behavior changes.
+- Run `cargo fmt`, `cargo test`, and `cargo clippy -- -D warnings`.
+- Update the README and changelog when users will notice the change.
 
-   ```bash
-   cargo fmt --all -- --check
-   cargo test
-   ```
+## Community tip packs
 
-4. Add or update tests when changing behavior.
-5. Keep the CLI fast, local-first, and free of unnecessary dependencies.
+Tip packs are YAML files. Keep them practical, short, original, and safe for a broad developer audience.
 
-## Good first contributions
-
-- A new developer tip or greeting.
-- A clearer error message.
-- A test for an edge case.
-- Accessibility or Windows-terminal improvements.
-- README corrections.
+```yaml
+name: web
+description: Useful web-development reminders.
+tips:
+  - Test loading, error, and empty states.
+  - Check the browser console before guessing.
+```

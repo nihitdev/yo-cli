@@ -1,0 +1,6 @@
+name: community
+description: Example community pack for yoo.
+tips:
+  - Share a reproducible example when asking for help.
+  - Backup code before the reinstall becomes a story.
+  - Ship the smallest useful version first.

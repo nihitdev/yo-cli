@@ -2,17 +2,21 @@
 
 All notable changes to `yoo` are documented here.
 
-## 0.2.0 — Unreleased
+## 0.3.0
 
-### Added
-- Config file support with `yoo init` and `yoo config`.
-- `neon`, `ocean`, and `mono` terminal themes.
-- `--fast`, `--no-art`, `--plain`, `--name`, and `--theme` options.
-- Current project name, Git branch, and changed-file count.
-- Unit tests for argument parsing, config parsing, content, and theme parsing.
-- GitHub Actions CI for Linux, Windows, and macOS.
+- Added YAML configuration at the standard OS config location.
+- Added `yoo doctor` for Rust, Cargo, Git, config, and current-project checks.
+- Added a local coding-session timer with `yoo session [MINUTES]`.
+- Added nine themes: neon, ocean, mono, dracula, tokyo-night, gruvbox, nord, rose-pine, and catppuccin.
+- Added built-in tip packs: general, rust, git, and linux.
+- Added community YAML tip packs stored in the user config directory.
+- Added `yoo tip [PACK]` and `yoo tips`.
+- Switched the project license to GPL-3.0-or-later.
+
+## 0.2.0
+
+- Added configurable name, themes, typewriter mode, Git information, tests, and CI.
 
 ## 0.1.0
 
-### Added
-- Initial `yoo` greeting CLI published to crates.io.
+- Initial crates.io release.

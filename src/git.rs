@@ -43,14 +43,29 @@ fn run_git(directory: &Path, arguments: &[&str]) -> Option<String> {
         .map(|text| text.trim().to_owned())
 }
 
+pub fn run_command(program: &str, arguments: &[&str]) -> Option<String> {
+    let output = Command::new(program)
+        .args(arguments)
+        .stderr(Stdio::null())
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    String::from_utf8(output.stdout)
+        .ok()
+        .map(|text| text.trim().to_owned())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn returns_none_for_a_non_git_directory() {
+    fn inspect_never_panics_for_a_temp_directory() {
         let directory = std::env::temp_dir();
-        // This assertion only requires that the function never panics when Git data is unavailable.
         let _ = inspect(&directory);
     }
 }

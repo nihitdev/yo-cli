@@ -1,0 +1,27 @@
+# Copy this to the path printed by `yoo config`, or simply run `yoo init`.
+
+version: 1
+
+profile:
+  name: Nihit
+
+appearance:
+  theme: tokyo-night
+  ascii: true
+  colors: true
+  typing_speed_ms: 12
+
+git:
+  show_branch: true
+  show_status: true
+
+tips:
+  enabled: true
+  pack: rust
+
+hydration:
+  enabled: true
+
+session:
+  default_minutes: 25
+  show_complete_message: true

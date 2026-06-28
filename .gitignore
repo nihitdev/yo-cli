@@ -1,12 +1,17 @@
 # Rust build output
-/target/
+target/
 
-# Editor and OS files
+# Local editor files
 .vscode/
 .idea/
 *.swp
+*.swo
+
+# OS files
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Local output
-*.log
+# Local environment files
+.env
+.env.*
