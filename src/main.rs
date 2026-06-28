@@ -1,38 +1,25 @@
-use std::{
-    io::{self, Write},
-    thread,
-    time::Duration,
-};
+mod app;
+mod args;
+mod config;
+mod content;
+mod git;
+mod ui;
 
-fn type_text(text: &str, delay_ms: u64) {
-    for ch in text.chars() {
-        print!("{ch}");
-        io::stdout().flush().unwrap();
-        thread::sleep(Duration::from_millis(delay_ms));
-    }
-    println!();
-}
+use std::{env, process};
 
 fn main() {
-    let art = r#"
-██╗   ██╗ ██████╗  ██████╗ 
-╚██╗ ██╔╝██╔═══██╗██╔═══██╗
- ╚████╔╝ ██║   ██║██║   ██║
-  ╚██╔╝  ██║   ██║██║   ██║
-   ██║   ╚██████╔╝╚██████╔╝
-   ╚═╝    ╚═════╝  ╚═════╝ 
-"#;
+    let raw_args: Vec<String> = env::args().skip(1).collect();
 
-    println!("{art}");
+    let command = match args::parse(&raw_args) {
+        Ok(command) => command,
+        Err(error) => {
+            eprintln!("error: {error}\n\n{}", args::help_text());
+            process::exit(2);
+        }
+    };
 
-    type_text("YOOOOO WSP BRO 🔥", 25);
-    println!();
-
-    type_text("Don't forget to drink water 💧", 18);
-    println!();
-
-    type_text("Have a great coding session 😎", 18);
-    println!();
-
-    type_text("Cya 👋", 25);
+    if let Err(error) = app::execute(command) {
+        eprintln!("yoo: {error}");
+        process::exit(1);
+    }
 }

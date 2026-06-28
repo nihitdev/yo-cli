@@ -1,27 +1,16 @@
 [package]
 name = "yoo"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
-
+rust-version = "1.85"
 authors = ["Nihit"]
-description = "A tiny CLI that greets you before every coding session."
+description = "A tiny developer companion that starts coding sessions with good vibes."
 license = "MIT"
-
 repository = "https://github.com/nihitdev/yo-cli"
 homepage = "https://github.com/nihitdev/yo-cli"
 documentation = "https://docs.rs/yoo"
-
 readme = "README.md"
-
-keywords = [
-    "cli",
-    "terminal",
-    "greeting",
-    "developer"
-]
-
-categories = [
-    "command-line-utilities"
-]
+keywords = ["cli", "terminal", "developer", "productivity", "greeting"]
+categories = ["command-line-utilities"]
 
 [dependencies]
