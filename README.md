@@ -1,4 +1,4 @@
-# yoo
+# Yoo-cli
 
 <p align="center">
   <strong>A tiny developer companion for better coding sessions.</strong>
@@ -14,6 +14,9 @@
   </a>
   <a href="https://crates.io/crates/yoo">
     <img src="https://img.shields.io/crates/d/yoo?style=for-the-badge&label=downloads" alt="Crates.io downloads">
+    <a href="https://github.com/nihitdev/scoop-nihitdev">
+  <img src="https://img.shields.io/badge/Scoop-nihitdev-blue?style=for-the-badge" alt="Available via Scoop">
+</a>
   </a>
   <a href="https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml">
     <img src="https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml/badge.svg" alt="CI status">
@@ -97,25 +100,63 @@ yoo session 25
   <img src="docs/images/session.png" alt="yoo local coding session timer" width="780">
 </p>
 
-## Install
+## Installation
 
-Install from crates.io:
+### Cargo (Cross-platform)
+
+Install the latest version from crates.io:
 
 ```bash
 cargo install yoo
 ```
 
-Then start a session:
+Update later:
+
+```bash
+cargo install yoo --force
+```
+
+---
+
+### Scoop (Windows)
+
+Add the official Nihitdev bucket:
+
+```powershell
+scoop bucket add nihitdev https://github.com/nihitdev/scoop-nihitdev
+```
+
+Install **yoo**:
+
+```powershell
+scoop install yoo
+```
+
+Update later:
+
+```powershell
+scoop update
+scoop update yoo
+```
+
+---
+
+### WinGet (Windows)
+
+> **Coming soon.** The package has been submitted to the official Microsoft WinGet Community Repository and will be available after approval.
+
+```powershell
+winget install --id Nihitdev.Yoo
+```
+
+---
+
+Start your first developer session:
 
 ```bash
 yoo
 ```
 
-To update later:
-
-```bash
-cargo install yoo --force
-```
 
 ## Commands
 
