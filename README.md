@@ -117,4 +117,4 @@ Found a bug, have a better greeting, or want to add a feature? Read [CONTRIBUTIN
 
 ## License
 
-MIT © Nihit
+This project is licensed under the GNU General Public License v3.0 or later (GPL-3.0-or-later).
