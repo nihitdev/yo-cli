@@ -1,9 +1,9 @@
 use std::{error::Error, io};
 
 use crate::{
-    args::{self, Command, RunOptions, SessionOptions},
+    args::{self, Command, FetchOptions, RunOptions, SessionOptions},
     config::{self, WriteResult},
-    content, doctor, git, timer, tips,
+    content, doctor, fetch, git, timer, tips,
     ui::{Theme, Ui},
 };
 
@@ -20,6 +20,7 @@ pub fn execute(command: Command) -> Result<(), Box<dyn Error>> {
             doctor::print(&doctor::collect(&directory));
             Ok(())
         }
+        Command::Fetch(options) => run_fetch(options),
         Command::Session(options) => session(options),
         Command::Tip(pack) => print_tip(pack),
         Command::Tips => list_tips(),
@@ -114,6 +115,27 @@ fn run(options: RunOptions) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn run_fetch(options: FetchOptions) -> Result<(), Box<dyn Error>> {
+    let directory = std::env::current_dir()?;
+    let report = fetch::collect(&directory);
+
+    if options.json {
+        println!("{}", fetch::to_json(&report)?);
+        return Ok(());
+    }
+
+    let config = config::load()?;
+    let ui = ui_for_fetch(&config, &options)?;
+
+    if config.appearance.ascii && !options.no_art {
+        ui.print_art()?;
+        ui.blank_line()?;
+    }
+
+    fetch::print(&report, &ui)?;
+    Ok(())
+}
+
 fn session(options: SessionOptions) -> Result<(), Box<dyn Error>> {
     let config = config::load()?;
     let minutes = options.minutes.unwrap_or(config.session.default_minutes);
@@ -148,7 +170,29 @@ fn list_tips() -> Result<(), Box<dyn Error>> {
 }
 
 fn ui_for_run(config: &config::Config, options: &RunOptions) -> Result<Ui, io::Error> {
-    let theme_name = options.theme.as_deref().unwrap_or(&config.appearance.theme);
+    ui_for_display(
+        config,
+        options.theme.as_deref(),
+        options.plain,
+        if options.fast {
+            0
+        } else {
+            config.appearance.typing_speed_ms
+        },
+    )
+}
+
+fn ui_for_fetch(config: &config::Config, options: &FetchOptions) -> Result<Ui, io::Error> {
+    ui_for_display(config, options.theme.as_deref(), options.plain, 0)
+}
+
+fn ui_for_display(
+    config: &config::Config,
+    theme_override: Option<&str>,
+    plain: bool,
+    typing_speed_ms: u64,
+) -> Result<Ui, io::Error> {
+    let theme_name = theme_override.unwrap_or(&config.appearance.theme);
     let theme = Theme::parse(theme_name).ok_or_else(|| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -159,15 +203,9 @@ fn ui_for_run(config: &config::Config, options: &RunOptions) -> Result<Ui, io::E
         )
     })?;
 
-    let typing_speed_ms = if options.fast {
-        0
-    } else {
-        config.appearance.typing_speed_ms
-    };
-
     Ok(Ui::new(
         theme,
-        config.appearance.colors && !options.plain,
+        config.appearance.colors && !plain,
         typing_speed_ms,
     ))
 }

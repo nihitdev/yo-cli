@@ -1,18 +1,19 @@
 [package]
 name = "yoo"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["Nihit"]
-description = "A tiny developer companion that starts coding sessions with good vibes."
+description = "A tiny developer companion for better coding sessions."
 license = "GPL-3.0-or-later"
 repository = "https://github.com/nihitdev/yo-cli"
-homepage = "https://github.com/nihitdev/yo-cli"
+homepage = "https://nihitdev.github.io"
 documentation = "https://docs.rs/yoo"
 readme = "README.md"
-keywords = ["cli", "terminal", "developer", "productivity", "greeting"]
+keywords = ["cli", "terminal", "developer", "productivity", "environment"]
 categories = ["command-line-utilities"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 serde_yaml = "0.9"

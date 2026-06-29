@@ -8,6 +8,14 @@ pub struct RunOptions {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct FetchOptions {
+    pub no_art: bool,
+    pub plain: bool,
+    pub theme: Option<String>,
+    pub json: bool,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SessionOptions {
     pub minutes: Option<u64>,
 }
@@ -18,6 +26,7 @@ pub enum Command {
     Init,
     ConfigPath,
     Doctor,
+    Fetch(FetchOptions),
     Session(SessionOptions),
     Tip(Option<String>),
     Tips,
@@ -35,6 +44,7 @@ pub fn parse(arguments: &[String]) -> Result<Command, String> {
         "init" | "--init" => require_standalone(arguments, Command::Init),
         "config" | "--config" => require_standalone(arguments, Command::ConfigPath),
         "doctor" => require_standalone(arguments, Command::Doctor),
+        "fetch" | "status" => parse_fetch(&arguments[1..]),
         "tips" => require_standalone(arguments, Command::Tips),
         "tip" => parse_tip(&arguments[1..]),
         "session" => parse_session(&arguments[1..]),
@@ -68,6 +78,35 @@ fn parse_run(arguments: &[String]) -> Result<Command, String> {
     }
 
     Ok(Command::Run(options))
+}
+
+fn parse_fetch(arguments: &[String]) -> Result<Command, String> {
+    let mut options = FetchOptions::default();
+    let mut index = 0;
+
+    while index < arguments.len() {
+        match arguments[index].as_str() {
+            "--no-art" => options.no_art = true,
+            "--plain" => options.plain = true,
+            "--json" => options.json = true,
+            "--theme" => {
+                index += 1;
+                options.theme = Some(required_value(arguments, index, "--theme")?);
+            }
+            value if value.starts_with('-') => {
+                return Err(format!("unknown fetch option `{value}`"));
+            }
+            value => return Err(format!("unknown fetch argument `{value}`")),
+        }
+
+        index += 1;
+    }
+
+    if options.json && (options.no_art || options.plain || options.theme.is_some()) {
+        return Err("`--json` cannot be combined with display options".to_owned());
+    }
+
+    Ok(Command::Fetch(options))
 }
 
 fn parse_session(arguments: &[String]) -> Result<Command, String> {
@@ -146,12 +185,20 @@ COMMANDS:
   init                    Create the default YAML config and a sample community tip pack
   config                  Print the YAML config file location
   doctor                  Check Rust, Cargo, Git, config, and current-project setup
+  fetch [OPTIONS]         Show developer environment and current-project information
+  status [OPTIONS]        Alias for `yoo fetch`
   session [MINUTES]       Start a local coding-session timer (default comes from config)
   tip [PACK]              Print one random tip; PACK defaults to your configured pack
   tips                    List built-in and locally installed community tip packs
   help                    Print this help message
 
-OPTIONS:
+FETCH OPTIONS:
+  --json                  Print machine-readable JSON with no decoration
+  --no-art                Hide the ASCII logo for this run
+  --plain                 Disable ANSI colours for this run
+  --theme <THEME>         Override the theme for this run only
+
+RUN OPTIONS:
   --fast                  Skip the typewriter animation
   --no-art                Hide the ASCII logo for this run
   --plain                 Disable ANSI colours for this run
@@ -167,7 +214,9 @@ EXAMPLES:
   yoo
   yoo --fast --theme tokyo-night
   yoo doctor
-  yoo session
+  yoo fetch
+  yoo fetch --json
+  yoo status --plain
   yoo session 45
   yoo tip rust
   yoo tips
@@ -203,6 +252,38 @@ mod tests {
                 theme: Some("ocean".to_owned()),
             })
         );
+    }
+
+    #[test]
+    fn parses_fetch_options() {
+        let arguments = values(&["fetch", "--no-art", "--plain", "--theme", "nord"]);
+        assert_eq!(
+            parse(&arguments),
+            Ok(Command::Fetch(FetchOptions {
+                no_art: true,
+                plain: true,
+                theme: Some("nord".to_owned()),
+                json: false,
+            }))
+        );
+    }
+
+    #[test]
+    fn parses_fetch_json() {
+        let arguments = values(&["fetch", "--json"]);
+        assert_eq!(
+            parse(&arguments),
+            Ok(Command::Fetch(FetchOptions {
+                json: true,
+                ..FetchOptions::default()
+            }))
+        );
+    }
+
+    #[test]
+    fn rejects_json_with_display_options() {
+        let arguments = values(&["fetch", "--json", "--plain"]);
+        assert!(parse(&arguments).is_err());
     }
 
     #[test]

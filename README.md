@@ -1,4 +1,4 @@
-# Yoo-cli
+# yoo
 
 <p align="center">
   <strong>A tiny developer companion for better coding sessions.</strong>
@@ -14,9 +14,9 @@
   </a>
   <a href="https://crates.io/crates/yoo">
     <img src="https://img.shields.io/crates/d/yoo?style=for-the-badge&label=downloads" alt="Crates.io downloads">
-    <a href="https://github.com/nihitdev/scoop-nihitdev">
-  <img src="https://img.shields.io/badge/Scoop-nihitdev-blue?style=for-the-badge" alt="Available via Scoop">
-</a>
+  </a>
+  <a href="https://github.com/nihitdev/scoop-nihitdev">
+    <img src="https://img.shields.io/badge/Scoop-nihitdev-blue?style=for-the-badge" alt="Available via Scoop">
   </a>
   <a href="https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml">
     <img src="https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml/badge.svg" alt="CI status">
@@ -26,9 +26,6 @@
   </a>
 </p>
 
-<p align="center">
-  <img src="docs/images/hero.png" alt="yoo starting a developer session in a terminal" width="780">
-</p>
 
 ## What is yoo?
 
@@ -57,7 +54,8 @@ Terminal open. Brain online. Let's go, Nihit. ⚡
 * 🎨 Nine terminal themes
 * 🦀 Written in Rust
 * ✅ Unit tests, formatting checks, Clippy, and GitHub Actions CI
-
+* ⚡ Developer-aware environment fetcher — coming in v0.4.0
+* 📄 JSON output for scripting and automation — coming in v0.4.0
 ## Screenshots
 
 ### Start a coding session
@@ -98,6 +96,15 @@ yoo session 25
 
 <p align="center">
   <img src="docs/images/session.png" alt="yoo local coding session timer" width="780">
+</p>
+### Fetch your developer environment
+
+```bash
+yoo fetch
+```
+
+<p align="center">
+  <img src="docs/images/fetch.png" alt="yoo fetch showing developer environment and project status" width="780">
 </p>
 
 ## Installation
@@ -156,7 +163,31 @@ Start your first developer session:
 ```bash
 yoo
 ```
+## Developer Fetch
 
+> **Coming in v0.4.0.**
+
+`yoo fetch` is a developer-aware fetch command. It combines environment information with the project in your current directory.
+
+```bash
+yoo fetch
+```
+
+It detects:
+
+* OS and architecture
+* Shell, terminal, and editor when available
+* Rust, Cargo, and Git versions
+* Rust, Node.js, Python, Go, Java, and .NET project markers
+* Current Git branch and working-tree status
+
+Use JSON output for scripts and automation:
+
+```bash
+yoo fetch --json
+```
+
+`yoo status` is an alias for `yoo fetch`.
 
 ## Commands
 
@@ -170,7 +201,11 @@ yoo tip rust
 yoo tip git
 yoo session
 yoo session 25
+yoo fetch
+yoo fetch --json
+yoo status
 ```
+
 
 ## Useful Options
 
@@ -330,11 +365,15 @@ cargo clippy -- -D warnings
 * [x] `yoo doctor`
 * [x] Local coding-session timer
 * [x] Community YAML tip packs
+* [ ] `yoo fetch` developer environment and project status
+* [ ] JSON output for `yoo fetch`
 * [ ] More tip packs from contributors
 * [ ] Config editor command
 * [ ] Shell completion support
 * [ ] Better terminal accessibility options
 * [ ] Optional release update checker
+
+
 
 ## Contributing
 

@@ -3,6 +3,7 @@ mod args;
 mod config;
 mod content;
 mod doctor;
+mod fetch;
 mod git;
 mod timer;
 mod tips;

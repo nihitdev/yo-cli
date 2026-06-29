@@ -2,6 +2,16 @@
 
 All notable changes to `yoo` are documented here.
 
+## 0.4.0
+
+- Added `yoo fetch`, a developer-aware environment and project status command.
+- Added `yoo status` as an alias for `yoo fetch`.
+- Added detection for OS, architecture, shell, terminal, editor, Rust, Cargo, and Git.
+- Added project detection for Rust, Node.js, Python, Go, Java, and .NET repositories.
+- Added current Git branch and working-tree status to fetch output.
+- Added `yoo fetch --json` for machine-readable output.
+- Added display controls for fetch: `--theme`, `--plain`, and `--no-art`.
+
 ## 0.3.0
 
 - Added YAML configuration at the standard OS config location.
