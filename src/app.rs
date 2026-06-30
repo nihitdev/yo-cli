@@ -1,9 +1,9 @@
 use std::{error::Error, io};
 
 use crate::{
-    args::{self, Command, FetchOptions, RunOptions, SessionOptions},
+    args::{self, Command, FetchOptions, ProjectOptions, RunOptions, SessionOptions},
     config::{self, WriteResult},
-    content, doctor, fetch, git, timer, tips,
+    content, doctor, fetch, git, project, timer, tips,
     ui::{Theme, Ui},
 };
 
@@ -21,6 +21,7 @@ pub fn execute(command: Command) -> Result<(), Box<dyn Error>> {
             Ok(())
         }
         Command::Fetch(options) => run_fetch(options),
+        Command::Project(options) => run_project(options),
         Command::Session(options) => session(options),
         Command::Tip(pack) => print_tip(pack),
         Command::Tips => list_tips(),
@@ -81,13 +82,13 @@ fn run(options: RunOptions) -> Result<(), Box<dyn Error>> {
     ui.blank_line()?;
 
     let directory = std::env::current_dir()?;
-    let project = directory
+    let project_name = directory
         .file_name()
         .and_then(|name| name.to_str())
         .unwrap_or("current directory");
 
     ui.divider()?;
-    ui.info("📁", "Project:", project)?;
+    ui.info("📁", "Project:", project_name)?;
 
     if config.git.show_branch {
         if let Some(info) = git::inspect(&directory) {
@@ -133,6 +134,27 @@ fn run_fetch(options: FetchOptions) -> Result<(), Box<dyn Error>> {
     }
 
     fetch::print(&report, &ui)?;
+    Ok(())
+}
+
+fn run_project(options: ProjectOptions) -> Result<(), Box<dyn Error>> {
+    let directory = std::env::current_dir()?;
+    let report = project::collect(&directory);
+
+    if options.json {
+        println!("{}", project::to_json(&report)?);
+        return Ok(());
+    }
+
+    let config = config::load()?;
+    let ui = ui_for_project(&config, &options)?;
+
+    if config.appearance.ascii && !options.no_art {
+        ui.print_art()?;
+        ui.blank_line()?;
+    }
+
+    project::print(&report, &ui)?;
     Ok(())
 }
 
@@ -183,6 +205,10 @@ fn ui_for_run(config: &config::Config, options: &RunOptions) -> Result<Ui, io::E
 }
 
 fn ui_for_fetch(config: &config::Config, options: &FetchOptions) -> Result<Ui, io::Error> {
+    ui_for_display(config, options.theme.as_deref(), options.plain, 0)
+}
+
+fn ui_for_project(config: &config::Config, options: &ProjectOptions) -> Result<Ui, io::Error> {
     ui_for_display(config, options.theme.as_deref(), options.plain, 0)
 }
 

@@ -1,17 +1,5 @@
-# Rust build output
 target/
+dist/
+manifests/
 
-# Local editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS files
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Local environment files
-.env
-.env.*
+*.pdb

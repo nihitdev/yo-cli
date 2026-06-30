@@ -118,7 +118,7 @@ pub fn print(report: &FetchReport, ui: &Ui) -> io::Result<()> {
         "⚡",
         "yoo:",
         &format!(
-            "v{} · try `yoo doctor` for health checks",
+            "v{} · try `yoo project` for a deeper project overview",
             report.yoo_version
         ),
     )?;
@@ -206,7 +206,7 @@ fn executable_name(path: &Path) -> Option<String> {
         .filter(|name| !name.is_empty())
 }
 
-fn detect_project(directory: &Path) -> ProjectInfo {
+pub fn detect_project(directory: &Path) -> ProjectInfo {
     let fallback_name = directory_name(directory);
 
     if let Some(contents) = read_file(directory.join("Cargo.toml")) {
@@ -314,7 +314,7 @@ fn read_file(path: PathBuf) -> Option<String> {
     fs::read_to_string(path).ok()
 }
 
-fn find_toml_string(contents: &str, key: &str) -> Option<String> {
+pub fn find_toml_string(contents: &str, key: &str) -> Option<String> {
     for line in contents.lines() {
         let line = line.trim();
         if line.starts_with('#') || !line.starts_with(key) {
@@ -344,13 +344,13 @@ mod tests {
         let manifest = r#"
 [package]
 name = "yoo"
-version = "0.4.0"
+version = "0.5.0"
 "#;
 
         assert_eq!(find_toml_string(manifest, "name"), Some("yoo".to_owned()));
         assert_eq!(
             find_toml_string(manifest, "version"),
-            Some("0.4.0".to_owned())
+            Some("0.5.0".to_owned())
         );
     }
 

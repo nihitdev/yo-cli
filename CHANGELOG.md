@@ -2,15 +2,25 @@
 
 All notable changes to `yoo` are documented here.
 
+## 0.5.0
+
+### Added
+
+- Added `yoo project` for a structured overview of the current project.
+- Added project type and package-manager detection for Rust, Node.js, Python, Go, Java, and .NET projects.
+- Added source-file and source-line counts while skipping generated folders such as `target`, `node_modules`, and `.git`.
+- Added Git branch, working-tree, commit-count, and latest-tag information when available.
+- Added checks for README, license, changelog, `.gitignore`, and GitHub Actions CI files.
+- Added machine-readable output with `yoo project --json`.
+
 ## 0.4.0
 
-- Added `yoo fetch`, a developer-aware environment and project status command.
+### Added
+
+- Added `yoo fetch` for developer environment and current-project information.
 - Added `yoo status` as an alias for `yoo fetch`.
-- Added detection for OS, architecture, shell, terminal, editor, Rust, Cargo, and Git.
-- Added project detection for Rust, Node.js, Python, Go, Java, and .NET repositories.
-- Added current Git branch and working-tree status to fetch output.
-- Added `yoo fetch --json` for machine-readable output.
-- Added display controls for fetch: `--theme`, `--plain`, and `--no-art`.
+- Added JSON output with `yoo fetch --json`.
+- Added project detection for Rust, Node.js, Python, Go, Java, and .NET markers.
 
 ## 0.3.0
 

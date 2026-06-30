@@ -5,6 +5,7 @@ mod content;
 mod doctor;
 mod fetch;
 mod git;
+mod project;
 mod timer;
 mod tips;
 mod ui;

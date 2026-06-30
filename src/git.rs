@@ -26,6 +26,15 @@ pub fn inspect(directory: &Path) -> Option<GitInfo> {
     })
 }
 
+pub fn commit_count(directory: &Path) -> Option<usize> {
+    run_git(directory, &["rev-list", "--count", "HEAD"])
+        .and_then(|value| value.parse::<usize>().ok())
+}
+
+pub fn latest_tag(directory: &Path) -> Option<String> {
+    run_git(directory, &["describe", "--tags", "--abbrev=0"])
+}
+
 fn run_git(directory: &Path, arguments: &[&str]) -> Option<String> {
     let output = Command::new("git")
         .args(arguments)
@@ -67,5 +76,12 @@ mod tests {
     fn inspect_never_panics_for_a_temp_directory() {
         let directory = std::env::temp_dir();
         let _ = inspect(&directory);
+    }
+
+    #[test]
+    fn git_helpers_never_panic_for_a_temp_directory() {
+        let directory = std::env::temp_dir();
+        let _ = commit_count(&directory);
+        let _ = latest_tag(&directory);
     }
 }

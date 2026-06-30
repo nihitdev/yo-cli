@@ -16,6 +16,14 @@ pub struct FetchOptions {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ProjectOptions {
+    pub no_art: bool,
+    pub plain: bool,
+    pub theme: Option<String>,
+    pub json: bool,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SessionOptions {
     pub minutes: Option<u64>,
 }
@@ -27,6 +35,7 @@ pub enum Command {
     ConfigPath,
     Doctor,
     Fetch(FetchOptions),
+    Project(ProjectOptions),
     Session(SessionOptions),
     Tip(Option<String>),
     Tips,
@@ -45,6 +54,7 @@ pub fn parse(arguments: &[String]) -> Result<Command, String> {
         "config" | "--config" => require_standalone(arguments, Command::ConfigPath),
         "doctor" => require_standalone(arguments, Command::Doctor),
         "fetch" | "status" => parse_fetch(&arguments[1..]),
+        "project" => parse_project(&arguments[1..]),
         "tips" => require_standalone(arguments, Command::Tips),
         "tip" => parse_tip(&arguments[1..]),
         "session" => parse_session(&arguments[1..]),
@@ -107,6 +117,35 @@ fn parse_fetch(arguments: &[String]) -> Result<Command, String> {
     }
 
     Ok(Command::Fetch(options))
+}
+
+fn parse_project(arguments: &[String]) -> Result<Command, String> {
+    let mut options = ProjectOptions::default();
+    let mut index = 0;
+
+    while index < arguments.len() {
+        match arguments[index].as_str() {
+            "--no-art" => options.no_art = true,
+            "--plain" => options.plain = true,
+            "--json" => options.json = true,
+            "--theme" => {
+                index += 1;
+                options.theme = Some(required_value(arguments, index, "--theme")?);
+            }
+            value if value.starts_with('-') => {
+                return Err(format!("unknown project option `{value}`"));
+            }
+            value => return Err(format!("unknown project argument `{value}`")),
+        }
+
+        index += 1;
+    }
+
+    if options.json && (options.no_art || options.plain || options.theme.is_some()) {
+        return Err("`--json` cannot be combined with display options".to_owned());
+    }
+
+    Ok(Command::Project(options))
 }
 
 fn parse_session(arguments: &[String]) -> Result<Command, String> {
@@ -187,12 +226,13 @@ COMMANDS:
   doctor                  Check Rust, Cargo, Git, config, and current-project setup
   fetch [OPTIONS]         Show developer environment and current-project information
   status [OPTIONS]        Alias for `yoo fetch`
+  project [OPTIONS]       Show a structured overview of the current project
   session [MINUTES]       Start a local coding-session timer (default comes from config)
   tip [PACK]              Print one random tip; PACK defaults to your configured pack
   tips                    List built-in and locally installed community tip packs
   help                    Print this help message
 
-FETCH OPTIONS:
+FETCH / PROJECT OPTIONS:
   --json                  Print machine-readable JSON with no decoration
   --no-art                Hide the ASCII logo for this run
   --plain                 Disable ANSI colours for this run
@@ -216,6 +256,8 @@ EXAMPLES:
   yoo doctor
   yoo fetch
   yoo fetch --json
+  yoo project
+  yoo project --json
   yoo status --plain
   yoo session 45
   yoo tip rust
@@ -281,8 +323,26 @@ mod tests {
     }
 
     #[test]
+    fn parses_project_json() {
+        let arguments = values(&["project", "--json"]);
+        assert_eq!(
+            parse(&arguments),
+            Ok(Command::Project(ProjectOptions {
+                json: true,
+                ..ProjectOptions::default()
+            }))
+        );
+    }
+
+    #[test]
     fn rejects_json_with_display_options() {
         let arguments = values(&["fetch", "--json", "--plain"]);
+        assert!(parse(&arguments).is_err());
+    }
+
+    #[test]
+    fn rejects_project_json_with_display_options() {
+        let arguments = values(&["project", "--json", "--no-art"]);
         assert!(parse(&arguments).is_err());
     }
 

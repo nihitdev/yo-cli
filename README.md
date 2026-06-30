@@ -5,15 +5,15 @@
 </p>
 
 <p align="center">
-  Start your session with good vibes, useful project details, environment checks, tip packs, and a local focus timer.
+  Start a session with useful project details, environment checks, tip packs, a focus timer, and a fast project overview.
 </p>
 
 <p align="center">
   <a href="https://crates.io/crates/yoo">
-    <img src="https://img.shields.io/crates/v/yoo?style=for-the-badge&logo=rust&label=crates.io" alt="Crates.io version">
+    <img src="https://img.shields.io/crates/v/yoo?style=for-the-badge&amp;logo=rust&amp;label=crates.io" alt="Crates.io version">
   </a>
   <a href="https://crates.io/crates/yoo">
-    <img src="https://img.shields.io/crates/d/yoo?style=for-the-badge&label=downloads" alt="Crates.io downloads">
+    <img src="https://img.shields.io/crates/d/yoo?style=for-the-badge&amp;label=downloads" alt="Crates.io downloads">
   </a>
   <a href="https://github.com/nihitdev/scoop-nihitdev">
     <img src="https://img.shields.io/badge/Scoop-nihitdev-blue?style=for-the-badge" alt="Available via Scoop">
@@ -26,15 +26,14 @@
   </a>
 </p>
 
-
 ## What is yoo?
 
 `yoo` is a Rust CLI that makes opening a terminal feel a little better.
 
-It gives you a friendly developer-session greeting, shows the current project and Git state, offers practical tips, checks your Rust setup, and includes a lightweight local coding-session timer.
+It gives you a friendly developer-session greeting, shows project and Git state, checks your Rust setup, fetches environment information, analyses the project in the current directory, offers practical tips, and includes a lightweight local focus timer.
 
 ```text
-Terminal open. Brain online. Let's go, Nihit. ⚡
+Terminal open. Brain online. Let's go. ⚡
 
 📁 Project: yo-cli
 🌿 Git branch: main
@@ -45,23 +44,25 @@ Terminal open. Brain online. Let's go, Nihit. ⚡
 
 ## Features
 
-* 🚀 Friendly developer session starter
-* 🩺 `yoo doctor` for Rust, Cargo, Git, config, and project checks
-* ⏱️ Local coding-session timer with `yoo session`
-* 📝 YAML configuration
-* 💡 Built-in and community YAML tip packs
-* 🌿 Current Git branch and working-tree status
-* 🎨 Nine terminal themes
-* 🦀 Written in Rust
-* ✅ Unit tests, formatting checks, Clippy, and GitHub Actions CI
-* ⚡ Developer-aware environment fetcher 
-* 📄 JSON output for scripting and automation
+- 🚀 Friendly developer session starter
+- 🩺 `yoo doctor` for Rust, Cargo, Git, config, and project checks
+- ⚡ `yoo fetch` for developer-environment and project detection
+- 📦 `yoo project` for project metadata, source stats, Git details, and project-file checks
+- 📄 JSON output with `yoo fetch --json` and `yoo project --json`
+- ⏱️ Local coding-session timer with `yoo session`
+- 📝 YAML configuration
+- 💡 Built-in and community YAML tip packs
+- 🌿 Current Git branch and working-tree status
+- 🎨 Nine terminal themes
+- 🦀 Written in Rust
+- ✅ Unit tests, formatting checks, Clippy, and GitHub Actions CI
+
 ## Screenshots
 
 ### Start a coding session
 
 ```bash
-yoo --fast --name Nihit
+yoo --fast --name YourName
 ```
 
 <p align="center">
@@ -78,25 +79,6 @@ yoo doctor
   <img src="docs/images/doctor.png" alt="yoo doctor output with Rust and Git checks" width="780">
 </p>
 
-### Discover tip packs
-
-```bash
-yoo tips
-```
-
-<p align="center">
-  <img src="docs/images/tips.png" alt="yoo list of built-in and local tip packs" width="780">
-</p>
-
-### Start a focus session
-
-```bash
-yoo session 25
-```
-
-<p align="center">
-  <img src="docs/images/session.png" alt="yoo local coding session timer" width="780">
-</p>
 ### Fetch your developer environment
 
 ```bash
@@ -107,11 +89,32 @@ yoo fetch
   <img src="docs/images/fetch.png" alt="yoo fetch showing developer environment and project status" width="780">
 </p>
 
+### Inspect the current project
+
+```bash
+yoo project
+```
+
+```text
+yoo project — project overview
+
+📦 Name:            yoo
+🔧 Language:        Rust
+📦 Package manager: Cargo
+📄 Manifest:        Cargo.toml
+🏷 Version:         0.5.0
+🦀 Edition:         2024
+⚖ License:          GPL-3.0-or-later
+
+📁 Source files:    10
+📏 Source lines:    2,000+
+🌿 Git branch:      main
+✏️ Working tree:    clean
+```
+
 ## Installation
 
-### Cargo (Cross-platform)
-
-Install the latest version from crates.io:
+### Cargo (cross-platform)
 
 ```bash
 cargo install yoo
@@ -123,19 +126,10 @@ Update later:
 cargo install yoo --force
 ```
 
----
-
 ### Scoop (Windows)
-
-Add the official Nihitdev bucket:
 
 ```powershell
 scoop bucket add nihitdev https://github.com/nihitdev/scoop-nihitdev
-```
-
-Install **yoo**:
-
-```powershell
 scoop install yoo
 ```
 
@@ -143,76 +137,53 @@ Update later:
 
 ```powershell
 scoop update
+yoo --version
 scoop update yoo
 ```
 
----
-
 ### WinGet (Windows)
 
-> **Coming soon.** The package has been submitted to the official Microsoft WinGet Community Repository and will be available after approval.
+The package is being prepared for the official WinGet community repository.
 
 ```powershell
 winget install --id Nihitdev.Yoo
 ```
-
----
 
 Start your first developer session:
 
 ```bash
 yoo
 ```
-## Developer Fetch
-
-`yoo fetch` is a developer-aware fetch command. It combines environment information with the project in your current directory.
-
-```bash
-yoo fetch
-```
-
-It detects:
-
-* OS and architecture
-* Shell, terminal, and editor when available
-* Rust, Cargo, and Git versions
-* Rust, Node.js, Python, Go, Java, and .NET project markers
-* Current Git branch and working-tree status
-
-Use JSON output for scripts and automation:
-
-```bash
-yoo fetch --json
-```
-
-`yoo status` is an alias for `yoo fetch`.
 
 ## Commands
 
 ```text
 yoo
 yoo doctor
+yoo fetch
+yoo fetch --json
+yoo status
+yoo project
+yoo project --json
 yoo init
 yoo config
 yoo tips
 yoo tip rust
-yoo tip git
 yoo session
 yoo session 25
-yoo fetch
-yoo fetch --json
-yoo status
 ```
 
-
-## Useful Options
+## Useful options
 
 ```bash
 yoo --fast
-yoo --name Nihit
+yoo --name YourName
 yoo --theme tokyo-night
 yoo --plain
 yoo --no-art
+yoo project --plain
+yoo fetch --json
+yoo project --json
 ```
 
 ## Themes
@@ -235,6 +206,21 @@ Example:
 yoo --fast --theme tokyo-night
 ```
 
+## Project detection
+
+`yoo project` and `yoo fetch` detect these project markers:
+
+| Project type | Marker | Package-manager detection |
+| :-- | :-- | :-- |
+| Rust | `Cargo.toml` | Cargo |
+| Node.js | `package.json` | npm, pnpm, Yarn, or Bun |
+| Python | `pyproject.toml` | pip, uv, Poetry, or Pipenv |
+| Go | `go.mod` | Go modules |
+| Java | `pom.xml` or Gradle files | Maven or Gradle |
+| .NET | `.sln` or `.csproj` | .NET SDK |
+
+`yoo project` counts source files and lines while skipping generated or heavy folders such as `.git`, `target`, `node_modules`, `dist`, `build`, `.next`, `.venv`, and `vendor`.
+
 ## Configuration
 
 Create the default YAML configuration and a sample community tip pack:
@@ -251,43 +237,13 @@ Linux:   ~/.config/yoo/config.yaml
 macOS:   ~/Library/Application Support/yoo/config.yaml
 ```
 
-Example configuration:
-
-```yaml
-version: 1
-
-profile:
-  name: Nihit
-
-appearance:
-  theme: tokyo-night
-  ascii: true
-  colors: true
-  typing_speed_ms: 12
-
-git:
-  show_branch: true
-  show_status: true
-
-tips:
-  enabled: true
-  pack: rust
-
-hydration:
-  enabled: true
-
-session:
-  default_minutes: 25
-  show_complete_message: true
-```
-
 Print the active config path:
 
 ```bash
 yoo config
 ```
 
-## Tip Packs
+## Tip packs
 
 `yoo` ships with these built-in tip packs:
 
@@ -312,66 +268,38 @@ Linux:   ~/.config/yoo/tips
 macOS:   ~/Library/Application Support/yoo/tips
 ```
 
-Example community tip pack:
-
-```yaml
-name: web
-description: Web-development reminders.
-
-tips:
-  - Test loading, error, and empty states.
-  - Check the browser console before guessing.
-  - Never expose secrets in frontend code.
-```
-
-Save it as `web.yaml`, then run:
-
-```bash
-yoo tip web
-```
-
 ## Development
 
 ```bash
 git clone https://github.com/nihitdev/yo-cli.git
 cd yo-cli
 
-cargo fmt
+cargo fmt --check
 cargo test
 cargo clippy -- -D warnings
 
 cargo run -- doctor
-cargo run -- --fast --name Nihit
-```
-
-## Quality Checks
-
-Before pushing changes:
-
-```bash
-cargo fmt --check
-cargo test
-cargo clippy -- -D warnings
+cargo run -- fetch
+cargo run -- project
+cargo run -- project --json
 ```
 
 ## Roadmap
 
-* [x] Developer session greeting
-* [x] Git branch and working-tree summary
-* [x] YAML configuration
-* [x] Themes
-* [x] `yoo doctor`
-* [x] Local coding-session timer
-* [x] Community YAML tip packs
-* [ ] `yoo fetch` developer environment and project status
-* [ ] JSON output for `yoo fetch`
-* [ ] More tip packs from contributors
-* [ ] Config editor command
-* [ ] Shell completion support
-* [ ] Better terminal accessibility options
-* [ ] Optional release update checker
-
-
+- [x] Developer session greeting
+- [x] Git branch and working-tree summary
+- [x] YAML configuration
+- [x] Themes
+- [x] `yoo doctor`
+- [x] Local coding-session timer
+- [x] Community YAML tip packs
+- [x] `yoo fetch` developer environment and project status
+- [x] `yoo project` project overview and source stats
+- [x] JSON output for `yoo fetch` and `yoo project`
+- [ ] More tip packs from contributors
+- [ ] Shell completion support
+- [ ] Better terminal accessibility options
+- [ ] Optional release update checker
 
 ## Contributing
 
