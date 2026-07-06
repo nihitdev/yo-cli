@@ -2,4 +2,4 @@ target/
 dist/
 manifests/
 
-*.pdb
+*.pdbdist/
