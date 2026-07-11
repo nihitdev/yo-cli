@@ -5,7 +5,7 @@ use std::{
 
 use serde::Serialize;
 
-use crate::{git, manifest, ui::Ui};
+use crate::{git, ui::Ui};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct FetchReport {
@@ -210,41 +210,39 @@ pub fn detect_project(directory: &Path) -> ProjectInfo {
     let fallback_name = directory_name(directory);
 
     if let Some(contents) = read_file(directory.join("Cargo.toml")) {
-        let metadata = manifest::cargo(&contents);
         return ProjectInfo {
-            name: metadata.name.unwrap_or(fallback_name),
+            name: find_toml_string(&contents, "name").unwrap_or(fallback_name),
             kind: "Rust".to_owned(),
             manifest: Some("Cargo.toml".to_owned()),
-            version: metadata.version,
+            version: find_toml_string(&contents, "version"),
             directory: directory.display().to_string(),
         };
     }
 
     if let Some(contents) = read_file(directory.join("package.json")) {
-        let metadata = manifest::package_json(&contents);
+        let package: serde_json::Value = serde_json::from_str(&contents).unwrap_or_default();
         return ProjectInfo {
-            name: metadata.name.unwrap_or(fallback_name),
+            name: package
+                .get("name")
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_owned)
+                .unwrap_or(fallback_name),
             kind: "Node.js".to_owned(),
             manifest: Some("package.json".to_owned()),
-            version: metadata.version,
+            version: package
+                .get("version")
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_owned),
             directory: directory.display().to_string(),
         };
     }
 
-    if let Some(contents) = read_file(directory.join("pyproject.toml")) {
-        let metadata = manifest::pyproject(&contents);
-        return project_from_metadata(
-            directory,
-            fallback_name,
-            "Python",
-            "pyproject.toml",
-            metadata,
-        );
+    if directory.join("pyproject.toml").is_file() {
+        return project_from_marker(directory, fallback_name, "Python", "pyproject.toml");
     }
 
-    if let Some(contents) = read_file(directory.join("go.mod")) {
-        let metadata = manifest::go_mod(&contents);
-        return project_from_metadata(directory, fallback_name, "Go", "go.mod", metadata);
+    if directory.join("go.mod").is_file() {
+        return project_from_marker(directory, fallback_name, "Go", "go.mod");
     }
 
     if directory.join("pom.xml").is_file()
@@ -258,11 +256,7 @@ pub fn detect_project(directory: &Path) -> ProjectInfo {
         } else {
             "build.gradle"
         };
-        let metadata = read_file(directory.join(manifest))
-            .filter(|_| manifest == "pom.xml")
-            .map(|contents| manifest::maven(&contents))
-            .unwrap_or_default();
-        return project_from_metadata(directory, fallback_name, "Java", manifest, metadata);
+        return project_from_marker(directory, fallback_name, "Java", manifest);
     }
 
     if let Some(project_file) = first_project_file(directory, |path| {
@@ -271,15 +265,12 @@ pub fn detect_project(directory: &Path) -> ProjectInfo {
             Some("sln" | "csproj")
         )
     }) {
-        let manifest_name = project_file
+        let manifest = project_file
             .file_name()
             .and_then(|name| name.to_str())
             .unwrap_or(".NET project")
             .to_owned();
-        let metadata = read_file(project_file)
-            .map(|contents| manifest::dotnet(&contents))
-            .unwrap_or_default();
-        return project_from_metadata(directory, fallback_name, ".NET", &manifest_name, metadata);
+        return project_from_marker(directory, fallback_name, ".NET", &manifest);
     }
 
     ProjectInfo {
@@ -291,18 +282,12 @@ pub fn detect_project(directory: &Path) -> ProjectInfo {
     }
 }
 
-fn project_from_metadata(
-    directory: &Path,
-    fallback_name: String,
-    kind: &str,
-    manifest: &str,
-    metadata: manifest::Metadata,
-) -> ProjectInfo {
+fn project_from_marker(directory: &Path, name: String, kind: &str, manifest: &str) -> ProjectInfo {
     ProjectInfo {
-        name: metadata.name.unwrap_or(fallback_name),
+        name,
         kind: kind.to_owned(),
         manifest: Some(manifest.to_owned()),
-        version: metadata.version,
+        version: None,
         directory: directory.display().to_string(),
     }
 }
@@ -329,9 +314,82 @@ fn read_file(path: PathBuf) -> Option<String> {
     fs::read_to_string(path).ok()
 }
 
+pub fn find_toml_string(contents: &str, key: &str) -> Option<String> {
+    let mut in_package = false;
+
+    for line in contents.lines() {
+        let line = line.trim();
+
+        if line.starts_with('[') {
+            in_package = line == "[package]";
+            continue;
+        }
+
+        if !in_package || line.starts_with('#') {
+            continue;
+        }
+
+        let Some((found_key, value)) = line.split_once('=') else {
+            continue;
+        };
+
+        if found_key.trim() == key {
+            return parse_toml_string(value.trim());
+        }
+    }
+
+    None
+}
+
+fn parse_toml_string(value: &str) -> Option<String> {
+    let quote = value.chars().next()?;
+
+    if quote == '\'' {
+        let end = value[1..].find('\'')? + 1;
+        return Some(value[1..end].to_owned());
+    }
+
+    if quote != '"' {
+        return None;
+    }
+
+    let mut escaped = false;
+    for (offset, character) in value[1..].char_indices() {
+        if character == '"' && !escaped {
+            let end = offset + 2;
+            return serde_json::from_str(&value[..end]).ok();
+        }
+
+        escaped = character == '\\' && !escaped;
+        if character != '\\' {
+            escaped = false;
+        }
+    }
+
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn parses_only_package_toml_strings_without_extra_dependencies() {
+        let manifest = r#"
+[workspace.package]
+name = "wrong"
+
+[package]
+name = 'yoo'
+version = "0.6.1" # inline comment
+"#;
+
+        assert_eq!(find_toml_string(manifest, "name").as_deref(), Some("yoo"));
+        assert_eq!(
+            find_toml_string(manifest, "version").as_deref(),
+            Some("0.6.1")
+        );
+    }
 
     #[test]
     fn collect_never_panics_for_a_temp_directory() {

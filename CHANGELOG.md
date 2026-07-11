@@ -2,6 +2,17 @@
 
 All notable changes to `yoo` are documented here.
 
+## 0.6.1
+
+### Removed
+
+- Removed the TOML and XML parser dependencies added in 0.6.0 to keep the executable lean.
+- Removed the expanded multi-language manifest metadata and project-aware doctor behavior.
+
+### Changed
+
+- Cargo package fields use a small dependency-free reader that stays inside the `[package]` section and supports quoted values.
+
 ## 0.6.0
 
 ### Added

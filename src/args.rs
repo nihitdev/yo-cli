@@ -223,7 +223,7 @@ USAGE:
 COMMANDS:
   init                    Create the default YAML config and a sample community tip pack
   config                  Print the YAML config file location
-  doctor                  Check the current project's tools, Git, and yoo config
+  doctor                  Check Rust, Cargo, Git, config, and current-project setup
   fetch [OPTIONS]         Show developer environment and current-project information
   status [OPTIONS]        Alias for `yoo fetch`
   project [OPTIONS]       Show a structured overview of the current project

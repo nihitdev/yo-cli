@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{config, fetch, git, project};
+use crate::{config, git};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
@@ -45,12 +45,16 @@ impl Report {
 }
 
 pub fn collect(directory: &Path) -> Report {
-    let detected = fetch::detect_project(directory);
-    let mut checks = language_checks(directory, &detected.kind);
+    let mut checks = vec![
+        command_check("Rust compiler", "rustc", &["--version"]),
+        command_check("Cargo", "cargo", &["--version"]),
+        command_check("Git", "git", &["--version"]),
+        command_check("Rustfmt", "rustfmt", &["--version"]),
+        command_check("Clippy", "cargo", &["clippy", "--version"]),
+    ];
 
-    checks.push(command_check("Git", "git", &["--version"]));
     checks.push(config_check());
-    checks.push(project_check(&detected));
+    checks.push(project_check(directory));
     checks.push(repository_check(directory));
 
     Report { checks }
@@ -100,79 +104,6 @@ fn command_check(label: &'static str, program: &str, arguments: &[&str]) -> Chec
     }
 }
 
-fn command_check_any(label: &'static str, commands: &[(&str, &[&str])]) -> Check {
-    for (program, arguments) in commands {
-        if let Some(version) = git::run_command(program, arguments) {
-            return Check {
-                label,
-                status: Status::Pass,
-                detail: version,
-            };
-        }
-    }
-
-    Check {
-        label,
-        status: Status::Fail,
-        detail: "not found in PATH".to_owned(),
-    }
-}
-
-fn language_checks(directory: &Path, language: &str) -> Vec<Check> {
-    match language {
-        "Rust" => vec![
-            command_check("Rust compiler", "rustc", &["--version"]),
-            command_check("Cargo", "cargo", &["--version"]),
-            command_check("Rustfmt", "rustfmt", &["--version"]),
-            command_check("Clippy", "cargo", &["clippy", "--version"]),
-        ],
-        "Node.js" => {
-            let mut checks = vec![command_check("Node.js", "node", &["--version"])];
-            let package_manager = project::package_manager(directory, language);
-            let manager_check = match package_manager.as_deref() {
-                Some("pnpm") => command_check("pnpm", "pnpm", &["--version"]),
-                Some("Yarn") => command_check("Yarn", "yarn", &["--version"]),
-                Some("Bun") => command_check("Bun", "bun", &["--version"]),
-                _ => command_check("npm", "npm", &["--version"]),
-            };
-            checks.push(manager_check);
-            checks
-        }
-        "Python" => {
-            let mut checks = vec![command_check_any(
-                "Python",
-                &[
-                    ("python3", &["--version"]),
-                    ("python", &["--version"]),
-                    ("py", &["--version"]),
-                ],
-            )];
-            let package_manager = project::package_manager(directory, language);
-            let manager_check = match package_manager.as_deref() {
-                Some("uv") => command_check("uv", "uv", &["--version"]),
-                Some("Poetry") => command_check("Poetry", "poetry", &["--version"]),
-                Some("Pipenv") => command_check("Pipenv", "pipenv", &["--version"]),
-                _ => command_check_any("pip", &[("pip3", &["--version"]), ("pip", &["--version"])]),
-            };
-            checks.push(manager_check);
-            checks
-        }
-        "Go" => vec![command_check("Go", "go", &["version"])],
-        "Java" => {
-            let mut checks = vec![command_check("Java", "java", &["--version"])];
-            let manager_check = if directory.join("pom.xml").is_file() {
-                command_check("Maven", "mvn", &["--version"])
-            } else {
-                command_check("Gradle", "gradle", &["--version"])
-            };
-            checks.push(manager_check);
-            checks
-        }
-        ".NET" => vec![command_check(".NET SDK", "dotnet", &["--version"])],
-        _ => Vec::new(),
-    }
-}
-
 fn config_check() -> Check {
     let path = config::config_path();
 
@@ -201,18 +132,20 @@ fn config_check() -> Check {
     }
 }
 
-fn project_check(project: &fetch::ProjectInfo) -> Check {
-    if let Some(manifest) = project.manifest.as_deref() {
+fn project_check(directory: &Path) -> Check {
+    let manifest = directory.join("Cargo.toml");
+
+    if manifest.is_file() {
         Check {
-            label: "Current project",
+            label: "Rust project",
             status: Status::Pass,
-            detail: format!("{} ({manifest})", project.kind),
+            detail: "Cargo.toml found".to_owned(),
         }
     } else {
         Check {
-            label: "Current project",
+            label: "Rust project",
             status: Status::Warn,
-            detail: "no supported project manifest found in this directory".to_owned(),
+            detail: "Cargo.toml not found in this directory".to_owned(),
         }
     }
 }
@@ -264,21 +197,5 @@ mod tests {
         assert_eq!(report.pass_count(), 1);
         assert_eq!(report.warn_count(), 1);
         assert_eq!(report.fail_count(), 1);
-    }
-
-    #[test]
-    fn project_check_describes_the_detected_language() {
-        let project = fetch::ProjectInfo {
-            name: "demo".to_owned(),
-            kind: "Python".to_owned(),
-            manifest: Some("pyproject.toml".to_owned()),
-            version: Some("1.0.0".to_owned()),
-            directory: ".".to_owned(),
-        };
-
-        let check = project_check(&project);
-
-        assert_eq!(check.status, Status::Pass);
-        assert_eq!(check.detail, "Python (pyproject.toml)");
     }
 }

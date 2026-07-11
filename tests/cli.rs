@@ -48,22 +48,20 @@ fn invalid_arguments_exit_with_usage_error() {
 }
 
 #[test]
-fn project_json_reads_workspace_inherited_cargo_metadata() {
+fn project_json_reads_cargo_package_metadata() {
     let directory = temporary_directory("cargo");
     fs::create_dir_all(directory.join("src")).expect("source directory should be created");
     fs::write(
         directory.join("Cargo.toml"),
         r#"
 [workspace.package]
-version = "7.2.0"
-edition = "2024"
-license = "MIT"
+name = "wrong-section"
 
 [package]
-name = 'workspace-demo'
-version.workspace = true
-edition.workspace = true
-license.workspace = true
+name = 'lean-demo'
+version = "7.2.0" # inline comments are allowed
+edition = "2024"
+license = "MIT"
 "#,
     )
     .expect("manifest should be written");
@@ -74,7 +72,7 @@ license.workspace = true
         serde_json::from_slice(&output.stdout).expect("project output should be JSON");
 
     assert!(output.status.success());
-    assert_eq!(report["project"]["name"], "workspace-demo");
+    assert_eq!(report["project"]["name"], "lean-demo");
     assert_eq!(report["project"]["version"], "7.2.0");
     assert_eq!(report["project"]["edition"], "2024");
     assert_eq!(report["project"]["license"], "MIT");
@@ -84,7 +82,7 @@ license.workspace = true
 }
 
 #[test]
-fn fetch_json_reads_python_project_metadata() {
+fn fetch_json_detects_python_without_parsing_extra_metadata() {
     let directory = temporary_directory("python");
     fs::write(
         directory.join("pyproject.toml"),
@@ -101,9 +99,13 @@ version = "4.3.2"
         serde_json::from_slice(&output.stdout).expect("fetch output should be JSON");
 
     assert!(output.status.success());
-    assert_eq!(report["project"]["name"], "python-demo");
+    assert!(
+        report["project"]["name"]
+            .as_str()
+            .is_some_and(|name| name.starts_with("yoo-cli-test-python-"))
+    );
     assert_eq!(report["project"]["kind"], "Python");
-    assert_eq!(report["project"]["version"], "4.3.2");
+    assert!(report["project"]["version"].is_null());
 
     fs::remove_dir_all(directory).expect("test directory should be removed");
 }

@@ -30,7 +30,7 @@
 
 `yoo` is a Rust CLI that makes opening a terminal feel a little better.
 
-It gives you a friendly developer-session greeting, shows project and Git state, checks the detected project's toolchain, fetches environment information, analyses the project in the current directory, offers practical tips, and includes a lightweight local focus timer.
+It gives you a friendly developer-session greeting, shows project and Git state, checks your Rust setup, fetches environment information, analyses the project in the current directory, offers practical tips, and includes a lightweight local focus timer.
 
 ```text
 Terminal open. Brain online. Let's go. ⚡
@@ -45,7 +45,7 @@ Terminal open. Brain online. Let's go. ⚡
 ## Features
 
 - 🚀 Friendly developer session starter
-- 🩺 `yoo doctor` for project-aware toolchain, Git, config, and manifest checks
+- 🩺 `yoo doctor` for Rust, Cargo, Git, config, and project checks
 - ⚡ `yoo fetch` for developer-environment and project detection
 - 📦 `yoo project` for project metadata, source stats, Git details, and project-file checks
 - 📄 JSON output with `yoo fetch --json` and `yoo project --json`
@@ -102,7 +102,7 @@ yoo project — project overview
 🔧 Language:        Rust
 📦 Package manager: Cargo
 📄 Manifest:        Cargo.toml
-🏷 Version:         0.6.0
+🏷 Version:         0.6.1
 🦀 Edition:         2024
 ⚖ License:          GPL-3.0-or-later
 
@@ -208,7 +208,7 @@ yoo --fast --theme tokyo-night
 
 ## Project detection
 
-`yoo project` and `yoo fetch` detect these project markers and read available package metadata from their native manifest formats:
+`yoo project` and `yoo fetch` detect these project markers:
 
 | Project type | Marker | Package-manager detection |
 | :-- | :-- | :-- |
@@ -297,7 +297,6 @@ cargo run -- project --json
 - [x] `yoo fetch` developer environment and project status
 - [x] `yoo project` project overview and source stats
 - [x] JSON output for `yoo fetch` and `yoo project`
-- [x] Project-aware doctor checks
 - [x] Automated cross-platform GitHub releases
 - [ ] More tip packs from contributors
 - [ ] Shell completion support
