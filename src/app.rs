@@ -1,5 +1,8 @@
 use std::{error::Error, io};
 
+#[cfg(not(windows))]
+use std::io::IsTerminal;
+
 use crate::{
     args::{self, Command, FetchOptions, ProjectOptions, RunOptions, SessionOptions},
     config::{self, WriteResult},
@@ -229,9 +232,38 @@ fn ui_for_display(
         )
     })?;
 
+    let interactive = stdout_is_interactive();
+
     Ok(Ui::new(
         theme,
-        config.appearance.colors && !plain,
-        typing_speed_ms,
+        config.appearance.colors && !plain && interactive,
+        if interactive { typing_speed_ms } else { 0 },
     ))
+}
+
+#[cfg(not(windows))]
+fn stdout_is_interactive() -> bool {
+    io::stdout().is_terminal()
+}
+
+#[cfg(windows)]
+fn stdout_is_interactive() -> bool {
+    use std::ffi::c_void;
+
+    const STD_OUTPUT_HANDLE: u32 = -11_i32 as u32;
+    const INVALID_HANDLE_VALUE: *mut c_void = -1_isize as *mut c_void;
+
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn GetStdHandle(std_handle: u32) -> *mut c_void;
+        fn GetConsoleMode(console: *mut c_void, mode: *mut u32) -> i32;
+    }
+
+    let handle = unsafe { GetStdHandle(STD_OUTPUT_HANDLE) };
+    if handle.is_null() || handle == INVALID_HANDLE_VALUE {
+        return false;
+    }
+
+    let mut mode = 0;
+    unsafe { GetConsoleMode(handle, &mut mode) != 0 }
 }

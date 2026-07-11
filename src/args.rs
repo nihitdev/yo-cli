@@ -58,7 +58,7 @@ pub fn parse(arguments: &[String]) -> Result<Command, String> {
         "tips" => require_standalone(arguments, Command::Tips),
         "tip" => parse_tip(&arguments[1..]),
         "session" => parse_session(&arguments[1..]),
-        "--version" | "-V" => require_standalone(arguments, Command::Version),
+        "version" | "--version" | "-V" => require_standalone(arguments, Command::Version),
         _ => parse_run(arguments),
     }
 }
@@ -230,6 +230,7 @@ COMMANDS:
   session [MINUTES]       Start a local coding-session timer (default comes from config)
   tip [PACK]              Print one random tip; PACK defaults to your configured pack
   tips                    List built-in and locally installed community tip packs
+  version                 Print version
   help                    Print this help message
 
 FETCH / PROJECT OPTIONS:
@@ -365,6 +366,12 @@ mod tests {
     fn parses_tip_pack() {
         let arguments = values(&["tip", "rust"]);
         assert_eq!(parse(&arguments), Ok(Command::Tip(Some("rust".to_owned()))));
+    }
+
+    #[test]
+    fn parses_version_command() {
+        assert_eq!(parse(&values(&["version"])), Ok(Command::Version));
+        assert_eq!(parse(&values(&["--version"])), Ok(Command::Version));
     }
 
     #[test]

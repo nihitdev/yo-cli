@@ -248,8 +248,15 @@ fn visit_source_files(directory: &Path, extensions: &[&str], summary: &mut Sourc
 
     for entry in entries.filter_map(Result::ok) {
         let path = entry.path();
+        let Ok(file_type) = entry.file_type() else {
+            continue;
+        };
 
-        if path.is_dir() {
+        if file_type.is_symlink() {
+            continue;
+        }
+
+        if file_type.is_dir() {
             if should_skip_directory(&path) {
                 continue;
             }
@@ -260,7 +267,11 @@ fn visit_source_files(directory: &Path, extensions: &[&str], summary: &mut Sourc
 
         let extension = path.extension().and_then(|value| value.to_str());
 
-        if !extension.is_some_and(|value| extensions.contains(&value)) {
+        if !extension.is_some_and(|value| {
+            extensions
+                .iter()
+                .any(|extension| value.eq_ignore_ascii_case(extension))
+        }) {
             continue;
         }
 
@@ -414,5 +425,22 @@ license = "MIT"
         assert_eq!(format_number(0), "0");
         assert_eq!(format_number(123), "123");
         assert_eq!(format_number(1_234_567), "1,234,567");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn source_count_skips_symlinked_directories() {
+        use std::os::unix::fs::symlink;
+
+        let directory = temporary_directory();
+        fs::write(directory.join("src").join("main.RS"), "fn main() {}\n")
+            .expect("source file should be written");
+        symlink(&directory, directory.join("src").join("loop"))
+            .expect("test symlink should be created");
+
+        let summary = count_source(&directory, "Rust");
+
+        assert_eq!(summary.files, 1);
+        fs::remove_dir_all(directory).expect("test directory should be removed");
     }
 }

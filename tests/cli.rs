@@ -27,14 +27,16 @@ fn temporary_directory(name: &str) -> PathBuf {
 }
 
 #[test]
-fn version_reports_the_package_version() {
-    let output = yoo(&std::env::temp_dir(), &["--version"]);
+fn version_command_and_flag_report_the_package_version() {
+    for arguments in [["version"], ["--version"]] {
+        let output = yoo(&std::env::temp_dir(), &arguments);
 
-    assert!(output.status.success());
-    assert_eq!(
-        String::from_utf8_lossy(&output.stdout).trim(),
-        format!("yoo {}", env!("CARGO_PKG_VERSION"))
-    );
+        assert!(output.status.success());
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout).trim(),
+            format!("yoo {}", env!("CARGO_PKG_VERSION"))
+        );
+    }
 }
 
 #[test]
@@ -45,6 +47,14 @@ fn invalid_arguments_exit_with_usage_error() {
     assert_eq!(output.status.code(), Some(2));
     assert!(stderr.contains("unknown project option"));
     assert!(stderr.contains("USAGE:"));
+}
+
+#[test]
+fn redirected_display_output_does_not_contain_ansi_codes() {
+    let output = yoo(&std::env::temp_dir(), &["fetch", "--no-art"]);
+
+    assert!(output.status.success());
+    assert!(!output.stdout.windows(2).any(|bytes| bytes == b"\x1b["));
 }
 
 #[test]

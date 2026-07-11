@@ -159,6 +159,7 @@ yoo
 
 ```text
 yoo
+yoo version
 yoo doctor
 yoo fetch
 yoo fetch --json
@@ -220,6 +221,10 @@ yoo --fast --theme tokyo-night
 | .NET | `.sln` or `.csproj` | .NET SDK |
 
 `yoo project` counts source files and lines while skipping generated or heavy folders such as `.git`, `target`, `node_modules`, `dist`, `build`, `.next`, `.venv`, and `vendor`.
+
+## Privacy
+
+`yoo` runs locally. It does not use AI services, collect telemetry, run a background service, or send project data anywhere. Environment and project information stays on your machine and is written only to the requested terminal or JSON output.
 
 ## Configuration
 
@@ -301,7 +306,6 @@ cargo run -- project --json
 - [ ] More tip packs from contributors
 - [ ] Shell completion support
 - [ ] Better terminal accessibility options
-- [ ] Optional release update checker
 
 ## Contributing
 

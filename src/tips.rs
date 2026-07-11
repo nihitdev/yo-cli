@@ -201,10 +201,11 @@ fn load_local_packs() -> Result<Vec<TipPack>, TipError> {
 }
 
 fn is_yaml_file(path: &Path) -> bool {
-    matches!(
-        path.extension().and_then(|extension| extension.to_str()),
-        Some("yaml" | "yml")
-    )
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| {
+            extension.eq_ignore_ascii_case("yaml") || extension.eq_ignore_ascii_case("yml")
+        })
 }
 
 fn read_pack_file(path: &Path) -> Result<TipPack, TipError> {
@@ -274,5 +275,13 @@ mod tests {
         .expect("tip pack should parse");
         assert_eq!(document.name.as_deref(), Some("web"));
         assert_eq!(document.tips.len(), 1);
+    }
+
+    #[test]
+    fn recognises_yaml_extensions_case_insensitively() {
+        assert!(is_yaml_file(Path::new("community.yaml")));
+        assert!(is_yaml_file(Path::new("TEAM.YAML")));
+        assert!(is_yaml_file(Path::new("tips.YmL")));
+        assert!(!is_yaml_file(Path::new("tips.json")));
     }
 }
