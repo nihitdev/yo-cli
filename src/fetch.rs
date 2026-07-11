@@ -5,7 +5,7 @@ use std::{
 
 use serde::Serialize;
 
-use crate::{git, ui::Ui};
+use crate::{git, manifest, ui::Ui};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct FetchReport {
@@ -210,39 +210,41 @@ pub fn detect_project(directory: &Path) -> ProjectInfo {
     let fallback_name = directory_name(directory);
 
     if let Some(contents) = read_file(directory.join("Cargo.toml")) {
+        let metadata = manifest::cargo(&contents);
         return ProjectInfo {
-            name: find_toml_string(&contents, "name").unwrap_or(fallback_name),
+            name: metadata.name.unwrap_or(fallback_name),
             kind: "Rust".to_owned(),
             manifest: Some("Cargo.toml".to_owned()),
-            version: find_toml_string(&contents, "version"),
+            version: metadata.version,
             directory: directory.display().to_string(),
         };
     }
 
     if let Some(contents) = read_file(directory.join("package.json")) {
-        let package: serde_json::Value = serde_json::from_str(&contents).unwrap_or_default();
+        let metadata = manifest::package_json(&contents);
         return ProjectInfo {
-            name: package
-                .get("name")
-                .and_then(serde_json::Value::as_str)
-                .map(str::to_owned)
-                .unwrap_or(fallback_name),
+            name: metadata.name.unwrap_or(fallback_name),
             kind: "Node.js".to_owned(),
             manifest: Some("package.json".to_owned()),
-            version: package
-                .get("version")
-                .and_then(serde_json::Value::as_str)
-                .map(str::to_owned),
+            version: metadata.version,
             directory: directory.display().to_string(),
         };
     }
 
-    if directory.join("pyproject.toml").is_file() {
-        return project_from_marker(directory, fallback_name, "Python", "pyproject.toml");
+    if let Some(contents) = read_file(directory.join("pyproject.toml")) {
+        let metadata = manifest::pyproject(&contents);
+        return project_from_metadata(
+            directory,
+            fallback_name,
+            "Python",
+            "pyproject.toml",
+            metadata,
+        );
     }
 
-    if directory.join("go.mod").is_file() {
-        return project_from_marker(directory, fallback_name, "Go", "go.mod");
+    if let Some(contents) = read_file(directory.join("go.mod")) {
+        let metadata = manifest::go_mod(&contents);
+        return project_from_metadata(directory, fallback_name, "Go", "go.mod", metadata);
     }
 
     if directory.join("pom.xml").is_file()
@@ -256,7 +258,11 @@ pub fn detect_project(directory: &Path) -> ProjectInfo {
         } else {
             "build.gradle"
         };
-        return project_from_marker(directory, fallback_name, "Java", manifest);
+        let metadata = read_file(directory.join(manifest))
+            .filter(|_| manifest == "pom.xml")
+            .map(|contents| manifest::maven(&contents))
+            .unwrap_or_default();
+        return project_from_metadata(directory, fallback_name, "Java", manifest, metadata);
     }
 
     if let Some(project_file) = first_project_file(directory, |path| {
@@ -265,12 +271,15 @@ pub fn detect_project(directory: &Path) -> ProjectInfo {
             Some("sln" | "csproj")
         )
     }) {
-        let manifest = project_file
+        let manifest_name = project_file
             .file_name()
             .and_then(|name| name.to_str())
             .unwrap_or(".NET project")
             .to_owned();
-        return project_from_marker(directory, fallback_name, ".NET", &manifest);
+        let metadata = read_file(project_file)
+            .map(|contents| manifest::dotnet(&contents))
+            .unwrap_or_default();
+        return project_from_metadata(directory, fallback_name, ".NET", &manifest_name, metadata);
     }
 
     ProjectInfo {
@@ -282,12 +291,18 @@ pub fn detect_project(directory: &Path) -> ProjectInfo {
     }
 }
 
-fn project_from_marker(directory: &Path, name: String, kind: &str, manifest: &str) -> ProjectInfo {
+fn project_from_metadata(
+    directory: &Path,
+    fallback_name: String,
+    kind: &str,
+    manifest: &str,
+    metadata: manifest::Metadata,
+) -> ProjectInfo {
     ProjectInfo {
-        name,
+        name: metadata.name.unwrap_or(fallback_name),
         kind: kind.to_owned(),
         manifest: Some(manifest.to_owned()),
-        version: None,
+        version: metadata.version,
         directory: directory.display().to_string(),
     }
 }
@@ -314,51 +329,9 @@ fn read_file(path: PathBuf) -> Option<String> {
     fs::read_to_string(path).ok()
 }
 
-pub fn find_toml_string(contents: &str, key: &str) -> Option<String> {
-    for line in contents.lines() {
-        let line = line.trim();
-        if line.starts_with('#') || !line.starts_with(key) {
-            continue;
-        }
-
-        let (found_key, value) = line.split_once('=')?;
-        if found_key.trim() != key {
-            continue;
-        }
-
-        let value = value.trim();
-        if value.starts_with('"') && value.ends_with('"') && value.len() >= 2 {
-            return Some(value[1..value.len() - 1].to_owned());
-        }
-    }
-
-    None
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn parses_toml_string_values() {
-        let manifest = r#"
-[package]
-name = "yoo"
-version = "0.5.0"
-"#;
-
-        assert_eq!(find_toml_string(manifest, "name"), Some("yoo".to_owned()));
-        assert_eq!(
-            find_toml_string(manifest, "version"),
-            Some("0.5.0".to_owned())
-        );
-    }
-
-    #[test]
-    fn ignores_similar_toml_keys() {
-        let manifest = "package-name = \"wrong\"\nname = \"right\"\n";
-        assert_eq!(find_toml_string(manifest, "name"), Some("right".to_owned()));
-    }
 
     #[test]
     fn collect_never_panics_for_a_temp_directory() {

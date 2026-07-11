@@ -2,7 +2,7 @@ use std::{fs, io, path::Path};
 
 use serde::Serialize;
 
-use crate::{fetch, git, ui::Ui};
+use crate::{fetch, git, manifest, ui::Ui};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ProjectReport {
@@ -56,21 +56,12 @@ pub fn collect(directory: &Path) -> ProjectReport {
         .as_deref()
         .and_then(|manifest| fs::read_to_string(directory.join(manifest)).ok());
 
-    let edition = if detected.kind == "Rust" {
-        manifest_contents
-            .as_deref()
-            .and_then(|contents| fetch::find_toml_string(contents, "edition"))
-    } else {
-        None
-    };
-
-    let license = if detected.kind == "Rust" {
-        manifest_contents
-            .as_deref()
-            .and_then(|contents| fetch::find_toml_string(contents, "license"))
-    } else {
-        find_license_file(directory)
-    };
+    let metadata = manifest_contents
+        .as_deref()
+        .map(|contents| manifest_metadata(&detected.kind, contents))
+        .unwrap_or_default();
+    let edition = metadata.edition;
+    let license = metadata.license.or_else(|| find_license_file(directory));
 
     let git = git::inspect(directory).map(|info| GitProjectSummary {
         branch: info.branch,
@@ -195,7 +186,7 @@ fn print_check(ui: &Ui, label: &str, present: bool) -> io::Result<()> {
     ui.info(icon, label, status)
 }
 
-fn package_manager(directory: &Path, language: &str) -> Option<String> {
+pub(crate) fn package_manager(directory: &Path, language: &str) -> Option<String> {
     match language {
         "Rust" => Some("Cargo".to_owned()),
         "Node.js" => {
@@ -231,6 +222,18 @@ fn package_manager(directory: &Path, language: &str) -> Option<String> {
         }
         ".NET" => Some(".NET SDK".to_owned()),
         _ => None,
+    }
+}
+
+fn manifest_metadata(language: &str, contents: &str) -> manifest::Metadata {
+    match language {
+        "Rust" => manifest::cargo(contents),
+        "Node.js" => manifest::package_json(contents),
+        "Python" => manifest::pyproject(contents),
+        "Go" => manifest::go_mod(contents),
+        "Java" => manifest::maven(contents),
+        ".NET" => manifest::dotnet(contents),
+        _ => manifest::Metadata::default(),
     }
 }
 

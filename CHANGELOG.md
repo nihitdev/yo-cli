@@ -2,6 +2,24 @@
 
 All notable changes to `yoo` are documented here.
 
+## 0.6.0
+
+### Added
+
+- Added structured Cargo, Python, Node.js, Go, Maven, and .NET manifest metadata readers.
+- Added project-aware `yoo doctor` checks for Rust, Node.js, Python, Go, Java, and .NET toolchains.
+- Added end-to-end CLI tests for version reporting, argument errors, and JSON project detection.
+- Added tag-driven GitHub Releases with Windows, Linux, and macOS archives plus SHA-256 checksums.
+
+### Changed
+
+- External Git and tool probes now stop after a bounded timeout instead of being able to hang indefinitely.
+- Cargo metadata now supports quoted TOML variants and workspace-inherited package fields.
+
+### Fixed
+
+- Fixed the malformed `*.pdb` ignore rule introduced while untracking generated distribution files.
+
 ## 0.5.0
 
 ### Added

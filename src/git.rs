@@ -1,7 +1,12 @@
 use std::{
+    io::Read,
     path::Path,
     process::{Command, Stdio},
+    thread,
+    time::{Duration, Instant},
 };
+
+const COMMAND_TIMEOUT: Duration = Duration::from_secs(5);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GitInfo {
@@ -36,34 +41,52 @@ pub fn latest_tag(directory: &Path) -> Option<String> {
 }
 
 fn run_git(directory: &Path, arguments: &[&str]) -> Option<String> {
-    let output = Command::new("git")
-        .args(arguments)
-        .current_dir(directory)
-        .stderr(Stdio::null())
-        .output()
-        .ok()?;
-
-    if !output.status.success() {
-        return None;
-    }
-
-    String::from_utf8(output.stdout)
-        .ok()
-        .map(|text| text.trim().to_owned())
+    run_command_in(directory, "git", arguments)
 }
 
 pub fn run_command(program: &str, arguments: &[&str]) -> Option<String> {
-    let output = Command::new(program)
-        .args(arguments)
-        .stderr(Stdio::null())
-        .output()
-        .ok()?;
+    command_stdout(Command::new(program).args(arguments), COMMAND_TIMEOUT)
+}
 
-    if !output.status.success() {
+pub fn run_command_in(directory: &Path, program: &str, arguments: &[&str]) -> Option<String> {
+    command_stdout(
+        Command::new(program).args(arguments).current_dir(directory),
+        COMMAND_TIMEOUT,
+    )
+}
+
+fn command_stdout(command: &mut Command, timeout: Duration) -> Option<String> {
+    let mut child = command
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .ok()?;
+    let mut stdout = child.stdout.take()?;
+    let output_reader = thread::spawn(move || {
+        let mut output = Vec::new();
+        stdout.read_to_end(&mut output).map(|_| output)
+    });
+    let deadline = Instant::now() + timeout;
+
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break status,
+            Ok(None) if Instant::now() < deadline => thread::sleep(Duration::from_millis(10)),
+            Ok(None) | Err(_) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                let _ = output_reader.join();
+                return None;
+            }
+        }
+    };
+    let output = output_reader.join().ok()?.ok()?;
+
+    if !status.success() {
         return None;
     }
 
-    String::from_utf8(output.stdout)
+    String::from_utf8(output)
         .ok()
         .map(|text| text.trim().to_owned())
 }
@@ -83,5 +106,13 @@ mod tests {
         let directory = std::env::temp_dir();
         let _ = commit_count(&directory);
         let _ = latest_tag(&directory);
+    }
+
+    #[test]
+    fn missing_commands_return_none() {
+        assert_eq!(
+            run_command("yoo-command-that-does-not-exist", &["--version"]),
+            None
+        );
     }
 }
