@@ -2,22 +2,20 @@
 
 All notable changes to `yoo` are documented here.
 
-## Unreleased
+## [0.6.2] - 2026-07-12
 
 ### Added
-
-- Added `yoo version` as a command-form equivalent of `yoo --version`.
-
-### Changed
-
-- Redirected output no longer contains ANSI styling or waits for typewriter animation.
-- CI now uses the committed dependency lockfile for tests and Clippy.
+- Raw binaries for npm/Chocolatey distribution
+- GitHub Actions workflow for raw binary uploads
+- Auto-updating hash support for Scoop
 
 ### Fixed
+- Improved release asset management
+- Better binary naming convention
 
-- Source counting skips symlinks and recognises source extensions case-insensitively.
-- Local tip packs recognise `.yaml` and `.yml` extensions regardless of letter case.
-
+### Changed
+- Updated installation instructions
+- Improved project detection
 ## 0.6.1
 
 ### Removed
