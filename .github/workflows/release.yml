@@ -19,12 +19,18 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             archive: yoo-${{ github.ref_name }}-linux-x86_64
+            binary_name: yoo
+            raw_name: yoo-linux-x86_64
           - os: macos-latest
             target: aarch64-apple-darwin
             archive: yoo-${{ github.ref_name }}-macos-aarch64
+            binary_name: yoo
+            raw_name: yoo-macos-aarch64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             archive: yoo-${{ github.ref_name }}-windows-x86_64
+            binary_name: yoo.exe
+            raw_name: yoo-windows-x86_64.exe
 
     steps:
       - uses: actions/checkout@v4
@@ -32,6 +38,14 @@ jobs:
         with:
           targets: ${{ matrix.target }}
       - run: cargo build --release --locked --target ${{ matrix.target }}
+
+      # --- NEW: Upload raw binary (for npm/Chocolatey) ---
+      - name: Upload raw binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.raw_name }}
+          path: target/${{ matrix.target }}/release/${{ matrix.binary_name }}
+          if-no-files-found: error
 
       - name: Package Unix archive
         if: runner.os != 'Windows'
