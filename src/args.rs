@@ -1,3 +1,5 @@
+use crate::timer;
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct RunOptions {
     pub fast: bool,
@@ -177,12 +179,20 @@ fn parse_tip(arguments: &[String]) -> Result<Command, String> {
 }
 
 fn parse_minutes(value: &str) -> Result<u64, String> {
-    let minutes = value
-        .parse::<u64>()
-        .map_err(|_| "minutes must be a whole number between 1 and 480".to_owned())?;
+    let minutes = value.parse::<u64>().map_err(|_| {
+        format!(
+            "minutes must be a whole number between {} and {}",
+            timer::MIN_MINUTES,
+            timer::MAX_MINUTES
+        )
+    })?;
 
-    if !(1..=480).contains(&minutes) {
-        return Err("minutes must be between 1 and 480".to_owned());
+    if !(timer::MIN_MINUTES..=timer::MAX_MINUTES).contains(&minutes) {
+        return Err(format!(
+            "minutes must be between {} and {}",
+            timer::MIN_MINUTES,
+            timer::MAX_MINUTES
+        ));
     }
 
     Ok(minutes)

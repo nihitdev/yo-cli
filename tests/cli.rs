@@ -28,7 +28,7 @@ fn temporary_directory(name: &str) -> PathBuf {
 
 #[test]
 fn version_command_and_flag_report_the_package_version() {
-    for arguments in [["version"], ["--version"]] {
+    for arguments in [["version"], ["--version"], ["-V"]] {
         let output = yoo(&std::env::temp_dir(), &arguments);
 
         assert!(output.status.success());
@@ -37,6 +37,14 @@ fn version_command_and_flag_report_the_package_version() {
             format!("yoo {}", env!("CARGO_PKG_VERSION"))
         );
     }
+}
+
+#[test]
+fn readme_version_example_matches_the_package_version() {
+    let readme = fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("README.md"))
+        .expect("README should be readable");
+
+    assert!(readme.contains(&format!("Version:         {}", env!("CARGO_PKG_VERSION"))));
 }
 
 #[test]

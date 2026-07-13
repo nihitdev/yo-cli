@@ -98,12 +98,11 @@ fn run(options: RunOptions) -> Result<(), Box<dyn Error>> {
             ui.info("🌿", "Git branch:", &info.branch)?;
 
             if config.git.show_status {
-                let change_status = if info.changed_files == 0 {
-                    "clean".to_owned()
-                } else {
-                    format!("{} changed file(s)", info.changed_files)
-                };
-                ui.info("✏️", "Working tree:", &change_status)?;
+                ui.info(
+                    "✏️",
+                    "Working tree:",
+                    &git::change_status(info.changed_files),
+                )?;
             }
         } else {
             ui.info("🌿", "Git:", "not a repository")?;

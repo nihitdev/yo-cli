@@ -146,14 +146,12 @@ pub fn print(report: &ProjectReport, ui: &Ui) -> io::Result<()> {
     ui.divider()?;
 
     if let Some(git) = report.git.as_ref() {
-        let status = if git.changed_files == 0 {
-            "clean".to_owned()
-        } else {
-            format!("{} changed file(s)", git.changed_files)
-        };
-
         ui.info("🌿", "Git branch:", &git.branch)?;
-        ui.info("✏️", "Working tree:", &status)?;
+        ui.info(
+            "✏️",
+            "Working tree:",
+            &git::change_status(git.changed_files),
+        )?;
 
         if let Some(commits) = git.commits {
             ui.info("📜", "Commits:", &format_number(commits))?;

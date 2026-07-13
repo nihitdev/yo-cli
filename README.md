@@ -30,7 +30,9 @@
 
 `yoo` is a Rust CLI that makes opening a terminal feel a little better.
 
-It gives you a friendly developer-session greeting, shows project and Git state, checks your Rust setup, fetches environment information, analyses the project in the current directory, offers practical tips, and includes a lightweight local focus timer.
+It gives you a friendly developer-session greeting, shows project and Git state, checks your Rust setup, fetches environment information, analyses the project in the current directory, offers practical tips, and includes a local focus timer.
+
+It is intentionally small: no telemetry, no daemon, no network calls, and no heavy runtime.
 
 ```text
 Terminal open. Brain online. Let's go. ⚡
@@ -41,6 +43,17 @@ Terminal open. Brain online. Let's go. ⚡
 
 💡 Tip: Write the test that would have caught your last bug.
 ```
+
+## Quick start
+
+```bash
+cargo install yoo
+yoo
+yoo doctor
+yoo project
+```
+
+Use `yoo --fast` when you want the greeting without the typewriter animation.
 
 ## Features
 
@@ -56,6 +69,14 @@ Terminal open. Brain online. Let's go. ⚡
 - 🎨 Nine terminal themes
 - 🦀 Written in Rust
 - ✅ Unit tests, formatting checks, Clippy, and GitHub Actions CI
+
+## Why use it?
+
+- Start a coding session with the project name, Git branch, working-tree state, and one useful reminder.
+- Check whether Rust, Cargo, Git, Rustfmt, Clippy, config, and repository basics are available.
+- Get a quick project report without opening an IDE.
+- Feed `yoo fetch --json` or `yoo project --json` into scripts.
+- Keep personal and team tips in simple YAML files.
 
 ## Screenshots
 
@@ -102,7 +123,7 @@ yoo project — project overview
 🔧 Language:        Rust
 📦 Package manager: Cargo
 📄 Manifest:        Cargo.toml
-🏷 Version:         0.6.1
+🏷 Version:         0.6.3
 🦀 Edition:         2024
 ⚖ License:          GPL-3.0-or-later
 
@@ -113,6 +134,11 @@ yoo project — project overview
 ```
 
 ## Installation
+
+Requirements:
+
+- Rust 1.85 or newer for building from source or installing with Cargo
+- Git installed if you want repository details in `yoo`, `yoo fetch`, `yoo project`, or `yoo doctor`
 
 ### Cargo (cross-platform)
 
@@ -157,22 +183,24 @@ yoo
 
 ## Commands
 
-```text
-yoo
-yoo version
-yoo doctor
-yoo fetch
-yoo fetch --json
-yoo status
-yoo project
-yoo project --json
-yoo init
-yoo config
-yoo tips
-yoo tip rust
-yoo session
-yoo session 25
-```
+| Command | Purpose |
+| :-- | :-- |
+| `yoo` | Start the default developer-session greeting |
+| `yoo --fast` | Start the greeting without the typewriter delay |
+| `yoo doctor` | Check local tooling, config, and repository basics |
+| `yoo fetch` | Show OS, shell, editor, Rust/Cargo/Git, project, and Git state |
+| `yoo fetch --json` | Print the fetch report as JSON |
+| `yoo status` | Alias for `yoo fetch` |
+| `yoo project` | Show project metadata, source stats, Git details, and project-file checks |
+| `yoo project --json` | Print the project report as JSON |
+| `yoo session` | Start the configured focus timer |
+| `yoo session 25` | Start a 25-minute focus timer |
+| `yoo tip rust` | Print one tip from the Rust tip pack |
+| `yoo tips` | List built-in and local tip packs |
+| `yoo init` | Create the default config and sample community tip pack |
+| `yoo config` | Print the active config path |
+| `yoo version` | Print the installed version |
+| `yoo help` | Print command help |
 
 ## Useful options
 
@@ -186,6 +214,8 @@ yoo project --plain
 yoo fetch --json
 yoo project --json
 ```
+
+`--json` is intentionally decoration-free and cannot be combined with display options such as `--plain`, `--no-art`, or `--theme`.
 
 ## Themes
 
@@ -222,6 +252,34 @@ yoo --fast --theme tokyo-night
 
 `yoo project` counts source files and lines while skipping generated or heavy folders such as `.git`, `target`, `node_modules`, `dist`, `build`, `.next`, `.venv`, and `vendor`.
 
+## JSON output
+
+Use JSON output when scripting or feeding project information into another tool:
+
+```bash
+yoo fetch --json
+yoo project --json
+```
+
+Example fields include:
+
+```json
+{
+  "yoo_version": "0.6.3",
+  "project": {
+    "name": "yoo",
+    "language": "Rust",
+    "version": "0.6.3"
+  },
+  "git": {
+    "branch": "main",
+    "changed_files": 0
+  }
+}
+```
+
+The exact report includes more fields, but it stays focused on local environment, project, source, and Git data.
+
 ## Privacy
 
 `yoo` runs locally. It does not use AI services, collect telemetry, run a background service, or send project data anywhere. Environment and project information stays on your machine and is written only to the requested terminal or JSON output.
@@ -246,6 +304,36 @@ Print the active config path:
 
 ```bash
 yoo config
+```
+
+Default config:
+
+```yaml
+version: 1
+
+profile:
+  name: developer
+
+appearance:
+  theme: neon
+  ascii: true
+  colors: true
+  typing_speed_ms: 12
+
+git:
+  show_branch: true
+  show_status: true
+
+tips:
+  enabled: true
+  pack: general
+
+hydration:
+  enabled: true
+
+session:
+  default_minutes: 25
+  show_complete_message: true
 ```
 
 ## Tip packs
@@ -273,6 +361,32 @@ Linux:   ~/.config/yoo/tips
 macOS:   ~/Library/Application Support/yoo/tips
 ```
 
+Example local tip pack:
+
+```yaml
+name: team
+description: Team workflow reminders.
+tips:
+  - Keep pull requests small enough to review carefully.
+  - Write down the command that fixed the problem.
+```
+
+Then run:
+
+```bash
+yoo tip team
+```
+
+## Troubleshooting
+
+| Problem | What to try |
+| :-- | :-- |
+| `yoo doctor` says config is missing | Run `yoo init`; defaults are still used until then |
+| No colours appear | Check whether output is redirected, or use a terminal that supports ANSI colours |
+| Git branch is missing | Run the command inside a Git repository and make sure `git` is in `PATH` |
+| `cargo install yoo` fails | Update Rust with `rustup update`, then retry |
+| JSON command rejects display flags | Remove `--plain`, `--no-art`, or `--theme` when using `--json` |
+
 ## Development
 
 ```bash
@@ -288,6 +402,15 @@ cargo run -- doctor
 cargo run -- fetch
 cargo run -- project
 cargo run -- project --json
+```
+
+Release checks used by this repo:
+
+```bash
+cargo fmt --check
+cargo test --locked
+cargo clippy --locked -- -D warnings
+cargo build --release --locked
 ```
 
 ## Roadmap

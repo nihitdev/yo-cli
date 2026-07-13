@@ -31,6 +31,14 @@ pub fn inspect(directory: &Path) -> Option<GitInfo> {
     })
 }
 
+pub fn change_status(changed_files: usize) -> String {
+    if changed_files == 0 {
+        "clean".to_owned()
+    } else {
+        format!("{changed_files} changed file(s)")
+    }
+}
+
 pub fn commit_count(directory: &Path) -> Option<usize> {
     run_git(directory, &["rev-list", "--count", "HEAD"])
         .and_then(|value| value.parse::<usize>().ok())
@@ -106,6 +114,12 @@ mod tests {
         let directory = std::env::temp_dir();
         let _ = commit_count(&directory);
         let _ = latest_tag(&directory);
+    }
+
+    #[test]
+    fn formats_change_status() {
+        assert_eq!(change_status(0), "clean");
+        assert_eq!(change_status(3), "3 changed file(s)");
     }
 
     #[test]

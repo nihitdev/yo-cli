@@ -2,21 +2,39 @@
 
 All notable changes to `yoo` are documented here.
 
+The format follows the spirit of Keep a Changelog: user-visible changes are grouped by release and by type.
+
+## [0.6.3] - 2026-07-13
+
+### Added
+- Expanded the README with a quick start, command reference table, JSON example, default config example, local tip-pack example, and troubleshooting guide.
+- Added tests that guard the README version example and the `-V` version flag.
+
+### Fixed
+- Synced package lockfile and versioned README examples with the crate version.
+- Fixed release metadata drift where `Cargo.toml`, `Cargo.lock`, and documentation could disagree about the current version.
+
+### Changed
+- Reused shared Git working-tree status formatting across session, fetch, and project output.
+- Kept session minute validation aligned with the timer bounds used by the application.
+- Clarified the project goal in the README: local-only, lightweight, no telemetry, no daemon, and no network calls.
+
 ## [0.6.2] - 2026-07-12
 
 ### Added
-- Raw binaries for npm/Chocolatey distribution
-- GitHub Actions workflow for raw binary uploads
-- Auto-updating hash support for Scoop
+- Raw binaries for npm/Chocolatey distribution.
+- GitHub Actions workflow for raw binary uploads.
+- Auto-updating hash support for Scoop.
 
 ### Fixed
-- Improved release asset management
-- Better binary naming convention
+- Improved release asset management.
+- Better binary naming convention.
 
 ### Changed
-- Updated installation instructions
-- Improved project detection
-## 0.6.1
+- Updated installation instructions.
+- Improved project detection.
+
+## [0.6.1]
 
 ### Removed
 
@@ -27,7 +45,7 @@ All notable changes to `yoo` are documented here.
 
 - Cargo package fields use a small dependency-free reader that stays inside the `[package]` section and supports quoted values.
 
-## 0.6.0
+## [0.6.0]
 
 ### Added
 
@@ -45,7 +63,7 @@ All notable changes to `yoo` are documented here.
 
 - Fixed the malformed `*.pdb` ignore rule introduced while untracking generated distribution files.
 
-## 0.5.0
+## [0.5.0]
 
 ### Added
 
@@ -56,7 +74,7 @@ All notable changes to `yoo` are documented here.
 - Added checks for README, license, changelog, `.gitignore`, and GitHub Actions CI files.
 - Added machine-readable output with `yoo project --json`.
 
-## 0.4.0
+## [0.4.0]
 
 ### Added
 
@@ -65,7 +83,7 @@ All notable changes to `yoo` are documented here.
 - Added JSON output with `yoo fetch --json`.
 - Added project detection for Rust, Node.js, Python, Go, Java, and .NET markers.
 
-## 0.3.0
+## [0.3.0]
 
 - Added YAML configuration at the standard OS config location.
 - Added `yoo doctor` for Rust, Cargo, Git, config, and current-project checks.
@@ -76,10 +94,10 @@ All notable changes to `yoo` are documented here.
 - Added `yoo tip [PACK]` and `yoo tips`.
 - Switched the project license to GPL-3.0-or-later.
 
-## 0.2.0
+## [0.2.0]
 
 - Added configurable name, themes, typewriter mode, Git information, tests, and CI.
 
-## 0.1.0
+## [0.1.0]
 
 - Initial crates.io release.

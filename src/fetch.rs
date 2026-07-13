@@ -102,13 +102,12 @@ pub fn print(report: &FetchReport, ui: &Ui) -> io::Result<()> {
     }
 
     if let Some(git) = report.git.as_ref() {
-        let status = if git.changed_files == 0 {
-            "clean".to_owned()
-        } else {
-            format!("{} changed file(s)", git.changed_files)
-        };
         ui.info("🌿", "Git branch:", &git.branch)?;
-        ui.info("✏️", "Working tree:", &status)?;
+        ui.info(
+            "✏️",
+            "Working tree:",
+            &git::change_status(git.changed_files),
+        )?;
     } else {
         ui.info("🌿", "Git:", "not a repository")?;
     }
