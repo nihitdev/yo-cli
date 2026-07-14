@@ -39,12 +39,17 @@ jobs:
           targets: ${{ matrix.target }}
       - run: cargo build --release --locked --target ${{ matrix.target }}
 
-      # --- NEW: Upload raw binary (for npm/Chocolatey) ---
+      - name: Prepare raw binary
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force raw
+          Copy-Item "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" "raw/${{ matrix.raw_name }}"
+
       - name: Upload raw binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.raw_name }}
-          path: target/${{ matrix.target }}/release/${{ matrix.binary_name }}
+          path: raw/${{ matrix.raw_name }}
           if-no-files-found: error
 
       - name: Package Unix archive
@@ -84,4 +89,5 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          overwrite_files: true
           files: release/*
