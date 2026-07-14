@@ -1,0 +1,39 @@
+{
+  "name": "@nihitdev/yoo",
+  "version": "0.6.3",
+  "description": "A tiny developer companion for better coding sessions.",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/nihitdev/yo-cli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nihitdev/yo-cli.git",
+    "directory": "npm"
+  },
+  "bugs": {
+    "url": "https://github.com/nihitdev/yo-cli/issues"
+  },
+  "keywords": [
+    "cli",
+    "terminal",
+    "developer",
+    "productivity",
+    "rust"
+  ],
+  "bin": {
+    "yoo": "bin/yoo.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/install.js"
+  },
+  "files": [
+    "bin",
+    "scripts",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

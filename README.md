@@ -152,6 +152,14 @@ Update later:
 cargo install yoo --force
 ```
 
+### npm (cross-platform binary installer)
+
+```bash
+npm install -g @nihitdev/yoo
+```
+
+The npm package downloads the matching prebuilt binary from GitHub Releases. It currently supports Windows x64, Linux x64, and macOS arm64.
+
 ### Scoop (Windows)
 
 ```powershell
