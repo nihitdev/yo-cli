@@ -160,6 +160,8 @@ npm install -g @nihitdev/yoo
 
 The npm package downloads the matching prebuilt binary from GitHub Releases. It currently supports Windows x64, Linux x64, and macOS arm64.
 
+The npm wrapper package lives in `packages/npm` to keep the repository root focused on the Rust CLI.
+
 ### Scoop (Windows)
 
 ```powershell
