@@ -3,3 +3,6 @@ dist/
 manifests/
 
 *.pdb
+
+packages/npm/*.tgz
+packages/npm/vendor/
