@@ -7,6 +7,9 @@ The format follows the spirit of Keep a Changelog: user-visible changes are grou
 ## [0.6.3] - 2026-07-13
 
 ### Added
+
+- Published `yoo-bin` to the Arch User Repository (AUR).
+- Published the npm wrapper package.
 - Expanded the README with a quick start, command reference table, JSON example, default config example, local tip-pack example, and troubleshooting guide.
 - Added tests that guard the README version example and the `-V` version flag.
 - Added an npm package wrapper for installing prebuilt `yoo` binaries from GitHub Releases.

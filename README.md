@@ -140,6 +140,8 @@ Requirements:
 - Rust 1.85 or newer for building from source or installing with Cargo
 - Git installed if you want repository details in `yoo`, `yoo fetch`, `yoo project`, or `yoo doctor`
 
+#All package managers install the same official binaries released from GitHub Releases.
+
 ### Cargo (cross-platform)
 
 ```bash
@@ -198,10 +200,16 @@ yay -S yoo-bin
 
 ### WinGet (Windows)
 
-Available soon through the official WinGet community repository. The package is currently awaiting review.
+> Available after the current community PR is merged.
 
 ```powershell
 winget install --id Nihitdev.Yoo
+```
+### Homebrew (Coming soon)
+
+```bash
+brew tap nihitdev/nihitdev
+brew install yoo
 ```
 
 Start your first developer session:
@@ -454,10 +462,24 @@ cargo build --release --locked
 - [x] `yoo fetch` developer environment and project status
 - [x] `yoo project` project overview and source stats
 - [x] JSON output for `yoo fetch` and `yoo project`
+- [x] AUR package
 - [x] Automated cross-platform GitHub releases
 - [ ] More tip packs from contributors
 - [ ] Shell completion support
 - [ ] Better terminal accessibility options
+
+   ## Package Ecosystem
+
+| Platform | Status |
+|-----------|--------|
+| crates.io | ✅ |
+| npm | ✅ |
+| pnpm | ✅ |
+| Bun | ✅ |
+| Scoop | ✅ |
+| Arch Linux (AUR) | ✅ |
+| WinGet | ⏳ Pending review |
+| Homebrew | 🚧 Planned |
 
 ## Contributing
 
