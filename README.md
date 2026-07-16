@@ -162,6 +162,18 @@ The npm package downloads the matching prebuilt binary from GitHub Releases. It 
 
 The npm wrapper package lives in `packages/npm` to keep the repository root focused on the Rust CLI.
 
+### pnpm
+
+```bash
+pnpm add -g @nihitde_v/yoo
+```
+
+### Bun
+
+```bash
+bun install -g @nihitde_v/yoo
+```
+
 ### Scoop (Windows)
 
 ```powershell
