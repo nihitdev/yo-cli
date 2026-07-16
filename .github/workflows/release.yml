@@ -12,6 +12,7 @@ jobs:
   build:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -19,58 +20,126 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             archive: yoo-${{ github.ref_name }}-linux-x86_64
+            binstall_archive: yoo-${{ github.ref_name }}-x86_64-unknown-linux-gnu
             binary_name: yoo
             raw_name: yoo-linux-x86_64
+            archive_extension: tar.gz
+
           - os: macos-latest
             target: aarch64-apple-darwin
             archive: yoo-${{ github.ref_name }}-macos-aarch64
+            binstall_archive: yoo-${{ github.ref_name }}-aarch64-apple-darwin
             binary_name: yoo
             raw_name: yoo-macos-aarch64
+            archive_extension: tar.gz
+
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             archive: yoo-${{ github.ref_name }}-windows-x86_64
+            binstall_archive: yoo-${{ github.ref_name }}-x86_64-pc-windows-msvc
             binary_name: yoo.exe
             raw_name: yoo-windows-x86_64.exe
+            archive_extension: zip
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-      - run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Build release binary
+        run: cargo build --release --locked --target ${{ matrix.target }}
 
       - name: Prepare raw binary
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force raw
-          Copy-Item "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" "raw/${{ matrix.raw_name }}"
+          New-Item -ItemType Directory -Force raw | Out-Null
+
+          Copy-Item `
+            "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" `
+            "raw/${{ matrix.raw_name }}"
 
       - name: Upload raw binary
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.raw_name }}
+          name: raw-${{ matrix.target }}
           path: raw/${{ matrix.raw_name }}
           if-no-files-found: error
 
-      - name: Package Unix archive
+      - name: Package Unix archives
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          mkdir -p "staging/${{ matrix.archive }}" dist
-          cp "target/${{ matrix.target }}/release/yoo" README.md LICENSE "staging/${{ matrix.archive }}/"
-          tar -C staging -czf "dist/${{ matrix.archive }}.tar.gz" "${{ matrix.archive }}"
+          set -euo pipefail
 
-      - name: Package Windows archive
+          mkdir -p \
+            "staging/${{ matrix.archive }}" \
+            "staging/${{ matrix.binstall_archive }}" \
+            dist
+
+          cp \
+            "target/${{ matrix.target }}/release/yoo" \
+            README.md \
+            LICENSE \
+            "staging/${{ matrix.archive }}/"
+
+          cp \
+            "target/${{ matrix.target }}/release/yoo" \
+            README.md \
+            LICENSE \
+            "staging/${{ matrix.binstall_archive }}/"
+
+          tar \
+            -C staging \
+            -czf "dist/${{ matrix.archive }}.tar.gz" \
+            "${{ matrix.archive }}"
+
+          tar \
+            -C staging \
+            -czf "dist/${{ matrix.binstall_archive }}.tar.gz" \
+            "${{ matrix.binstall_archive }}"
+
+      - name: Package Windows archives
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force "staging/${{ matrix.archive }}", dist
-          Copy-Item "target/${{ matrix.target }}/release/yoo.exe", README.md, LICENSE "staging/${{ matrix.archive }}/"
-          Compress-Archive -Path "staging/${{ matrix.archive }}/*" -DestinationPath "dist/${{ matrix.archive }}.zip"
+          $ErrorActionPreference = "Stop"
 
-      - uses: actions/upload-artifact@v4
+          New-Item `
+            -ItemType Directory `
+            -Force `
+            "staging/${{ matrix.archive }}", `
+            "staging/${{ matrix.binstall_archive }}", `
+            "dist" |
+            Out-Null
+
+          Copy-Item `
+            "target/${{ matrix.target }}/release/yoo.exe", `
+            "README.md", `
+            "LICENSE" `
+            "staging/${{ matrix.archive }}/"
+
+          Copy-Item `
+            "target/${{ matrix.target }}/release/yoo.exe", `
+            "README.md", `
+            "LICENSE" `
+            "staging/${{ matrix.binstall_archive }}/"
+
+          Compress-Archive `
+            -Path "staging/${{ matrix.archive }}/*" `
+            -DestinationPath "dist/${{ matrix.archive }}.zip"
+
+          Compress-Archive `
+            -Path "staging/${{ matrix.binstall_archive }}/*" `
+            -DestinationPath "dist/${{ matrix.binstall_archive }}.zip"
+
+      - name: Upload archives
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.archive }}
+          name: archives-${{ matrix.target }}
           path: dist/*
           if-no-files-found: error
 
@@ -78,15 +147,26 @@ jobs:
     name: Publish GitHub Release
     needs: build
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
         with:
           path: release
           merge-multiple: true
-      - name: Generate checksums
+
+      - name: List release files
+        run: ls -lah release
+
+      - name: Generate SHA-256 checksums
         working-directory: release
-        run: sha256sum * > SHA256SUMS
-      - uses: softprops/action-gh-release@v2
+        run: |
+          set -euo pipefail
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           overwrite_files: true
