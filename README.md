@@ -140,6 +140,19 @@ yoo project — project overview
 ```bash
 cargo install yoo
 ```
+### Cargo Binstall (Fast)
+
+Download a prebuilt binary from GitHub Releases instead of compiling from source:
+
+```bash
+cargo binstall yoo
+```
+
+Install Cargo Binstall first when needed:
+
+```bash
+cargo install cargo-binstall
+```
 
 ### npm
 
