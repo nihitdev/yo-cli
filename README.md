@@ -133,36 +133,19 @@ yoo project — project overview
 ✏️ Working tree:    clean
 ```
 
-## Installation
+## 📦 Installation
 
-Requirements:
-
-- Rust 1.85 or newer for building from source or installing with Cargo
-- Git installed if you want repository details in `yoo`, `yoo fetch`, `yoo project`, or `yoo doctor`
-
-#All package managers install the same official binaries released from GitHub Releases.
-
-### Cargo (cross-platform)
+### Cargo (Recommended)
 
 ```bash
 cargo install yoo
 ```
 
-Update later:
-
-```bash
-cargo install yoo --force
-```
-
-### npm (cross-platform binary installer)
+### npm
 
 ```bash
 npm install -g @nihitde_v/yoo
 ```
-
-The npm package downloads the matching prebuilt binary from GitHub Releases. It currently supports Windows x64, Linux x64, and macOS arm64.
-
-The npm wrapper package lives in `packages/npm` to keep the repository root focused on the Rust CLI.
 
 ### pnpm
 
@@ -173,43 +156,45 @@ pnpm add -g @nihitde_v/yoo
 ### Bun
 
 ```bash
-bun install -g @nihitde_v/yoo
+bun add -g @nihitde_v/yoo
 ```
 
 ### Scoop (Windows)
 
 ```powershell
-scoop bucket add nihitdev https://github.com/nihitdev/scoop-nihitdev
+scoop bucket add nihitdev https://github.com/nihitdev/scoop-bucket
 scoop install yoo
 ```
 
-Update later:
+### Chocolatey (Windows)
 
 ```powershell
-scoop update
-yoo --version
-scoop update yoo
+choco install yoo
 ```
+
+> **Note:** The Chocolatey package is currently awaiting moderation. Once approved, the command above will work.
+
+### WinGet (Windows)
+
+```powershell
+winget install Nihitdev.Yoo
+```
+
+> **Note:** The WinGet package is currently under review by Microsoft.
+
 ### Arch Linux (AUR)
 
 ```bash
 yay -S yoo-bin
 ```
-> [!TIP]
-> The Scoop bucket, AUR package, and future Homebrew formula are maintained automatically from GitHub releases.
 
-### WinGet (Windows)
-
-> Available after the current community PR is merged.
-
-```powershell
-winget install --id Nihitdev.Yoo
-```
-### Homebrew (Coming soon)
+### Build from Source
 
 ```bash
-brew tap nihitdev/nihitdev
-brew install yoo
+git clone https://github.com/nihitdev/yo-cli.git
+cd yo-cli
+cargo build --release
+cargo install --path .
 ```
 
 Start your first developer session:
