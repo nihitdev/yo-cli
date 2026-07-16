@@ -155,7 +155,7 @@ cargo install yoo --force
 ### npm (cross-platform binary installer)
 
 ```bash
-npm install -g @nihitdev/yoo
+npm install -g @nihitde_v/yoo
 ```
 
 The npm package downloads the matching prebuilt binary from GitHub Releases. It currently supports Windows x64, Linux x64, and macOS arm64.
@@ -176,10 +176,17 @@ scoop update
 yoo --version
 scoop update yoo
 ```
+### Arch Linux (AUR)
+
+```bash
+yay -S yoo-bin
+```
+> [!TIP]
+> The Scoop bucket, AUR package, and future Homebrew formula are maintained automatically from GitHub releases.
 
 ### WinGet (Windows)
 
-The package is being prepared for the official WinGet community repository.
+Available soon through the official WinGet community repository. The package is currently awaiting review.
 
 ```powershell
 winget install --id Nihitdev.Yoo
