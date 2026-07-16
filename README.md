@@ -123,7 +123,7 @@ yoo project — project overview
 🔧 Language:        Rust
 📦 Package manager: Cargo
 📄 Manifest:        Cargo.toml
-🏷 Version:         0.6.3
+🏷 Version:         0.6.4
 🦀 Edition:         2024
 ⚖ License:          GPL-3.0-or-later
 
@@ -481,3 +481,4 @@ See [LICENSE](LICENSE) for details.
 ---
 
 Built with ❤️ and Rust by [@nihitdev](https://github.com/nihitdev).
+
