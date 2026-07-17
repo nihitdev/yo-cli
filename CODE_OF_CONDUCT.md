@@ -35,10 +35,11 @@ This Code of Conduct applies within all project spaces, including GitHub issues,
 
 ## Enforcement
 
-If you experience or witness unacceptable behavior, please contact the maintainer:
+If you experience or witness unacceptable behavior, please contact the maintainer privately:
 
-- **Nihit**
+- Maintainer: Nihit
 - GitHub: https://github.com/nihitdev
+- Email: nihit429@gmail.com
 
 All reports will be reviewed and handled respectfully and confidentially whenever possible.
 
