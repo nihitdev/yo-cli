@@ -5,34 +5,48 @@
 </p>
 
 <p align="center">
-  Start a session with useful project details, environment checks, tip packs, a focus timer, and a fast project overview.
+  Start a terminal session with project details, environment checks, source statistics, Git status, tip packs, themes, and a local focus timer.
 </p>
 
 <p align="center">
   <a href="https://crates.io/crates/yoo">
-    <img src="https://img.shields.io/crates/v/yoo?style=for-the-badge&amp;logo=rust&amp;label=crates.io" alt="Crates.io version">
+    <img src="https://img.shields.io/crates/v/yoo?style=for-the-badge&logo=rust&label=crates.io" alt="Crates.io version">
   </a>
   <a href="https://crates.io/crates/yoo">
-    <img src="https://img.shields.io/crates/d/yoo?style=for-the-badge&amp;label=downloads" alt="Crates.io downloads">
+    <img src="https://img.shields.io/crates/d/yoo?style=for-the-badge&label=crate%20downloads" alt="Crates.io downloads">
   </a>
-  <a href="https://github.com/nihitdev/scoop-nihitdev">
-    <img src="https://img.shields.io/badge/Scoop-nihitdev-blue?style=for-the-badge" alt="Available via Scoop">
+  <a href="https://www.npmjs.com/package/@nihitde_v/yoo">
+    <img src="https://img.shields.io/npm/v/@nihitde_v/yoo?style=for-the-badge&logo=npm&label=npm" alt="npm version">
   </a>
+  <a href="https://github.com/nihitdev/yo-cli/releases/latest">
+    <img src="https://img.shields.io/github/v/release/nihitdev/yo-cli?style=for-the-badge&logo=github" alt="Latest GitHub release">
+  </a>
+</p>
+
+<p align="center">
   <a href="https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml">
-    <img src="https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml/badge.svg" alt="CI status">
+    <img src="https://img.shields.io/github/actions/workflow/status/nihitdev/yo-cli/ci.yml?branch=main&style=flat-square&logo=githubactions&label=CI" alt="CI status">
   </a>
+  <a href="https://github.com/nihitdev/yo-cli/releases">
+    <img src="https://img.shields.io/github/downloads/nihitdev/yo-cli/total?style=flat-square&logo=github" alt="GitHub downloads">
+  </a>
+  <a href="https://github.com/nihitdev/yo-cli">
+    <img src="https://img.shields.io/github/repo-size/nihitdev/yo-cli?style=flat-square" alt="Repository size">
+  </a>
+  <img src="https://img.shields.io/badge/Rust-2024-orange?style=flat-square&logo=rust" alt="Rust 2024 edition">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=flat-square" alt="Supported platforms">
   <a href="LICENSE">
-    <img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue?style=for-the-badge" alt="GPL-3.0-or-later license">
+    <img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue?style=flat-square" alt="GPL-3.0-or-later license">
   </a>
 </p>
 
 ## What is yoo?
 
-`yoo` is a Rust CLI that makes opening a terminal feel a little better.
+`yoo` is a fast Rust CLI that makes opening a terminal feel a little better.
 
 It gives you a friendly developer-session greeting, shows project and Git state, checks your Rust setup, fetches environment information, analyses the project in the current directory, offers practical tips, and includes a local focus timer.
 
-It is intentionally small: no telemetry, no daemon, no network calls, and no heavy runtime.
+**Private by default:** no telemetry, no daemon, no AI service, and no project data sent anywhere.
 
 ```text
 Terminal open. Brain online. Let's go. ⚡
@@ -47,7 +61,7 @@ Terminal open. Brain online. Let's go. ⚡
 ## Quick start
 
 ```bash
-cargo install yoo
+cargo binstall yoo
 yoo
 yoo doctor
 yoo project
@@ -57,6 +71,7 @@ Use `yoo --fast` when you want the greeting without the typewriter animation.
 
 ## Features
 
+- 📊 Counts source files and lines while skipping dependencies, caches, and build output
 - 🚀 Friendly developer session starter
 - 🩺 `yoo doctor` for Rust, Cargo, Git, config, and project checks
 - ⚡ `yoo fetch` for developer-environment and project detection
@@ -127,20 +142,17 @@ yoo project — project overview
 🦀 Edition:         2024
 ⚖ License:          GPL-3.0-or-later
 
-📁 Source files:    10
-📏 Source lines:    2,000+
+📁 Source files:    13
+📏 Source lines:    2,936
 🌿 Git branch:      main
 ✏️ Working tree:    clean
+📜 Commits:         36
+🏷 Latest tag:      v0.6.4
 ```
 
 ## 📦 Installation
 
-### Cargo (Recommended)
-
-```bash
-cargo install yoo
-```
-### Cargo Binstall (Fast)
+### Cargo Binstall (Fastest)
 
 Download a prebuilt binary from GitHub Releases instead of compiling from source:
 
@@ -152,6 +164,12 @@ Install Cargo Binstall first when needed:
 
 ```bash
 cargo install cargo-binstall
+```
+
+### Cargo
+
+```bash
+cargo install yoo
 ```
 
 ### npm
@@ -300,11 +318,11 @@ Example fields include:
 
 ```json
 {
-  "yoo_version": "0.6.3",
+  "yoo_version": "0.6.4",
   "project": {
     "name": "yoo",
     "language": "Rust",
-    "version": "0.6.3"
+    "version": "0.6.4"
   },
   "git": {
     "branch": "main",
@@ -419,6 +437,7 @@ yoo tip team
 | `yoo doctor` says config is missing | Run `yoo init`; defaults are still used until then |
 | No colours appear | Check whether output is redirected, or use a terminal that supports ANSI colours |
 | Git branch is missing | Run the command inside a Git repository and make sure `git` is in `PATH` |
+| `cargo install yoo` takes too long | Use `cargo binstall yoo` to download a prebuilt binary |
 | `cargo install yoo` fails | Update Rust with `rustup update`, then retry |
 | JSON command rejects display flags | Remove `--plain`, `--no-art`, or `--theme` when using `--json` |
 
@@ -462,22 +481,23 @@ cargo build --release --locked
 - [x] JSON output for `yoo fetch` and `yoo project`
 - [x] AUR package
 - [x] Automated cross-platform GitHub releases
+- [x] Cargo Binstall support
 - [ ] More tip packs from contributors
 - [ ] Shell completion support
 - [ ] Better terminal accessibility options
+## Package ecosystem
 
-   ## Package Ecosystem
-
-| Platform | Status |
-|-----------|--------|
-| crates.io | ✅ |
-| npm | ✅ |
-| pnpm | ✅ |
-| Bun | ✅ |
-| Scoop | ✅ |
-| Arch Linux (AUR) | ✅ |
-| WinGet | ⏳ Pending review |
-| Homebrew | 🚧 Planned |
+| Platform | Command | Status |
+| :-- | :-- | :--: |
+| Cargo Binstall | `cargo binstall yoo` | ✅ |
+| crates.io | `cargo install yoo` | ✅ |
+| npm | `npm install -g @nihitde_v/yoo` | ✅ |
+| pnpm | `pnpm add -g @nihitde_v/yoo` | ✅ |
+| Bun | `bun add -g @nihitde_v/yoo` | ✅ |
+| Scoop | `scoop install yoo` | ✅ |
+| Arch Linux (AUR) | `yay -S yoo-bin` | ✅ |
+| Chocolatey | `choco install yoo` | ⏳ Review |
+| WinGet | `winget install Nihitdev.Yoo` | ⏳ Review |
 
 ## Contributing
 
@@ -493,5 +513,5 @@ See [LICENSE](LICENSE) for details.
 
 ---
 
-Built with ❤️ and Rust by [@nihitdev](https://github.com/nihitdev).
+<p align="center">Built with ❤️ and Rust by <a href="https://github.com/nihitdev">@nihitdev</a></p>
 
