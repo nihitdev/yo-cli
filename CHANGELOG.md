@@ -4,6 +4,18 @@ All notable changes to `yoo` are documented here.
 
 The format follows the spirit of Keep a Changelog: user-visible changes are grouped by release and by type.
 
+## [0.6.5] - 2026-07-21
+
+### Added
+
+- Made `yoo doctor` detect Rust, Node.js, Python, Go, Java, and .NET projects.
+- Added a test covering non-Rust project detection in `yoo doctor`.
+
+### Changed
+
+- Reworked the README around yoo's core developer-session workflow with a shorter, screenshot-first presentation.
+- Corrected all npm package references to the published `@nihitde_v/yoo` scope.
+
 ## [0.6.3] - 2026-07-13
 
 ### Added

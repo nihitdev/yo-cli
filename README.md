@@ -210,11 +210,11 @@ Example project fields:
 
 ```json
 {
-  "yoo_version": "0.6.4",
+  "yoo_version": "0.6.5",
   "project": {
     "name": "yoo",
     "language": "Rust",
-    "version": "0.6.4"
+    "version": "0.6.5"
   },
   "git": {
     "branch": "main",
@@ -228,7 +228,7 @@ Example terminal output:
 ```text
 📦 Name:            yoo
 🔧 Language:        Rust
-🏷 Version:         0.6.4
+🏷 Version:         0.6.5
 ```
 
 `--json` cannot be combined with display options such as `--plain`, `--no-art`, or `--theme`.
