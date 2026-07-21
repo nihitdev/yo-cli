@@ -8,7 +8,7 @@ const exe = process.platform === "win32" ? "yoo.exe" : "yoo";
 const binary = join(__dirname, "..", "vendor", exe);
 
 if (!existsSync(binary)) {
-  console.error("yoo binary is missing. Try reinstalling @nihitdev/yoo.");
+  console.error("yoo binary is missing. Try reinstalling @nihitde_v/yoo.");
   process.exit(1);
 }
 
