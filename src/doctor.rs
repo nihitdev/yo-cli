@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{config, git};
+use crate::{config, fetch, git};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
@@ -133,19 +133,19 @@ fn config_check() -> Check {
 }
 
 fn project_check(directory: &Path) -> Check {
-    let manifest = directory.join("Cargo.toml");
+    let project = fetch::detect_project(directory);
 
-    if manifest.is_file() {
+    if let Some(manifest) = project.manifest {
         Check {
-            label: "Rust project",
+            label: "Project",
             status: Status::Pass,
-            detail: "Cargo.toml found".to_owned(),
+            detail: format!("{} detected ({manifest})", project.kind),
         }
     } else {
         Check {
-            label: "Rust project",
+            label: "Project",
             status: Status::Warn,
-            detail: "Cargo.toml not found in this directory".to_owned(),
+            detail: "no supported project manifest found in this directory".to_owned(),
         }
     }
 }
@@ -197,5 +197,22 @@ mod tests {
         assert_eq!(report.pass_count(), 1);
         assert_eq!(report.warn_count(), 1);
         assert_eq!(report.fail_count(), 1);
+    }
+
+    #[test]
+    fn project_check_detects_non_rust_projects() {
+        let directory =
+            std::env::temp_dir().join(format!("yoo-doctor-node-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).expect("test directory should be created");
+        std::fs::write(directory.join("package.json"), "{}")
+            .expect("package manifest should be written");
+
+        let check = project_check(&directory);
+
+        assert_eq!(check.label, "Project");
+        assert_eq!(check.status, Status::Pass);
+        assert_eq!(check.detail, "Node.js detected (package.json)");
+
+        std::fs::remove_dir_all(directory).expect("test directory should be removed");
     }
 }

@@ -1,9 +1,9 @@
-# @nihitdev/yoo
+# @nihitde_v/yoo
 
 npm installer for `yoo`, a tiny developer companion for better coding sessions.
 
 ```bash
-npm install -g @nihitdev/yoo
+npm install -g @nihitde_v/yoo
 yoo
 ```
 
