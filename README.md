@@ -1,11 +1,7 @@
 # yoo
 
 <p align="center">
-  <strong>Know your project. Check your setup. Start coding.</strong>
-</p>
-
-<p align="center">
-  <code>yoo</code> is a fast, local-first CLI for starting a development session with the context that matters.
+  A small, local-first CLI for viewing project, Git, and development environment information.
 </p>
 
 <p align="center">
@@ -24,31 +20,30 @@
   <img src="docs/images/hero.png" alt="yoo showing a developer session summary" width="780">
 </p>
 
-## Why yoo?
+## About
 
-Opening a project often means checking the same things again: the active branch, working-tree state, available tools, project type, and repository health.
-
-`yoo` puts that context behind a few memorable commands:
+`yoo` collects common project and environment checks in a few commands:
 
 ```bash
-yoo             # start the session
-yoo doctor      # check the setup
-yoo project     # inspect the repository
+yoo             # show a session summary
+yoo doctor      # check development tools and configuration
+yoo project     # inspect the current repository
 ```
 
-It stays intentionally small:
+The project is:
 
-- **Local only:** no telemetry, accounts, network calls, daemon, or AI service
-- **Fast:** written in Rust with only three runtime dependencies
-- **Useful anywhere:** Windows, Linux, and macOS
-- **Scriptable:** clean JSON from `yoo fetch --json` and `yoo project --json`
+- local-only, with no telemetry, accounts, daemon, or AI service
+- written in Rust
+- available on Windows, Linux, and macOS
+- usable in scripts through `yoo fetch --json` and `yoo project --json`
 
 ## Quick start
 
-Install a prebuilt binary:
+On Windows:
 
-```bash
-cargo binstall yoo
+```powershell
+winget source update
+winget install --id Nihitdev.yoo --exact
 ```
 
 Then run:
@@ -125,24 +120,41 @@ If needed, install Cargo Binstall first with `cargo install cargo-binstall`.
 cargo install yoo
 ```
 
-### npm, pnpm, or Bun
+### npm
 
 ```bash
 npm install -g @nihitde_v/yoo
-# or: pnpm add -g @nihitde_v/yoo
-# or: bun add -g @nihitde_v/yoo
 ```
 
-The npm wrapper downloads the matching prebuilt binary from GitHub Releases.
+### pnpm
 
-### Windows
+```bash
+pnpm add -g @nihitde_v/yoo
+```
+
+### Bun
+
+```bash
+bun add -g @nihitde_v/yoo
+```
+
+These packages download the matching prebuilt binary from GitHub Releases.
+
+### WinGet
+
+```powershell
+winget source update
+winget install --id Nihitdev.yoo --exact
+```
+
+### Scoop
 
 ```powershell
 scoop bucket add nihitdev https://github.com/nihitdev/scoop-bucket
 scoop install yoo
 ```
 
-Chocolatey and WinGet packages are awaiting registry review.
+The Chocolatey package is awaiting registry review.
 
 ### Arch Linux
 
@@ -326,7 +338,3 @@ Contributions should stay focused and keep yoo lightweight. See [CONTRIBUTING.md
 ## License
 
 GPL-3.0-or-later. See [LICENSE](LICENSE).
-
----
-
-<p align="center">Built with ❤️ and Rust by <a href="https://github.com/nihitdev">@nihitdev</a></p>
