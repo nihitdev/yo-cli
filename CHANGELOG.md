@@ -4,6 +4,19 @@ All notable changes to `yoo` are documented here.
 
 The format follows the spirit of Keep a Changelog: user-visible changes are grouped by release and by type.
 
+## [0.6.6] - 2026-07-30
+
+### Changed
+
+- Simplified the README and documented each supported installation method separately.
+- Added the published WinGet installation commands.
+
+### Fixed
+
+- Made .NET project-file detection case-insensitive.
+- Made README and license detection consistent across case-sensitive filesystems.
+- Stopped unrelated files in `.github/workflows` from being reported as GitHub Actions workflows.
+
 ## [0.6.5] - 2026-07-21
 
 ### Added
