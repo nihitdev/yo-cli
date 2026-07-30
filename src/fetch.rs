@@ -259,10 +259,11 @@ pub fn detect_project(directory: &Path) -> ProjectInfo {
     }
 
     if let Some(project_file) = first_project_file(directory, |path| {
-        matches!(
-            path.extension().and_then(|extension| extension.to_str()),
-            Some("sln" | "csproj")
-        )
+        path.extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| {
+                extension.eq_ignore_ascii_case("sln") || extension.eq_ignore_ascii_case("csproj")
+            })
     }) {
         let manifest = project_file
             .file_name()
@@ -395,5 +396,21 @@ version = "0.6.1" # inline comment
         let report = collect(&std::env::temp_dir());
         assert!(!report.environment.os.is_empty());
         assert!(!report.project.name.is_empty());
+    }
+
+    #[test]
+    fn detects_dotnet_project_extensions_case_insensitively() {
+        let directory =
+            std::env::temp_dir().join(format!("yoo-fetch-dotnet-{}", std::process::id()));
+        fs::create_dir_all(&directory).expect("test directory should be created");
+        fs::write(directory.join("Demo.CSPROJ"), "<Project />\n")
+            .expect("project file should be written");
+
+        let project = detect_project(&directory);
+
+        assert_eq!(project.kind, ".NET");
+        assert_eq!(project.manifest.as_deref(), Some("Demo.CSPROJ"));
+
+        fs::remove_dir_all(directory).expect("test directory should be removed");
     }
 }

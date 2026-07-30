@@ -307,7 +307,7 @@ fn source_extensions(language: &str) -> &'static [&'static str] {
 }
 
 fn any_file_exists(directory: &Path, candidates: &[&str]) -> bool {
-    candidates.iter().any(|name| directory.join(name).is_file())
+    find_named_file(directory, candidates).is_some()
 }
 
 fn has_ci_workflow(directory: &Path) -> bool {
@@ -315,18 +315,45 @@ fn has_ci_workflow(directory: &Path) -> bool {
 
     fs::read_dir(workflows)
         .map(|entries| {
-            entries
-                .filter_map(Result::ok)
-                .any(|entry| entry.path().is_file())
+            entries.filter_map(Result::ok).any(|entry| {
+                let path = entry.path();
+                path.is_file()
+                    && path
+                        .extension()
+                        .and_then(|extension| extension.to_str())
+                        .is_some_and(|extension| {
+                            extension.eq_ignore_ascii_case("yaml")
+                                || extension.eq_ignore_ascii_case("yml")
+                        })
+            })
         })
         .unwrap_or(false)
 }
 
 fn find_license_file(directory: &Path) -> Option<String> {
-    ["LICENSE", "LICENSE.md", "LICENCE", "LICENCE.md"]
-        .iter()
-        .find(|name| directory.join(name).is_file())
-        .map(|name| (*name).to_owned())
+    find_named_file(
+        directory,
+        &["LICENSE", "LICENSE.md", "LICENCE", "LICENCE.md"],
+    )
+}
+
+fn find_named_file(directory: &Path, candidates: &[&str]) -> Option<String> {
+    fs::read_dir(directory)
+        .ok()?
+        .filter_map(Result::ok)
+        .find_map(|entry| {
+            let file_type = entry.file_type().ok()?;
+            if !file_type.is_file() {
+                return None;
+            }
+
+            let name = entry.file_name();
+            let name = name.to_str()?;
+            candidates
+                .iter()
+                .any(|candidate| name.eq_ignore_ascii_case(candidate))
+                .then(|| name.to_owned())
+        })
 }
 
 fn format_number(value: usize) -> String {
@@ -414,6 +441,38 @@ license = "MIT"
             package_manager(&directory, "Node.js").as_deref(),
             Some("pnpm")
         );
+
+        fs::remove_dir_all(directory).expect("test directory should be removed");
+    }
+
+    #[test]
+    fn recognises_project_files_case_insensitively() {
+        let directory = temporary_directory();
+
+        fs::write(directory.join("ReadMe.MD"), "# Demo\n").expect("README should be written");
+        fs::write(directory.join("license"), "MIT\n").expect("license should be written");
+
+        let report = collect(&directory);
+
+        assert!(report.files.readme);
+        assert!(report.files.license);
+        assert_eq!(report.project.license.as_deref(), Some("license"));
+
+        fs::remove_dir_all(directory).expect("test directory should be removed");
+    }
+
+    #[test]
+    fn only_yaml_files_count_as_github_actions_workflows() {
+        let directory = temporary_directory();
+        let workflows = directory.join(".github").join("workflows");
+        fs::create_dir_all(&workflows).expect("workflow directory should be created");
+        fs::write(workflows.join("README.md"), "Not a workflow\n")
+            .expect("README should be written");
+
+        assert!(!has_ci_workflow(&directory));
+
+        fs::write(workflows.join("CI.YML"), "name: CI\n").expect("workflow should be written");
+        assert!(has_ci_workflow(&directory));
 
         fs::remove_dir_all(directory).expect("test directory should be removed");
     }
