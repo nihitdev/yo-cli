@@ -6,3 +6,6 @@ manifests/
 
 packages/npm/*.tgz
 packages/npm/vendor/
+
+# Temporary package-manager contribution checkouts
+winget-pkgs-update/
