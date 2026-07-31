@@ -3,7 +3,7 @@
 <p align="center">
   A small, local-first CLI for viewing project, Git, and development environment information.
 </p>
-📚 **[Read the complete yoo CLI Wiki](https://github.com/nihitdev/yo-cli/wiki)**
+📚 Read the complete yo-CLI Wiki (https://github.com/nihitdev/yo-cli/wiki)
 
 <p align="center">
   <a href="https://crates.io/crates/yoo"><img src="https://img.shields.io/crates/v/yoo?style=for-the-badge&logo=rust&label=crates.io" alt="Crates.io version"></a>
