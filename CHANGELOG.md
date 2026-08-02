@@ -13,6 +13,10 @@ The format follows the spirit of Keep a Changelog: user-visible changes are grou
 - Updated GitHub Actions dependencies to Node.js 24-compatible releases.
 - Reordered the README so the complete screenshot gallery appears before installation methods and removed the duplicate basic-usage section.
 
+### Fixed
+
+- Updated Catppuccin to its Mocha Mauve and Surface 2 colors, and Dracula to its Pink and Comment colors, so both themes use their real palettes and remain visually distinct.
+
 ## [0.9.0] - 2026-08-02
 
 ### Added

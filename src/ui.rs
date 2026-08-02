@@ -61,12 +61,14 @@ impl Theme {
             Self::Neon => "95",
             Self::Ocean => "96",
             Self::Mono => "37",
-            Self::Dracula => "95",
+            // Dracula Pink (#ff79c6).
+            Self::Dracula => "38;2;255;121;198",
             Self::TokyoNight => "94",
             Self::Gruvbox => "93",
             Self::Nord => "96",
             Self::RosePine => "95",
-            Self::Catppuccin => "94",
+            // Catppuccin Mocha Mauve (#cba6f7).
+            Self::Catppuccin => "38;2;203;166;247",
         }
     }
 
@@ -75,12 +77,14 @@ impl Theme {
             Self::Neon => "92",
             Self::Ocean => "94",
             Self::Mono => "90",
-            Self::Dracula => "35",
+            // Dracula Comment (#6272a4).
+            Self::Dracula => "38;2;98;114;164",
             Self::TokyoNight => "36",
             Self::Gruvbox => "33",
             Self::Nord => "36",
             Self::RosePine => "35",
-            Self::Catppuccin => "36",
+            // Catppuccin Mocha Surface 2 (#585b70).
+            Self::Catppuccin => "38;2;88;91;112",
         }
     }
 }
@@ -170,5 +174,25 @@ mod tests {
         assert_eq!(Theme::parse("tokyonight"), Some(Theme::TokyoNight));
         assert_eq!(Theme::parse("rose-pine"), Some(Theme::RosePine));
         assert_eq!(Theme::parse("unknown"), None);
+    }
+
+    #[test]
+    fn catppuccin_uses_the_mocha_palette() {
+        assert_eq!(Theme::Catppuccin.accent(), "38;2;203;166;247");
+        assert_eq!(Theme::Catppuccin.muted(), "38;2;88;91;112");
+
+        let ui = Ui::new(Theme::Catppuccin, true, 0);
+        assert_eq!(
+            ui.paint("yoo", Theme::Catppuccin.accent(), true),
+            "\x1b[1;38;2;203;166;247myoo\x1b[0m"
+        );
+    }
+
+    #[test]
+    fn dracula_uses_its_own_palette() {
+        assert_eq!(Theme::Dracula.accent(), "38;2;255;121;198");
+        assert_eq!(Theme::Dracula.muted(), "38;2;98;114;164");
+        assert_ne!(Theme::Dracula.accent(), Theme::Catppuccin.accent());
+        assert_ne!(Theme::Dracula.muted(), Theme::Catppuccin.muted());
     }
 }
