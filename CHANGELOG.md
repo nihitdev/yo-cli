@@ -10,6 +10,7 @@ The format follows the spirit of Keep a Changelog: user-visible changes are grou
 
 - Added detailed installation and shell-completion guides and linked them from the README.
 - Replaced product-style documentation language with factual project descriptions and expanded contribution guidance.
+- Updated GitHub Actions dependencies to Node.js 24-compatible releases.
 
 ## [0.9.0] - 2026-08-02
 

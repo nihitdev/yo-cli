@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -63,7 +63,7 @@ jobs:
             "raw/${{ matrix.raw_name }}"
 
       - name: Upload raw binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: raw-${{ matrix.target }}
           path: raw/${{ matrix.raw_name }}
@@ -137,7 +137,7 @@ jobs:
             -DestinationPath "dist/${{ matrix.binstall_archive }}.zip"
 
       - name: Upload archives
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: archives-${{ matrix.target }}
           path: dist/*
@@ -150,10 +150,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: release
           merge-multiple: true
@@ -174,7 +174,7 @@ jobs:
           bash scripts/release-notes.sh "${GITHUB_REF_NAME}" > release-notes.md
 
       - name: Publish GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           body_path: release-notes.md
           overwrite_files: true
