@@ -2,11 +2,7 @@
 
 <p align="center">
   A small, local-first CLI for viewing project, Git, and development environment information.
-</p>
-
-📚 Read the complete yo-CLI Wiki (https://github.com/nihitdev/yo-cli/wiki)
-📚 **[Read the complete yoo CLI Wiki](https://github.com/nihitdev/yo-cli/wiki)**
-=======
+</p
 
 <p align="center">
   📚 <strong><a href="https://github.com/nihitdev/yo-cli/wiki">Read the complete yoo CLI Wiki</a></strong>
