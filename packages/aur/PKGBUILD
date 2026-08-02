@@ -1,0 +1,32 @@
+pkgname=yoo-bin
+pkgver=0.7.0
+pkgrel=1
+pkgdesc="A tiny developer companion for better coding sessions"
+arch=('x86_64')
+url="https://github.com/nihitdev/yo-cli"
+license=('GPL-3.0-or-later')
+
+provides=('yoo')
+conflicts=('yoo')
+
+source=(
+  "https://github.com/nihitdev/yo-cli/releases/download/v${pkgver}/yoo-v${pkgver}-linux-x86_64.tar.gz"
+)
+
+sha256sums=(
+  '7f8186a51956445ae2ebe336e66c6b516a028a9381345a31c42bb8abf1eaf38c'
+)
+
+package() {
+  install -Dm755 \
+    "${srcdir}/yoo-v${pkgver}-linux-x86_64/yoo" \
+    "${pkgdir}/usr/bin/yoo"
+
+  install -Dm644 \
+    "${srcdir}/yoo-v${pkgver}-linux-x86_64/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+  install -Dm644 \
+    "${srcdir}/yoo-v${pkgver}-linux-x86_64/README.md" \
+    "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}
