@@ -1,5 +1,6 @@
 mod app;
 mod args;
+mod completions;
 mod config;
 mod content;
 mod doctor;

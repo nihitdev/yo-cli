@@ -4,6 +4,17 @@ All notable changes to `yoo` are documented here.
 
 The format follows the spirit of Keep a Changelog: user-visible changes are grouped by release and by type.
 
+## [0.9.0] - 2026-08-02
+
+### Added
+
+- Added generated shell completions for Bash, Zsh, Fish, and PowerShell.
+- Added a checksum-verified installer for supported Linux and macOS binaries.
+
+### Changed
+
+- GitHub releases now use the matching version section from this changelog as their release notes.
+
 ## [0.7.0] - 2026-08-02
 
 ### Changed

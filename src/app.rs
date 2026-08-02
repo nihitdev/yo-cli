@@ -28,6 +28,10 @@ pub fn execute(command: Command) -> Result<(), Box<dyn Error>> {
         Command::Session(options) => session(options),
         Command::Tip(pack) => print_tip(pack),
         Command::Tips => list_tips(),
+        Command::Completions(shell) => {
+            crate::completions::print(shell)?;
+            Ok(())
+        }
         Command::Help => {
             print!("{}", args::help_text());
             Ok(())

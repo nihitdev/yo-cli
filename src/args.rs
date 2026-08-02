@@ -41,6 +41,7 @@ pub enum Command {
     Session(SessionOptions),
     Tip(Option<String>),
     Tips,
+    Completions(crate::completions::Shell),
     Help,
     Version,
 }
@@ -58,11 +59,22 @@ pub fn parse(arguments: &[String]) -> Result<Command, String> {
         "fetch" | "status" => parse_fetch(&arguments[1..]),
         "project" => parse_project(&arguments[1..]),
         "tips" => require_standalone(arguments, Command::Tips),
+        "completions" => parse_completions(&arguments[1..]),
         "tip" => parse_tip(&arguments[1..]),
         "session" => parse_session(&arguments[1..]),
         "version" | "--version" | "-V" => require_standalone(arguments, Command::Version),
         _ => parse_run(arguments),
     }
+}
+
+fn parse_completions(arguments: &[String]) -> Result<Command, String> {
+    let [shell] = arguments else {
+        return Err("usage: yoo completions <bash|zsh|fish|powershell>".to_owned());
+    };
+
+    crate::completions::Shell::parse(shell)
+        .map(Command::Completions)
+        .ok_or_else(|| format!("unsupported shell `{shell}`; use bash, zsh, fish, or powershell"))
 }
 
 fn parse_run(arguments: &[String]) -> Result<Command, String> {
@@ -240,6 +252,7 @@ COMMANDS:
   session [MINUTES]       Start a local coding-session timer (default comes from config)
   tip [PACK]              Print one random tip; PACK defaults to your configured pack
   tips                    List built-in and locally installed community tip packs
+  completions <SHELL>     Generate completions for Bash, Zsh, Fish, or PowerShell
   version                 Print version
   help                    Print this help message
 
@@ -273,6 +286,7 @@ EXAMPLES:
   yoo session 45
   yoo tip rust
   yoo tips
+  yoo completions bash
   yoo init
 "#
 }
@@ -382,6 +396,15 @@ mod tests {
     fn parses_version_command() {
         assert_eq!(parse(&values(&["version"])), Ok(Command::Version));
         assert_eq!(parse(&values(&["--version"])), Ok(Command::Version));
+    }
+
+    #[test]
+    fn parses_completion_shell() {
+        assert_eq!(
+            parse(&values(&["completions", "powershell"])),
+            Ok(Command::Completions(crate::completions::Shell::Powershell))
+        );
+        assert!(parse(&values(&["completions", "unknown"])).is_err());
     }
 
     #[test]

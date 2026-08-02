@@ -110,6 +110,17 @@ yoo fetch
 
 ## Installation
 
+### Installer script
+
+On supported Linux x86-64 and Apple Silicon macOS systems:
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://raw.githubusercontent.com/nihitdev/yo-cli/main/install.sh | sh
+```
+
+The installer verifies the downloaded binary against the release's published SHA-256 checksum and installs it to `~/.local/bin`. Override the destination with `YOO_INSTALL_DIR` or install a specific release with `YOO_VERSION=0.9.0`.
+
 ### Prebuilt binary with Cargo Binstall
 
 ```bash
@@ -180,6 +191,7 @@ cargo install --path .
 | `yoo session [MINUTES]` | Start a local focus timer |
 | `yoo tip [PACK]` | Print a tip from a built-in or local pack |
 | `yoo tips` | List available tip packs |
+| `yoo completions <SHELL>` | Generate Bash, Zsh, Fish, or PowerShell completions |
 | `yoo init` | Create the default config and sample tip pack |
 | `yoo config` | Print the active config path |
 | `yoo help` | Show complete CLI help |
@@ -192,6 +204,32 @@ yoo --theme tokyo-night
 yoo --plain
 yoo --no-art
 yoo project --plain
+```
+
+## Shell completions
+
+Generate completions from the installed binary:
+
+```bash
+# Bash
+mkdir -p ~/.local/share/bash-completion/completions
+yoo completions bash > ~/.local/share/bash-completion/completions/yoo
+
+# Zsh
+mkdir -p ~/.zfunc
+yoo completions zsh > ~/.zfunc/_yoo
+
+# Fish
+mkdir -p ~/.config/fish/completions
+yoo completions fish > ~/.config/fish/completions/yoo.fish
+```
+
+For Zsh, ensure `~/.zfunc` is included in `fpath` before `compinit` runs.
+
+For PowerShell, add this line to your profile:
+
+```powershell
+yoo completions powershell | Out-String | Invoke-Expression
 ```
 
 ## Project detection
@@ -220,11 +258,11 @@ Example project fields:
 
 ```json
 {
-  "yoo_version": "0.7.0",
+  "yoo_version": "0.9.0",
   "project": {
     "name": "yoo",
     "language": "Rust",
-    "version": "0.7.0"
+    "version": "0.9.0"
   },
   "git": {
     "branch": "main",
@@ -238,7 +276,7 @@ Example terminal output:
 ```text
 📦 Name:            yoo
 🔧 Language:        Rust
-🏷 Version:         0.7.0
+🏷 Version:         0.9.0
 ```
 
 `--json` cannot be combined with display options such as `--plain`, `--no-art`, or `--theme`.

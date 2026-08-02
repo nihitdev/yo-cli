@@ -58,6 +58,20 @@ fn invalid_arguments_exit_with_usage_error() {
 }
 
 #[test]
+fn completion_commands_generate_shell_scripts() {
+    for (shell, marker) in [
+        ("bash", "complete -F _yoo yoo"),
+        ("zsh", "#compdef yoo"),
+        ("fish", "complete -c yoo"),
+        ("powershell", "Register-ArgumentCompleter"),
+    ] {
+        let output = yoo(&std::env::temp_dir(), &["completions", shell]);
+        assert!(output.status.success());
+        assert!(String::from_utf8_lossy(&output.stdout).contains(marker));
+    }
+}
+
+#[test]
 fn redirected_display_output_does_not_contain_ansi_codes() {
     let output = yoo(&std::env::temp_dir(), &["fetch", "--no-art"]);
 
