@@ -160,12 +160,6 @@ scoop install yoo
 
 The Chocolatey package is awaiting registry review.
 
-### Arch Linux
-
-```bash
-yay -S yoo-bin
-```
-
 ### Build from source
 
 ```bash
