@@ -20,10 +20,6 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue?style=flat-square" alt="GPL-3.0-or-later license"></a>
 </p>
 
-<p align="center">
-  <img src="docs/images/hero.png" alt="yoo showing a developer session summary" width="780">
-</p>
-
 ## Overview
 
 `yoo` collects common project and environment checks in a few commands:
@@ -41,26 +37,7 @@ The project is:
 - available on Windows, Linux, and macOS
 - usable in scripts through `yoo fetch --json` and `yoo project --json`
 
-## Basic usage
-
-On Windows:
-
-```powershell
-winget source update
-winget install --id Nihitdev.yoo --exact
-```
-
-Then run:
-
-```bash
-yoo --fast
-yoo doctor
-yoo project
-```
-
-No configuration is required. Run `yoo init` only when you want to customize the theme, profile, timer, or tip packs.
-
-## Usage
+## Screenshots
 
 ### 1. Start a coding session
 
@@ -106,6 +83,26 @@ yoo fetch
 
 <p align="center">
   <img src="docs/images/fetch.png" alt="yoo fetch showing developer environment information" width="780">
+</p>
+
+### 5. Start a local session timer
+
+```bash
+yoo session 25
+```
+
+<p align="center">
+  <img src="docs/images/session.png" alt="yoo local coding-session timer" width="780">
+</p>
+
+### 6. View installed tip packs
+
+```bash
+yoo tips
+```
+
+<p align="center">
+  <img src="docs/images/tips.png" alt="yoo installed tip packs" width="780">
 </p>
 
 ## Installation
