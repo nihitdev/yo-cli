@@ -230,11 +230,11 @@ Example project fields:
 
 ```json
 {
-  "yoo_version": "0.6.6",
+  "yoo_version": "0.7.0",
   "project": {
     "name": "yoo",
     "language": "Rust",
-    "version": "0.6.6"
+    "version": "0.7.0"
   },
   "git": {
     "branch": "main",
@@ -248,14 +248,14 @@ Example terminal output:
 ```text
 📦 Name:            yoo
 🔧 Language:        Rust
-🏷 Version:         0.6.6
+🏷 Version:         0.7.0
 ```
 
 `--json` cannot be combined with display options such as `--plain`, `--no-art`, or `--theme`.
 
 ## Configuration
 
-Create the default YAML file and a sample community tip pack:
+Create the default TOML file and a sample community tip pack:
 
 ```bash
 yoo init
@@ -265,34 +265,34 @@ yoo config
 Config locations:
 
 ```text
-Windows: %APPDATA%\yoo\config.yaml
-Linux:   ~/.config/yoo/config.yaml
-macOS:   ~/Library/Application Support/yoo/config.yaml
+Windows: %USERPROFILE%\.config\yoo\config.toml
+Linux:   ~/.config/yoo/config.toml
+macOS:   ~/Library/Application Support/yoo/config.toml
 ```
 
 The main settings are:
 
-```yaml
-profile:
-  name: developer
+```toml
+[profile]
+name = "developer"
 
-appearance:
-  theme: neon
-  ascii: true
-  colors: true
-  typing_speed_ms: 12
+[appearance]
+theme = "neon"
+ascii = true
+colors = true
+typing_speed_ms = 12
 
-git:
-  show_branch: true
-  show_status: true
+[git]
+show_branch = true
+show_status = true
 
-tips:
-  enabled: true
-  pack: general
+[tips]
+enabled = true
+pack = "general"
 
-session:
-  default_minutes: 25
-  show_complete_message: true
+[session]
+default_minutes = 25
+show_complete_message = true
 ```
 
 Available themes: `neon`, `ocean`, `mono`, `dracula`, `tokyo-night`, `gruvbox`, `nord`, `rose-pine`, and `catppuccin`.

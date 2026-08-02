@@ -231,8 +231,8 @@ USAGE:
   yoo <COMMAND>
 
 COMMANDS:
-  init                    Create the default YAML config and a sample community tip pack
-  config                  Print the YAML config file location
+  init                    Create the default TOML config and a sample community tip pack
+  config                  Print the TOML config file location
   doctor                  Check Rust, Cargo, Git, config, and current-project setup
   fetch [OPTIONS]         Show developer environment and current-project information
   status [OPTIONS]        Alias for `yoo fetch`

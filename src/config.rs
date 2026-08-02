@@ -10,33 +10,33 @@ use serde::Deserialize;
 use crate::ui::Theme;
 
 pub const DEFAULT_CONFIG: &str = r#"# yoo configuration
-# Edit this file by hand, or use yq if YAML is your thing.
+# Edit this file by hand.
 
-version: 1
+version = 1
 
-profile:
-  name: developer
+[profile]
+name = "developer"
 
-appearance:
-  theme: neon
-  ascii: true
-  colors: true
-  typing_speed_ms: 12
+[appearance]
+theme = "neon"
+ascii = true
+colors = true
+typing_speed_ms = 12
 
-git:
-  show_branch: true
-  show_status: true
+[git]
+show_branch = true
+show_status = true
 
-tips:
-  enabled: true
-  pack: general
+[tips]
+enabled = true
+pack = "general"
 
-hydration:
-  enabled: true
+[hydration]
+enabled = true
 
-session:
-  default_minutes: 25
-  show_complete_message: true
+[session]
+default_minutes = 25
+show_complete_message = true
 "#;
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -188,8 +188,8 @@ impl Error for ConfigError {}
 
 pub fn config_dir() -> PathBuf {
     if cfg!(target_os = "windows") {
-        if let Some(app_data) = env::var_os("APPDATA") {
-            return PathBuf::from(app_data).join("yoo");
+        if let Some(home) = home_dir() {
+            return home.join(".config").join("yoo");
         }
     }
 
@@ -213,7 +213,7 @@ pub fn config_dir() -> PathBuf {
 }
 
 pub fn config_path() -> PathBuf {
-    config_dir().join("config.yaml")
+    config_dir().join("config.toml")
 }
 
 pub fn tip_packs_dir() -> PathBuf {
@@ -254,8 +254,8 @@ fn home_dir() -> Option<PathBuf> {
 }
 
 fn parse(contents: &str) -> Result<Config, ConfigError> {
-    let config = serde_yaml::from_str::<Config>(contents)
-        .map_err(|error| ConfigError::new(format!("invalid YAML config: {error}")))?;
+    let config = toml::from_str::<Config>(contents)
+        .map_err(|error| ConfigError::new(format!("invalid TOML config: {error}")))?;
 
     validate(&config)?;
     Ok(config)
@@ -301,28 +301,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parses_a_valid_yaml_config() {
+    fn parses_a_valid_toml_config() {
         let config = parse(
             r#"
-version: 1
-profile:
-  name: Nihit
-appearance:
-  theme: ocean
-  ascii: false
-  colors: true
-  typing_speed_ms: 0
-git:
-  show_branch: true
-  show_status: false
-tips:
-  enabled: true
-  pack: rust
-hydration:
-  enabled: false
-session:
-  default_minutes: 45
-  show_complete_message: true
+version = 1
+[profile]
+name = "Nihit"
+[appearance]
+theme = "ocean"
+ascii = false
+colors = true
+typing_speed_ms = 0
+[git]
+show_branch = true
+show_status = false
+[tips]
+enabled = true
+pack = "rust"
+[hydration]
+enabled = false
+[session]
+default_minutes = 45
+show_complete_message = true
 "#,
         )
         .expect("config should parse");
@@ -335,14 +335,31 @@ session:
 
     #[test]
     fn defaults_fill_missing_sections() {
-        let config = parse("version: 1\nprofile:\n  name: Nihit\n").expect("config should parse");
+        let config =
+            parse("version = 1\n[profile]\nname = \"Nihit\"\n").expect("config should parse");
         assert_eq!(config.profile.name, "Nihit");
         assert_eq!(config.tips.pack, "general");
     }
 
     #[test]
     fn rejects_an_unknown_theme() {
-        let error = parse("appearance:\n  theme: purple\n").expect_err("theme should be rejected");
+        let error =
+            parse("[appearance]\ntheme = \"purple\"\n").expect_err("theme should be rejected");
         assert!(error.to_string().contains("appearance.theme"));
+    }
+
+    #[test]
+    fn config_file_uses_the_toml_extension() {
+        assert_eq!(
+            config_path().file_name().and_then(|name| name.to_str()),
+            Some("config.toml")
+        );
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_config_lives_under_dot_config() {
+        let home = home_dir().expect("Windows should provide a user home directory");
+        assert_eq!(config_dir(), home.join(".config").join("yoo"));
     }
 }

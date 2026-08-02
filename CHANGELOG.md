@@ -4,6 +4,13 @@ All notable changes to `yoo` are documented here.
 
 The format follows the spirit of Keep a Changelog: user-visible changes are grouped by release and by type.
 
+## [0.7.0] - 2026-08-02
+
+### Changed
+
+- Moved the Windows configuration to `%USERPROFILE%\.config\yoo\config.toml`.
+- Replaced the main YAML configuration format with TOML on every platform.
+
 ## [0.6.6] - 2026-07-30
 
 ### Changed
