@@ -1,6 +1,6 @@
 # @nihitde_v/yoo
 
-npm installer for `yoo`, a tiny developer companion for better coding sessions.
+npm installer for the `yoo` local project and development-environment CLI.
 
 ```bash
 npm install -g @nihitde_v/yoo

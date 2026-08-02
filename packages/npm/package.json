@@ -1,7 +1,7 @@
 {
   "name": "@nihitde_v/yoo",
   "version": "0.9.0",
-  "description": "A tiny developer companion for better coding sessions.",
+  "description": "Local CLI for project, Git, and development environment information.",
   "license": "GPL-3.0-or-later",
   "homepage": "https://github.com/nihitdev/yo-cli#readme",
   "repository": {

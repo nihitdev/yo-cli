@@ -236,7 +236,7 @@ fn required_value(arguments: &[String], index: usize, flag: &str) -> Result<Stri
 }
 
 pub fn help_text() -> &'static str {
-    r#"yoo — a tiny developer companion
+    r#"yoo — local project and development environment information
 
 USAGE:
   yoo [OPTIONS]

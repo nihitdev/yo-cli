@@ -2,10 +2,10 @@
 
 <p align="center">
   A small, local-first CLI for viewing project, Git, and development environment information.
-</p
+</p>
 
 <p align="center">
-  📚 <strong><a href="https://github.com/nihitdev/yo-cli/wiki">Read the complete yoo CLI Wiki</a></strong>
+  📚 <strong><a href="docs/README.md">Read the yoo documentation</a></strong>
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@
   <img src="docs/images/hero.png" alt="yoo showing a developer session summary" width="780">
 </p>
 
-## About
+## Overview
 
 `yoo` collects common project and environment checks in a few commands:
 
@@ -41,7 +41,7 @@ The project is:
 - available on Windows, Linux, and macOS
 - usable in scripts through `yoo fetch --json` and `yoo project --json`
 
-## Quick start
+## Basic usage
 
 On Windows:
 
@@ -60,7 +60,7 @@ yoo project
 
 No configuration is required. Run `yoo init` only when you want to customize the theme, profile, timer, or tip packs.
 
-## The core workflow
+## Usage
 
 ### 1. Start a coding session
 
@@ -68,7 +68,7 @@ No configuration is required. Run `yoo init` only when you want to customize the
 yoo --fast
 ```
 
-See the current project, Git branch, working-tree state, and one practical reminder without opening an IDE.
+This displays the current project, Git branch, working-tree state, and a configured reminder.
 
 <p align="center">
   <img src="docs/images/hero.png" alt="yoo developer session starter" width="780">
@@ -120,6 +120,8 @@ curl --proto '=https' --tlsv1.2 -LsSf \
 ```
 
 The installer verifies the downloaded binary against the release's published SHA-256 checksum and installs it to `~/.local/bin`. Override the destination with `YOO_INSTALL_DIR` or install a specific release with `YOO_VERSION=0.9.0`.
+
+See the [installation guide](docs/installation.md) for platform details, updates, uninstallation, and installer security options.
 
 ### Prebuilt binary with Cargo Binstall
 
@@ -231,6 +233,8 @@ For PowerShell, add this line to your profile:
 ```powershell
 yoo completions powershell | Out-String | Invoke-Expression
 ```
+
+See the [shell completion guide](docs/completions.md) for persistent setup and troubleshooting on every supported shell.
 
 ## Project detection
 
@@ -359,7 +363,14 @@ cargo clippy --locked -- -D warnings
 cargo build --release --locked
 ```
 
-Contributions should stay focused and keep yoo lightweight. See [CONTRIBUTING.md](CONTRIBUTING.md).
+## Contributing
+
+`yoo` is free software released under GPL-3.0-or-later. Source code, development history, and release automation are maintained in this repository.
+
+- Read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a change.
+- Use the [issue tracker](https://github.com/nihitdev/yo-cli/issues) for reproducible bugs and scoped feature proposals.
+- Run the formatting, test, and Clippy commands in the Development section before opening a pull request.
+- Keep contributions local-first and avoid adding telemetry, accounts, background services, or required network access.
 
 ## Troubleshooting
 
