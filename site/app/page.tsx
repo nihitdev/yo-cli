@@ -1,4 +1,5 @@
 import { CopyButton } from "./CopyButton";
+import { SiteExtras } from "./SiteExtras";
 
 const installs = [
   { label: "Installer", command: "curl -LsSf https://raw.githubusercontent.com/nihitdev/yo-cli/main/install.sh | sh" },
@@ -20,6 +21,42 @@ const commands = [
   ["yoo completions bash", "Generate completions for your shell"],
 ];
 
+const features = [
+  {
+    number: "01",
+    title: "Know the repository",
+    description: "See the detected language, version, package manager, source-file counts, branch, and working-tree state in one scan.",
+    command: "yoo project",
+  },
+  {
+    number: "02",
+    title: "Check the toolchain",
+    description: "Confirm that Git, language tools, formatters, linters, project detection, and your yoo configuration are ready to use.",
+    command: "yoo doctor",
+  },
+  {
+    number: "03",
+    title: "Start with context",
+    description: "Open a coding session with the project name, branch, pending changes, and one useful reminder already in view.",
+    command: "yoo --fast",
+  },
+  {
+    number: "04",
+    title: "Automate the output",
+    description: "Use stable, undecorated JSON in scripts, editor integrations, status bars, and your own developer tooling.",
+    command: "yoo project --json",
+  },
+];
+
+const projectTypes = [
+  ["Rust", "Cargo.toml", "Cargo"],
+  ["Node.js", "package.json", "npm · pnpm · Yarn · Bun"],
+  ["Python", "pyproject.toml", "pip · uv · Poetry · Pipenv"],
+  ["Go", "go.mod", "Go modules"],
+  ["Java", "pom.xml · Gradle", "Maven · Gradle"],
+  [".NET", ".sln · .csproj", ".NET SDK"],
+];
+
 const screenshots = [
   { src: "/hero.png", label: "Session summary", command: "yoo --fast" },
   { src: "/doctor.png", label: "Toolchain checks", command: "yoo doctor" },
@@ -32,15 +69,17 @@ const screenshots = [
 export default function Home() {
   return (
     <main>
+      <SiteExtras />
       <header className="nav-shell">
         <nav className="nav" aria-label="Main navigation">
           <a className="brand" href="#top" aria-label="yoo home">
             <span className="brand-mark">yoo</span><span className="cursor">_</span>
           </a>
           <div className="nav-links">
-            <a href="#screenshots">Screenshots</a>
+            <a href="#features">Features</a>
             <a href="#install">Install</a>
             <a href="#commands">Commands</a>
+            <a href="#configure">Configure</a>
             <a href="https://github.com/nihitdev/yo-cli/tree/main/docs">Docs</a>
           </div>
           <a className="github-link" href="https://github.com/nihitdev/yo-cli">
@@ -75,6 +114,24 @@ export default function Home() {
             <img src="/hero.png" alt="yoo displaying a terminal project session summary" />
           </div>
           <div className="accent-grid" aria-hidden="true" />
+        </div>
+      </section>
+
+      <section className="section feature-section" id="features">
+        <div className="section-heading">
+          <p className="kicker">What yoo does</p>
+          <h2>Your project&apos;s vital signs, at a glance.</h2>
+          <p>Use one focused tool instead of stitching together a handful of commands whenever you enter a repository.</p>
+        </div>
+        <div className="feature-grid">
+          {features.map((feature) => (
+            <article className="feature-card" key={feature.number}>
+              <span className="feature-number">{feature.number}</span>
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
+              <code>$ {feature.command}</code>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -135,6 +192,86 @@ export default function Home() {
             </div>
           ))}
         </div>
+        <div className="reference-note">
+          <div>
+            <strong>More built in</strong>
+            <p><code>yoo status</code>, <code>yoo tip</code>, <code>yoo tips</code>, <code>yoo init</code>, <code>yoo config</code>, and <code>yoo help</code>.</p>
+          </div>
+          <a className="text-link" href="https://github.com/nihitdev/yo-cli#commands">Full command reference <span>→</span></a>
+        </div>
+      </section>
+
+      <section className="section detection" id="detection">
+        <div className="section-heading compact">
+          <p className="kicker">Project detection</p>
+          <h2>Useful across your whole projects folder.</h2>
+          <p>yoo recognizes common repository markers and package managers automatically. Generated folders and dependencies are skipped while source files are counted.</p>
+        </div>
+        <div className="detection-table" role="table" aria-label="Supported project types">
+          <div className="detection-row detection-head" role="row"><span>Project</span><span>Detected from</span><span>Package tooling</span></div>
+          {projectTypes.map(([project, marker, tooling]) => (
+            <div className="detection-row" role="row" key={project}>
+              <strong>{project}</strong><code>{marker}</code><span>{tooling}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="section automation" id="automation">
+        <div className="automation-copy">
+          <p className="kicker">Made for automation</p>
+          <h2>Human-friendly in a terminal. Predictable in a script.</h2>
+          <p>Switch project and environment reports to JSON when another tool needs the data. Decorative display flags stay separate, so machine-readable output remains clean.</p>
+          <div className="automation-actions">
+            <code>yoo fetch --json</code>
+            <code>yoo project --json</code>
+          </div>
+        </div>
+        <pre className="json-card" aria-label="Example yoo JSON output"><code>{`{
+  "yoo_version": "0.9.0",
+  "project": {
+    "name": "yoo",
+    "language": "Rust",
+    "version": "0.9.0"
+  },
+  "git": {
+    "branch": "main",
+    "changed_files": 0
+  }
+}`}</code></pre>
+      </section>
+
+      <section className="section configure" id="configure">
+        <div className="section-heading compact">
+          <p className="kicker">Make it yours</p>
+          <h2>Configure once. Stay local.</h2>
+          <p>Run <code>yoo init</code> to create a readable TOML config and a sample tip pack. Choose a theme, tune the session timer, hide ASCII art, or add reminders for your own team.</p>
+        </div>
+        <div className="configure-grid">
+          <div className="config-card">
+            <div className="config-bar"><span>config.toml</span><span>~/.config/yoo</span></div>
+            <pre><code>{`[appearance]
+theme = "catppuccin"
+ascii = true
+colors = true
+
+[git]
+show_branch = true
+show_status = true
+
+[session]
+default_minutes = 25`}</code></pre>
+          </div>
+          <div className="theme-card">
+            <span className="feature-number">09 themes included</span>
+            <h3>Match your terminal.</h3>
+            <p>Neon, Ocean, Mono, Dracula, Tokyo Night, Gruvbox, Nord, Rosé Pine, and Catppuccin ship with yoo.</p>
+            <div className="theme-swatches" aria-label="Theme color samples">
+              <i /><i /><i /><i /><i /><i /><i /><i /><i />
+            </div>
+            <a className="text-link" href="https://github.com/nihitdev/yo-cli#configuration">Configuration guide <span>→</span></a>
+          </div>
+        </div>
       </section>
 
       <section className="section principles">
@@ -152,6 +289,16 @@ export default function Home() {
           <div><strong>00</strong><span>Accounts or required services</span></div>
           <div><strong>01</strong><span>Small Rust executable</span></div>
           <div><strong>09</strong><span>Built-in color themes</span></div>
+        </div>
+      </section>
+
+      <section className="section final-cta">
+        <p className="kicker">Ready when you are</p>
+        <h2>Meet the project you&apos;re in.</h2>
+        <p>Install yoo, open a repository, and run your first local project summary.</p>
+        <div className="hero-actions">
+          <a className="button primary" href="#install">Choose an install method</a>
+          <a className="button secondary" href="https://github.com/nihitdev/yo-cli/blob/main/docs/README.md">Read the docs <span>↗</span></a>
         </div>
       </section>
 
