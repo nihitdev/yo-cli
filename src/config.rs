@@ -23,6 +23,10 @@ ascii = true
 colors = true
 typing_speed_ms = 12
 
+[editor]
+# Leave empty to use VISUAL, EDITOR, or automatic detection.
+command = ""
+
 [git]
 show_branch = true
 show_status = true
@@ -45,6 +49,7 @@ pub struct Config {
     pub version: u8,
     pub profile: ProfileConfig,
     pub appearance: AppearanceConfig,
+    pub editor: EditorConfig,
     pub git: GitConfig,
     pub tips: TipsConfig,
     pub hydration: HydrationConfig,
@@ -64,6 +69,12 @@ pub struct AppearanceConfig {
     pub ascii: bool,
     pub colors: bool,
     pub typing_speed_ms: u64,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(default)]
+pub struct EditorConfig {
+    pub command: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -99,6 +110,7 @@ impl Default for Config {
             version: 1,
             profile: ProfileConfig::default(),
             appearance: AppearanceConfig::default(),
+            editor: EditorConfig::default(),
             git: GitConfig::default(),
             tips: TipsConfig::default(),
             hydration: HydrationConfig::default(),
@@ -283,6 +295,12 @@ fn validate(config: &Config) -> Result<(), ConfigError> {
         ));
     }
 
+    if config.editor.command.contains(['\r', '\n']) {
+        return Err(ConfigError::new(
+            "editor.command must be a single executable name or path",
+        ));
+    }
+
     if config.tips.pack.trim().is_empty() {
         return Err(ConfigError::new("tips.pack cannot be empty"));
     }
@@ -312,6 +330,8 @@ theme = "ocean"
 ascii = false
 colors = true
 typing_speed_ms = 0
+[editor]
+command = "cursor"
 [git]
 show_branch = true
 show_status = false
@@ -330,6 +350,7 @@ show_complete_message = true
         assert_eq!(config.profile.name, "Nihit");
         assert_eq!(config.appearance.theme, "ocean");
         assert!(!config.appearance.ascii);
+        assert_eq!(config.editor.command, "cursor");
         assert_eq!(config.session.default_minutes, 45);
     }
 
@@ -339,6 +360,7 @@ show_complete_message = true
             parse("version = 1\n[profile]\nname = \"Nihit\"\n").expect("config should parse");
         assert_eq!(config.profile.name, "Nihit");
         assert_eq!(config.tips.pack, "general");
+        assert!(config.editor.command.is_empty());
     }
 
     #[test]

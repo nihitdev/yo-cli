@@ -6,7 +6,7 @@ use std::io::IsTerminal;
 use crate::{
     args::{self, Command, FetchOptions, ProjectOptions, RunOptions, SessionOptions},
     config::{self, WriteResult},
-    content, doctor, fetch, git, project, timer, tips,
+    content, doctor, editor, fetch, git, project, timer, tips,
     ui::{Theme, Ui},
 };
 
@@ -23,6 +23,7 @@ pub fn execute(command: Command) -> Result<(), Box<dyn Error>> {
             doctor::print(&doctor::collect(&directory));
             Ok(())
         }
+        Command::Edit(options) => edit(options.editor.as_deref()),
         Command::Fetch(options) => run_fetch(options),
         Command::Project(options) => run_project(options),
         Command::Session(options) => session(options),
@@ -41,6 +42,13 @@ pub fn execute(command: Command) -> Result<(), Box<dyn Error>> {
             Ok(())
         }
     }
+}
+
+fn edit(override_editor: Option<&str>) -> Result<(), Box<dyn Error>> {
+    let config = config::load()?;
+    let configured_editor =
+        (!config.editor.command.trim().is_empty()).then_some(config.editor.command.trim());
+    editor::open(override_editor, configured_editor)
 }
 
 fn init() -> Result<(), Box<dyn Error>> {

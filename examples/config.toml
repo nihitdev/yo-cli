@@ -11,6 +11,9 @@ ascii = true
 colors = true
 typing_speed_ms = 12
 
+[editor]
+command = "code"
+
 [git]
 show_branch = true
 show_status = true

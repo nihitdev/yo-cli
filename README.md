@@ -107,6 +107,18 @@ yoo tips
   <img src="docs/images/tips.png" alt="yoo installed tip packs" width="780">
 </p>
 
+### 7. Open the current project in your editor
+
+```bash
+yoo edit --editor code
+```
+
+Use `--editor` to choose an editor explicitly, or run `yoo edit` to use `VISUAL`, `EDITOR`, or an automatically detected editor.
+
+<p align="center">
+  <img src="docs/images/edit.png" alt="yoo edit opening the current project in Visual Studio Code" width="780">
+</p>
+
 ## Installation
 
 ### Installer script
@@ -118,7 +130,7 @@ curl --proto '=https' --tlsv1.2 -LsSf \
   https://yo-cli.vercel.app/yo-setup | sh
 ```
 
-The installer verifies the downloaded binary against the release's published SHA-256 checksum and installs it to `~/.local/bin`. Override the destination with `YOO_INSTALL_DIR` or install a specific release with `YOO_VERSION=0.9.0`.
+The installer verifies the downloaded binary against the release's published SHA-256 checksum and installs it to `~/.local/bin`. Override the destination with `YOO_INSTALL_DIR` or install a specific release with `YOO_VERSION=1.0.0`.
 
 See the [installation guide](docs/installation.md) for platform details, updates, uninstallation, and installer security options.
 
@@ -186,6 +198,7 @@ cargo install --path .
 | :-- | :-- |
 | `yoo` | Start a developer session |
 | `yoo doctor` | Check local tools, configuration, project detection, and Git |
+| `yoo edit [--editor <EDITOR>]` | Open the current directory in your preferred editor |
 | `yoo project` | Show project metadata, source stats, Git details, and repository files |
 | `yoo fetch` | Show the developer environment and current project |
 | `yoo status` | Alias for `yoo fetch` |
@@ -261,11 +274,11 @@ Example project fields:
 
 ```json
 {
-  "yoo_version": "0.9.0",
+  "yoo_version": "1.0.0",
   "project": {
     "name": "yoo",
     "language": "Rust",
-    "version": "0.9.0"
+    "version": "1.0.0"
   },
   "git": {
     "branch": "main",
@@ -279,7 +292,7 @@ Example terminal output:
 ```text
 📦 Name:            yoo
 🔧 Language:        Rust
-🏷 Version:         0.9.0
+🏷 Version:         1.0.0
 ```
 
 `--json` cannot be combined with display options such as `--plain`, `--no-art`, or `--theme`.
@@ -312,6 +325,10 @@ theme = "neon"
 ascii = true
 colors = true
 typing_speed_ms = 12
+
+[editor]
+# Leave empty to detect an editor automatically.
+command = "code"
 
 [git]
 show_branch = true

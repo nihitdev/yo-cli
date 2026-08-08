@@ -15,6 +15,7 @@ const installs = [
 const commands = [
   ["yoo", "Current project, Git state, and one configured reminder"],
   ["yoo doctor", "Local toolchain and repository checks"],
+  ["yoo edit", "Open the current project in your preferred editor"],
   ["yoo project", "Project metadata, source statistics, and Git details"],
   ["yoo fetch", "Development environment and current project"],
   ["yoo session 25", "Local coding-session timer"],
@@ -64,6 +65,7 @@ const screenshots = [
   { src: "/fetch.png", label: "Environment report", command: "yoo fetch" },
   { src: "/session.png", label: "Session timer", command: "yoo session 25" },
   { src: "/tips.png", label: "Tip packs", command: "yoo tips" },
+  { src: "/edit.png", label: "Editor launch", command: "yoo edit" },
 ];
 
 export default function Home() {
@@ -109,7 +111,7 @@ export default function Home() {
             <div className="terminal-bar">
               <div className="traffic"><i /><i /><i /></div>
               <span>~/projects/yoo</span>
-              <span className="version">v0.9.0</span>
+              <span className="version">v1.0.0</span>
             </div>
             <img src="/hero.png" alt="yoo displaying a terminal project session summary" />
           </div>
@@ -228,11 +230,11 @@ export default function Home() {
           </div>
         </div>
         <pre className="json-card" aria-label="Example yoo JSON output"><code>{`{
-  "yoo_version": "0.9.0",
+  "yoo_version": "1.0.0",
   "project": {
     "name": "yoo",
     "language": "Rust",
-    "version": "0.9.0"
+    "version": "1.0.0"
   },
   "git": {
     "branch": "main",
@@ -254,6 +256,9 @@ export default function Home() {
 theme = "catppuccin"
 ascii = true
 colors = true
+
+[editor]
+command = "code"
 
 [git]
 show_branch = true

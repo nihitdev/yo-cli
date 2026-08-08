@@ -30,12 +30,18 @@ pub struct SessionOptions {
     pub minutes: Option<u64>,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct EditOptions {
+    pub editor: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
     Run(RunOptions),
     Init,
     ConfigPath,
     Doctor,
+    Edit(EditOptions),
     Fetch(FetchOptions),
     Project(ProjectOptions),
     Session(SessionOptions),
@@ -56,6 +62,7 @@ pub fn parse(arguments: &[String]) -> Result<Command, String> {
         "init" | "--init" => require_standalone(arguments, Command::Init),
         "config" | "--config" => require_standalone(arguments, Command::ConfigPath),
         "doctor" => require_standalone(arguments, Command::Doctor),
+        "edit" => parse_edit(&arguments[1..]),
         "fetch" | "status" => parse_fetch(&arguments[1..]),
         "project" => parse_project(&arguments[1..]),
         "tips" => require_standalone(arguments, Command::Tips),
@@ -64,6 +71,16 @@ pub fn parse(arguments: &[String]) -> Result<Command, String> {
         "session" => parse_session(&arguments[1..]),
         "version" | "--version" | "-V" => require_standalone(arguments, Command::Version),
         _ => parse_run(arguments),
+    }
+}
+
+fn parse_edit(arguments: &[String]) -> Result<Command, String> {
+    match arguments {
+        [] => Ok(Command::Edit(EditOptions::default())),
+        [flag, editor] if flag == "--editor" => Ok(Command::Edit(EditOptions {
+            editor: Some(required_value(arguments, 1, "--editor")?),
+        })),
+        _ => Err("usage: yoo edit [--editor <EDITOR>]".to_owned()),
     }
 }
 
@@ -246,6 +263,7 @@ COMMANDS:
   init                    Create the default TOML config and a sample community tip pack
   config                  Print the TOML config file location
   doctor                  Check Rust, Cargo, Git, config, and current-project setup
+  edit [OPTIONS]          Open the current directory in your preferred editor
   fetch [OPTIONS]         Show developer environment and current-project information
   status [OPTIONS]        Alias for `yoo fetch`
   project [OPTIONS]       Show a structured overview of the current project
@@ -261,6 +279,9 @@ FETCH / PROJECT OPTIONS:
   --no-art                Hide the ASCII logo for this run
   --plain                 Disable ANSI colours for this run
   --theme <THEME>         Override the theme for this run only
+
+EDIT OPTIONS:
+  --editor <EDITOR>       Use a specific editor instead of automatic detection
 
 RUN OPTIONS:
   --fast                  Skip the typewriter animation
@@ -278,6 +299,8 @@ EXAMPLES:
   yoo
   yoo --fast --theme tokyo-night
   yoo doctor
+  yoo edit
+  yoo edit --editor cursor
   yoo fetch
   yoo fetch --json
   yoo project
@@ -378,6 +401,21 @@ mod tests {
             parse(&arguments),
             Ok(Command::Session(SessionOptions { minutes: Some(45) }))
         );
+    }
+
+    #[test]
+    fn parses_edit_options() {
+        assert_eq!(
+            parse(&values(&["edit"])),
+            Ok(Command::Edit(EditOptions::default()))
+        );
+        assert_eq!(
+            parse(&values(&["edit", "--editor", "cursor"])),
+            Ok(Command::Edit(EditOptions {
+                editor: Some("cursor".to_owned()),
+            }))
+        );
+        assert!(parse(&values(&["edit", "cursor"])).is_err());
     }
 
     #[test]

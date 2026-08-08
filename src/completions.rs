@@ -35,7 +35,7 @@ pub fn script(shell: Shell) -> &'static str {
 
 #[cfg(test)]
 const COMMANDS: &str =
-    "init config doctor fetch status project session tip tips completions version help";
+    "init config doctor edit fetch status project session tip tips completions version help";
 #[cfg(test)]
 const DISPLAY_OPTIONS: &str = "--json --no-art --plain --theme";
 #[cfg(test)]
@@ -64,7 +64,7 @@ const BASH: &str = r#"_yoo() {
     session)
       COMPREPLY=( $(compgen -W "--minutes" -- "$current") ) ;;
     *)
-      COMPREPLY=( $(compgen -W "init config doctor fetch status project session tip tips completions version help --fast --no-art --plain --name --theme -h --help -V --version" -- "$current") ) ;;
+      COMPREPLY=( $(compgen -W "init config doctor edit fetch status project session tip tips completions version help --fast --no-art --plain --name --theme -h --help -V --version" -- "$current") ) ;;
   esac
 }
 complete -F _yoo yoo
@@ -78,6 +78,7 @@ _yoo() {
     'init:Create the default config and sample tip pack'
     'config:Print the config file location'
     'doctor:Check tools and project setup'
+    'edit:Open the current directory in an editor'
     'fetch:Show environment and project information'
     'status:Alias for fetch'
     'project:Show a structured project overview'
@@ -107,6 +108,7 @@ _yoo() {
         fetch|status|project)
           _arguments '--json[machine-readable JSON]' '--no-art[hide art]' '--plain[disable colours]' '--theme[override theme]:theme:($themes)' ;;
         session) _arguments '--minutes[session length]:minutes:' '1:minutes:' ;;
+        edit) _arguments '--editor[use a specific editor]:editor:_command_names' ;;
         completions) _values 'shell' $shells ;;
       esac ;;
   esac
@@ -119,6 +121,7 @@ const FISH: &str = r#"complete -c yoo -f
 complete -c yoo -n '__fish_use_subcommand' -a init -d 'Create the default config and sample tip pack'
 complete -c yoo -n '__fish_use_subcommand' -a config -d 'Print the config file location'
 complete -c yoo -n '__fish_use_subcommand' -a doctor -d 'Check tools and project setup'
+complete -c yoo -n '__fish_use_subcommand' -a edit -d 'Open the current directory in an editor'
 complete -c yoo -n '__fish_use_subcommand' -a fetch -d 'Show environment and project information'
 complete -c yoo -n '__fish_use_subcommand' -a status -d 'Alias for fetch'
 complete -c yoo -n '__fish_use_subcommand' -a project -d 'Show a structured project overview'
@@ -134,11 +137,12 @@ complete -c yoo -n '__fish_seen_subcommand_from fetch status project' -l no-art 
 complete -c yoo -n '__fish_seen_subcommand_from fetch status project' -l plain -d 'Disable ANSI colours'
 complete -c yoo -n '__fish_seen_subcommand_from fetch status project' -l theme -xa 'neon ocean mono dracula tokyo-night gruvbox nord rose-pine catppuccin'
 complete -c yoo -n '__fish_seen_subcommand_from session' -l minutes -d 'Session length in minutes'
-complete -c yoo -n 'not __fish_seen_subcommand_from init config doctor fetch status project session tip tips completions version help' -l fast -d 'Skip the typewriter animation'
-complete -c yoo -n 'not __fish_seen_subcommand_from init config doctor fetch status project session tip tips completions version help' -l no-art -d 'Hide the ASCII logo'
-complete -c yoo -n 'not __fish_seen_subcommand_from init config doctor fetch status project session tip tips completions version help' -l plain -d 'Disable ANSI colours'
-complete -c yoo -n 'not __fish_seen_subcommand_from init config doctor fetch status project session tip tips completions version help' -l name -r -d 'Override the profile name'
-complete -c yoo -n 'not __fish_seen_subcommand_from init config doctor fetch status project session tip tips completions version help' -l theme -xa 'neon ocean mono dracula tokyo-night gruvbox nord rose-pine catppuccin'
+complete -c yoo -n '__fish_seen_subcommand_from edit' -l editor -r -d 'Use a specific editor'
+complete -c yoo -n 'not __fish_seen_subcommand_from init config doctor edit fetch status project session tip tips completions version help' -l fast -d 'Skip the typewriter animation'
+complete -c yoo -n 'not __fish_seen_subcommand_from init config doctor edit fetch status project session tip tips completions version help' -l no-art -d 'Hide the ASCII logo'
+complete -c yoo -n 'not __fish_seen_subcommand_from init config doctor edit fetch status project session tip tips completions version help' -l plain -d 'Disable ANSI colours'
+complete -c yoo -n 'not __fish_seen_subcommand_from init config doctor edit fetch status project session tip tips completions version help' -l name -r -d 'Override the profile name'
+complete -c yoo -n 'not __fish_seen_subcommand_from init config doctor edit fetch status project session tip tips completions version help' -l theme -xa 'neon ocean mono dracula tokyo-night gruvbox nord rose-pine catppuccin'
 complete -c yoo -s h -l help -d 'Print help'
 complete -c yoo -s V -l version -d 'Print version'
 "#;
@@ -146,7 +150,7 @@ complete -c yoo -s V -l version -d 'Print version'
 const POWERSHELL: &str = r#"Register-ArgumentCompleter -Native -CommandName yoo -ScriptBlock {
   param($wordToComplete, $commandAst, $cursorPosition)
 
-  $commands = 'init','config','doctor','fetch','status','project','session','tip','tips','completions','version','help'
+  $commands = 'init','config','doctor','edit','fetch','status','project','session','tip','tips','completions','version','help'
   $themes = 'neon','ocean','mono','dracula','tokyo-night','gruvbox','nord','rose-pine','catppuccin'
   $shells = 'bash','zsh','fish','powershell'
   $tokens = @($commandAst.CommandElements | ForEach-Object { $_.Extent.Text })
@@ -157,6 +161,7 @@ const POWERSHELL: &str = r#"Register-ArgumentCompleter -Native -CommandName yoo 
   elseif ($previous -eq '--theme') { $values = $themes }
   elseif ($command -in @('fetch','status','project')) { $values = '--json','--no-art','--plain','--theme' }
   elseif ($command -eq 'session') { $values = '--minutes' }
+  elseif ($command -eq 'edit') { $values = '--editor' }
   else { $values = $commands + @('--fast','--no-art','--plain','--name','--theme','-h','--help','-V','--version') }
 
   $values | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {

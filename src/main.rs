@@ -4,6 +4,7 @@ mod completions;
 mod config;
 mod content;
 mod doctor;
+mod editor;
 mod fetch;
 mod git;
 mod project;

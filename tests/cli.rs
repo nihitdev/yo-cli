@@ -58,6 +58,18 @@ fn invalid_arguments_exit_with_usage_error() {
 }
 
 #[test]
+fn edit_reports_when_the_requested_editor_cannot_be_launched() {
+    let output = yoo(
+        &std::env::temp_dir(),
+        &["edit", "--editor", "yoo-editor-that-does-not-exist"],
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(stderr.contains("could not launch editor `yoo-editor-that-does-not-exist`"));
+}
+
+#[test]
 fn completion_commands_generate_shell_scripts() {
     for (shell, marker) in [
         ("bash", "complete -F _yoo yoo"),

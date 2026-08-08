@@ -6,8 +6,22 @@ The format follows the spirit of Keep a Changelog: user-visible changes are grou
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-08
+
+🎉 **yoo 1.0.0 is here—the first stable release!** 🚀
+
+### Added
+
+- Added `yoo edit` to open the current project in a configured or automatically detected editor.
+- Added `yoo edit --editor <EDITOR>` for one-off editor overrides.
+- Added `[editor] command` to `config.toml` for a persistent editor preference.
+- Added the friendly, checksum-verified installer endpoint at `https://yo-cli.vercel.app/yo-setup`.
+- Added a new editor-launch screenshot to the README and website gallery.
+
 ### Changed
 
+- Added `yoo edit` completions for Bash, Zsh, Fish, and PowerShell.
+- Updated installation documentation and the GitHub wiki with the friendly installer URL and PATH guidance.
 - Added detailed installation and shell-completion guides and linked them from the README.
 - Replaced product-style documentation language with factual project descriptions and expanded contribution guidance.
 - Updated GitHub Actions dependencies to Node.js 24-compatible releases.
@@ -15,6 +29,8 @@ The format follows the spirit of Keep a Changelog: user-visible changes are grou
 
 ### Fixed
 
+- Fixed Windows editor detection to prefer launchable `.exe`, `.cmd`, and other `PATHEXT` entries over extensionless shell scripts.
+- Fixed stale wiki configuration paths that still referenced YAML configuration files.
 - Updated Catppuccin to its Mocha Mauve and Surface 2 colors, and Dracula to its Pink and Comment colors, so both themes use their real palettes and remain visually distinct.
 
 ## [0.9.0] - 2026-08-02
