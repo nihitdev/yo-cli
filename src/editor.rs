@@ -105,22 +105,27 @@ fn executable_on_path(program: &str) -> Option<PathBuf> {
 
 fn executable_candidates(directory: &Path, program: &str) -> impl Iterator<Item = PathBuf> {
     let base = directory.join(program);
-    let mut candidates = Vec::new();
 
     #[cfg(windows)]
-    if base.extension().is_none() {
-        let extensions =
-            env::var_os("PATHEXT").unwrap_or_else(|| OsString::from(".COM;.EXE;.BAT;.CMD"));
-        candidates.extend(
-            extensions
-                .to_string_lossy()
-                .split(';')
-                .filter(|extension| !extension.is_empty())
-                .map(|extension| directory.join(format!("{program}{extension}"))),
-        );
-    }
+    let candidates = {
+        let mut candidates = Vec::new();
+        if base.extension().is_none() {
+            let extensions =
+                env::var_os("PATHEXT").unwrap_or_else(|| OsString::from(".COM;.EXE;.BAT;.CMD"));
+            candidates.extend(
+                extensions
+                    .to_string_lossy()
+                    .split(';')
+                    .filter(|extension| !extension.is_empty())
+                    .map(|extension| directory.join(format!("{program}{extension}"))),
+            );
+        }
+        candidates.push(base);
+        candidates
+    };
 
-    candidates.push(base);
+    #[cfg(not(windows))]
+    let candidates = vec![base];
 
     candidates.into_iter()
 }
