@@ -5,7 +5,9 @@
 </p>
 
 <p align="center">
-  📚 <strong><a href="docs/README.md">Read the yoo documentation</a></strong>
+  🌐 <strong><a href="https://yo-cli.vercel.app">Website</a></strong>
+  &nbsp;·&nbsp;
+  📚 <strong><a href="docs/README.md">Documentation</a></strong>
 </p>
 
 <p align="center">
