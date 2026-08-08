@@ -115,7 +115,7 @@ On supported Linux x86-64 and Apple Silicon macOS systems:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://raw.githubusercontent.com/nihitdev/yo-cli/main/install.sh | sh
+  https://yo-cli.vercel.app/yo-setup | sh
 ```
 
 The installer verifies the downloaded binary against the release's published SHA-256 checksum and installs it to `~/.local/bin`. Override the destination with `YOO_INSTALL_DIR` or install a specific release with `YOO_VERSION=0.9.0`.

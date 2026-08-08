@@ -2,7 +2,7 @@ import { CopyButton } from "./CopyButton";
 import { SiteExtras } from "./SiteExtras";
 
 const installs = [
-  { label: "Installer", command: "curl -LsSf https://raw.githubusercontent.com/nihitdev/yo-cli/main/install.sh | sh" },
+  { label: "Installer", command: "curl --proto '=https' --tlsv1.2 -LsSf https://yo-cli.vercel.app/yo-setup | sh" },
   { label: "Cargo", command: "cargo install yoo" },
   { label: "npm", command: "npm install -g @nihitde_v/yoo" },
   { label: "WinGet", command: "winget install --id Nihitdev.yoo --exact" },

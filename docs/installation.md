@@ -8,7 +8,7 @@ The installer supports Linux x86-64 and Apple Silicon macOS. It downloads the ra
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://raw.githubusercontent.com/nihitdev/yo-cli/main/install.sh | sh
+  https://yo-cli.vercel.app/yo-setup | sh
 ```
 
 Ensure the installation directory is on `PATH`:
@@ -23,7 +23,7 @@ Add that line to `~/.bashrc`, `~/.zshrc`, or the appropriate shell startup file 
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://raw.githubusercontent.com/nihitdev/yo-cli/main/install.sh |
+  https://yo-cli.vercel.app/yo-setup |
   YOO_VERSION=0.9.0 sh
 ```
 
@@ -31,7 +31,7 @@ curl --proto '=https' --tlsv1.2 -LsSf \
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://raw.githubusercontent.com/nihitdev/yo-cli/main/install.sh |
+  https://yo-cli.vercel.app/yo-setup |
   YOO_INSTALL_DIR="$HOME/bin" sh
 ```
 
@@ -39,7 +39,7 @@ curl --proto '=https' --tlsv1.2 -LsSf \
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://raw.githubusercontent.com/nihitdev/yo-cli/main/install.sh \
+  https://yo-cli.vercel.app/yo-setup \
   --output yoo-install.sh
 less yoo-install.sh
 sh yoo-install.sh

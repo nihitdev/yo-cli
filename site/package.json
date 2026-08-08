@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "sync-installer": "node scripts/sync-installer.mjs",
+    "prebuild": "npm run sync-installer",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
