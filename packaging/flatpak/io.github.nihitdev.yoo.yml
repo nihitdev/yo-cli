@@ -21,6 +21,9 @@ modules:
       - cp cargo-config.toml .cargo/config.toml
       - cargo build --release --locked --offline
       - install -Dm755 target/release/yoo /app/bin/yoo
+      - install -Dm755 /usr/bin/git /app/bin/git
+      - cp -a /usr/libexec/git-core /app/libexec/
+      - cp -a /usr/share/git-core /app/share/
       - install -Dm644 LICENSE /app/share/licenses/yoo/LICENSE
       - install -Dm644 README.md /app/share/doc/yoo/README.md
       - install -Dm644 io.github.nihitdev.yoo.metainfo.xml /app/share/metainfo/io.github.nihitdev.yoo.metainfo.xml
