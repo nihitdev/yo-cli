@@ -1,0 +1,42 @@
+#!/bin/sh
+set -eu
+
+fail() { printf 'yoo APT setup: %s\n' "$1" >&2; exit 1; }
+[ "$(id -u)" -eq 0 ] || fail 'run this script with sudo sh'
+command -v apt-get >/dev/null 2>&1 || fail 'Debian or Ubuntu with APT is required'
+[ "$(dpkg --print-architecture)" = amd64 ] || fail 'only amd64 is currently supported'
+for tool in curl gpg; do
+  command -v "$tool" >/dev/null 2>&1 || fail 'install ca-certificates, curl and gnupg first'
+done
+
+umask 022
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT HUP INT TERM
+mkdir -m700 "$work/gnupg"
+curl --proto '=https' --proto-redir '=https' --tlsv1.2 --fail --silent --show-error --location \
+  https://yo-cli.vercel.app/apt/yoo-archive-keyring.gpg -o "$work/key.gpg"
+# Pin the repository identity before modifying any system files.
+fingerprints=$(gpg --homedir "$work/gnupg" --batch --show-keys --with-colons "$work/key.gpg" |
+  awk -F: '$1 == "pub" { primary=1; next } primary && $1 == "fpr" { print $10; primary=0 }')
+[ "$fingerprints" = '@FINGERPRINT@' ] || fail 'repository signing key fingerprint mismatch'
+gpg --homedir "$work/gnupg" --batch --import "$work/key.gpg" >/dev/null 2>&1
+gpg --homedir "$work/gnupg" --batch --export-options export-minimal \
+  --export '@FINGERPRINT@' > "$work/keyring.gpg"
+[ -s "$work/keyring.gpg" ] || fail 'empty repository key'
+
+cat > "$work/yoo.sources" <<'SOURCES'
+Types: deb
+URIs: https://yo-cli.vercel.app/apt
+Suites: stable
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/yoo-archive-keyring.gpg
+SOURCES
+install -d -m755 /etc/apt/keyrings /etc/apt/sources.list.d
+# Stage on the destination filesystem, then rename: repeated runs create no duplicates.
+install -m644 "$work/keyring.gpg" /etc/apt/keyrings/yoo-archive-keyring.gpg.new
+mv -f /etc/apt/keyrings/yoo-archive-keyring.gpg.new /etc/apt/keyrings/yoo-archive-keyring.gpg
+install -m644 "$work/yoo.sources" /etc/apt/sources.list.d/yoo.sources.new
+mv -f /etc/apt/sources.list.d/yoo.sources.new /etc/apt/sources.list.d/yoo.sources
+apt-get update -o APT::Update::Error-Mode=any
+printf 'yoo repository configured. Install with: sudo apt install yoo\n'

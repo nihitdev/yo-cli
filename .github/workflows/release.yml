@@ -251,3 +251,13 @@ jobs:
           set -euo pipefail
           sudo snap install snapcraft --classic
           snapcraft upload snap-artifacts/*.snap --release=candidate
+
+  publish-apt:
+    needs: publish
+    uses: ./.github/workflows/apt-repository.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets:
+      APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+      APT_SIGNING_PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+      APT_PUBLISH_TOKEN: ${{ secrets.APT_PUBLISH_TOKEN }}

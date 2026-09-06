@@ -1,0 +1,21 @@
+Package: yoo
+Architecture: amd64
+Version: 1.0.0-1
+Priority: optional
+Section: utils
+Maintainer: Nihit <nihitdev@users.noreply.github.com>
+Installed-Size: 1217
+Depends: libc6 (>= 2.39), libgcc-s1
+Suggests: git
+Filename: pool/main/y/yoo/yoo_1.0.0-1_amd64.deb
+Size: 436924
+MD5sum: 9b6c6af3f13b7dad3ad717135ea0f6af
+SHA1: 2c905f0dd7d1a9af2b602f1c9a66ff0b791730a7
+SHA256: d52501e851506c18c8590b85d3a699de213d941bc84a7644301f39684a29e7e4
+SHA512: 65155c8fa5c4d86dc340425bc3611ce58d451a1e0bbefc3353866deb2dc3815cb12ff83a2218c26e30c4bea0ebf2f789fe25fb247d978be0a294a4c9281dfcb6
+Homepage: https://nihitdev.github.io
+Description: Local CLI for project, Git, and development environment information.
+ Inspect local projects, Git status and development tools, generate shell
+ completions, and run coding-session timers. No daemon or network service is
+ required.
+

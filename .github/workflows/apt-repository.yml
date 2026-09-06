@@ -1,0 +1,114 @@
+name: Publish APT repository
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+    secrets:
+      APT_SIGNING_KEY:
+        required: false
+      APT_SIGNING_PASSPHRASE:
+        required: false
+      APT_PUBLISH_TOKEN:
+        required: false
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (blank refreshes the current repository signatures)'
+        type: string
+        default: ''
+  schedule:
+    - cron: '21 5 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yoo-apt-production
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check optional signing and publication credentials
+        id: credentials
+        env:
+          KEY: ${{ secrets.APT_SIGNING_KEY }}
+          PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+          TOKEN: ${{ secrets.APT_PUBLISH_TOKEN }}
+        run: |
+          if [ -n "$KEY" ] && [ -n "$PASSPHRASE" ] && [ -n "$TOKEN" ]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'APT publication skipped: configure the three APT secrets.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/checkout@v6
+        if: steps.credentials.outputs.enabled == 'true'
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          token: ${{ secrets.APT_PUBLISH_TOKEN }}
+      - name: Install Debian repository tools
+        if: steps.credentials.outputs.enabled == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apt-utils gnupg
+      - name: Download release or select current package
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ -n "$TAG" ]; then
+            [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+            mkdir -p target/apt-download
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern 'yoo_*_amd64.deb' --pattern SHA256SUMS --dir target/apt-download
+            (cd target/apt-download && sha256sum --check --ignore-missing SHA256SUMS)
+            packages=(target/apt-download/yoo_*_amd64.deb)
+            [[ ${#packages[@]} == 1 && -f "${packages[0]}" ]]
+            echo "APT_DEB=${packages[0]}" >> "$GITHUB_ENV"
+            echo "APT_EXPECTED_VERSION=${TAG#v}" >> "$GITHUB_ENV"
+          else
+            latest=''
+            for package in site/public/apt/pool/main/y/yoo/*.deb; do
+              version=$(dpkg-deb -f "$package" Version)
+              if [ -z "$latest" ] || dpkg --compare-versions "$version" gt "$latest"; then
+                latest=$version
+                selected=$package
+              fi
+            done
+            echo "APT_DEB=$selected" >> "$GITHUB_ENV"
+          fi
+      - name: Import key, sign and validate repository
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+          APT_SIGNING_PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          export GNUPGHOME
+          GNUPGHOME=$(mktemp -d)
+          trap 'gpgconf --kill gpg-agent; rm -rf "$GNUPGHOME"' EXIT
+          chmod 700 "$GNUPGHOME"
+          printf '%s' "$APT_SIGNING_KEY" | gpg --batch --import
+          export APT_SIGNING_FINGERPRINT
+          APT_SIGNING_FINGERPRINT=$(gpg --batch --show-keys --with-colons site/public/apt/yoo-archive-keyring.gpg | awk -F: '$1 == "fpr" {print $10; exit}')
+          bash scripts/apt-repository.sh "$APT_DEB"
+          bash scripts/apt-validate.sh
+      - name: Commit public repository for Vercel Git deployment
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git config user.name nihitdev
+          git config user.email nihitdev@users.noreply.github.com
+          git add site/public/apt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update signed yoo APT repository'
+            # Never force-push: a concurrent source change must be reviewed/retried.
+            git push origin "HEAD:$BRANCH"
+          fi
