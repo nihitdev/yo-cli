@@ -22,5 +22,7 @@ find hostdir/binpkgs -maxdepth 1 -type f -name 'yoo-*.xbps' -exec cp {} /workspa
 package=$(find /workspace/dist-void -maxdepth 1 -type f -name 'yoo-*.xbps' -print -quit)
 [[ -n "$package" ]]
 tar -tf "$package" | grep -qx './usr/bin/yoo'
-xbps-install -y -R /tmp/void-packages/hostdir/binpkgs yoo
-[[ "$(yoo --version)" == "yoo $version" ]]
+if [[ "${RUN_INSTALL_TEST:-0}" == 1 ]]; then
+  xbps-install -y -R /tmp/void-packages/hostdir/binpkgs yoo
+  [[ "$(yoo --version)" == "yoo $version" ]]
+fi

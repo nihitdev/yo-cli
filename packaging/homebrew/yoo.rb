@@ -20,7 +20,6 @@ class Yoo < Formula
 
   def install
     bin.install "yoo"
-    generate_completions_from_executable(bin/"yoo", "completions", shells: [:bash, :zsh, :fish], shell_parameter_format: :arg)
   end
 
   test do

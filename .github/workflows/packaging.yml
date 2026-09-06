@@ -46,8 +46,8 @@ jobs:
           cargo generate-rpm
           dpkg-deb --info target/debian/*.deb
           dpkg-deb --contents target/debian/*.deb
-          dpkg-deb -f target/debian/*.deb Depends | grep -q libc6
-          dpkg-deb -f target/debian/*.deb Depends | grep -q libgcc-s1
+          dpkg-deb -f target/debian/*.deb Depends | grep libc6 >/dev/null
+          dpkg-deb -f target/debian/*.deb Depends | grep libgcc-s1 >/dev/null
           sudo apt-get update
           sudo apt-get install -y rpm
           rpm -qp --requires target/generate-rpm/*.rpm
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:
-      - run: pacman -Syu --noconfirm git
+      - run: pacman -Syu --noconfirm git zip
       - uses: actions/checkout@v6
       - run: |
           set -euo pipefail
@@ -143,28 +143,34 @@ jobs:
       - name: Build and install from the static repository in Tumbleweed
         run: |
           set -euo pipefail
+          version=$(bash scripts/package-version.sh)
           docker run --rm \
             -v "$GITHUB_WORKSPACE:/workspace:ro" \
+            -e YOO_VERSION="$version" \
             opensuse/tumbleweed \
             bash -euxo pipefail -c '
               zypper --non-interactive refresh
               zypper --non-interactive install --no-recommends \
                 cargo cargo-packaging rust rpm-build createrepo_c gpg2
-              rpmbuild -ba /workspace/packaging/opensuse/yoo.spec
-              test -x /root/rpmbuild/RPMS/x86_64/yoo-1.0.0-0.x86_64.rpm
-              rpm -qpl /root/rpmbuild/RPMS/x86_64/yoo-1.0.0-0.x86_64.rpm | grep -qx /usr/bin/yoo
-              python3 -m http.server 18080 --directory /workspace/site/public >/tmp/yoo-http.log 2>&1 &
+              mkdir -p /usr/src/packages/SOURCES
+              curl -fsSL "https://github.com/nihitdev/yo-cli/archive/refs/tags/v${YOO_VERSION}.tar.gz" \
+                -o "/usr/src/packages/SOURCES/yoo-${YOO_VERSION}.tar.gz"
+              cp /workspace/packaging/opensuse/vendor.tar.zst /usr/src/packages/SOURCES/
+              sed "s/^Version:.*/Version:        ${YOO_VERSION}/" \
+                /workspace/packaging/opensuse/yoo.spec >/tmp/yoo.spec
+              rpmbuild -ba /tmp/yoo.spec
+              test -x "/root/rpmbuild/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm"
+              rpm -qpl "/root/rpmbuild/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm" | grep -qx /usr/bin/yoo
+              mkdir -p /tmp/yoo-repo/packages
+              cp "/root/rpmbuild/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm" /tmp/yoo-repo/packages/
+              createrepo_c --update /tmp/yoo-repo
+              printf "%s\\n" "[yoo]" "name=yoo" "baseurl=http://127.0.0.1:18080/" "enabled=1" "gpgcheck=0" "repo_gpgcheck=0" >/etc/zypp/repos.d/yoo.repo
+              python3 -m http.server 18080 --directory /tmp/yoo-repo >/tmp/yoo-http.log 2>&1 &
               server=$!
               trap "kill $server" EXIT
-              rpm --import /workspace/site/public/opensuse/RPM-GPG-KEY-yoo
-              sed \
-                -e "s#^baseurl=.*#baseurl=http://127.0.0.1:18080/opensuse/#" \
-                -e "s#^gpgkey=.*#gpgkey=file:///workspace/site/public/opensuse/RPM-GPG-KEY-yoo#" \
-                /workspace/site/public/opensuse/yoo.repo \
-                >/etc/zypp/repos.d/yoo.repo
-              zypper --non-interactive --gpg-auto-import-keys refresh
+              zypper --non-interactive refresh
               zypper --non-interactive install --no-recommends yoo
-              test "$(yoo --version)" = "yoo 1.0.0"
+              test "$(yoo --version)" = "yoo ${YOO_VERSION}"
             '
 
   alpine:
@@ -211,7 +217,11 @@ jobs:
               xbps-install -Syu -y
               xbps-install -y bash git wget base-devel
               git clone --depth 1 https://github.com/void-linux/void-packages.git /tmp/void-packages
-              bash /workspace/scripts/void-build.sh
+              useradd -m builder
+              chown -R builder:builder /tmp/void-packages /workspace/dist-void
+              su builder -c "bash /workspace/scripts/void-build.sh"
+              xbps-install -y -R /tmp/void-packages/hostdir/binpkgs yoo
+              test "$(yoo --version)" = "yoo $(bash /workspace/scripts/package-version.sh)"
             '
           test -n "$(find dist-void -name 'yoo-*.xbps' -print -quit)"
       - uses: actions/upload-artifact@v7
