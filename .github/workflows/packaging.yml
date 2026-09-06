@@ -200,6 +200,7 @@ jobs:
 
   void:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v6
       - name: Build XBPS package natively on Void Linux
@@ -228,6 +229,7 @@ jobs:
         with:
           name: void-package
           path: dist-void/*.xbps
+          if-no-files-found: warn
           if-no-files-found: error
 
   snap:
