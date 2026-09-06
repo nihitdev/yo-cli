@@ -112,7 +112,7 @@ yoo session 25
 The default report includes the installed version and current project context:
 
 ```text
-Version:         1.1.0
+Version:         1.1.1
 Project:         yoo
 Git:             main · clean
 ```
