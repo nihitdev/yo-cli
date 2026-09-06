@@ -4,6 +4,12 @@ All notable changes to `yoo` are documented here.
 
 The format follows the spirit of Keep a Changelog: user-visible changes are grouped by release and by type.
 
+## [1.1.1] - 2026-09-06
+
+### Changed
+
+- Expanded release packaging and validation across supported ecosystems.
+
 ## [Unreleased]
 
 ## [1.0.0] - 2026-08-08
