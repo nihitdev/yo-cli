@@ -20,6 +20,7 @@ jobs:
         run: |
           set -euo pipefail
           version=$(bash scripts/package-version.sh "$GITHUB_REF_NAME")
+          sed -E -i "s/^Version:[[:space:]]+[0-9]+\.[0-9]+\.[0-9]+$/Version:         $version/" README.md
           echo "Release version: $version" >> "$GITHUB_STEP_SUMMARY"
       - run: cargo fmt --check
       - run: cargo test --locked
