@@ -1,0 +1,27 @@
+# Maintainer: Nihit <nihitdev@users.noreply.github.com>
+
+pkgname=yoo
+pkgver=1.0.0
+pkgrel=0
+pkgdesc="Local-first developer session starter and project inspector"
+url="https://github.com/nihitdev/yo-cli"
+arch="x86_64"
+license="GPL-3.0-or-later"
+makedepends="cargo rust"
+source="$pkgname-$pkgver.tar.gz::https://github.com/nihitdev/yo-cli/archive/refs/tags/v$pkgver.tar.gz"
+options="!check"
+
+build() {
+	cd "$srcdir/yo-cli-$pkgver"
+	cargo build --release --locked
+}
+
+package() {
+	cd "$srcdir/yo-cli-$pkgver"
+	install -Dm755 target/release/yoo "$pkgdir/usr/bin/yoo"
+	install -Dm644 LICENSE "$pkgdir/usr/share/licenses/yoo/LICENSE"
+	install -Dm644 README.md "$pkgdir/usr/share/doc/yoo/README.md"
+}
+sha512sums="
+a4f3987032771eecc373e4be36d6e096aebfb6f9701e614e447e6c63f7b9eaceb9f792a2c50044fe8bc99de9418f817b05c0c3aaef76e96c00bae451f92cca83  yoo-1.0.0.tar.gz
+"
