@@ -1,12 +1,14 @@
 app-id: io.github.nihitdev.yoo
 runtime: org.freedesktop.Platform
-runtime-version: '25.08'
+runtime-version: "25.08"
 sdk: org.freedesktop.Sdk
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.rust-stable
 command: yoo
+
 finish-args:
   - --filesystem=host:ro
+
 modules:
   - name: yoo
     buildsystem: simple
@@ -21,6 +23,9 @@ modules:
       - install -Dm755 target/release/yoo /app/bin/yoo
       - install -Dm644 LICENSE /app/share/licenses/yoo/LICENSE
       - install -Dm644 README.md /app/share/doc/yoo/README.md
+      - install -Dm644 io.github.nihitdev.yoo.metainfo.xml /app/share/metainfo/io.github.nihitdev.yoo.metainfo.xml
     sources:
       - type: archive
         path: ../../target/flatpak/yoo-source.tar.gz
+      - type: file
+        path: io.github.nihitdev.yoo.metainfo.xml
