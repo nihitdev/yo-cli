@@ -1,0 +1,29 @@
+class Yoo < Formula
+  desc "Local CLI for project, Git, and development environment information"
+  homepage "https://github.com/nihitdev/yo-cli"
+  version "@VERSION@"
+  license "GPL-3.0-or-later"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/nihitdev/yo-cli/releases/download/v@VERSION@/yoo-v@VERSION@-macos-aarch64.tar.gz"
+      sha256 "@MAC_SHA@"
+    end
+  end
+
+  on_linux do
+    on_intel do
+      url "https://github.com/nihitdev/yo-cli/releases/download/v@VERSION@/yoo-v@VERSION@-linux-x86_64.tar.gz"
+      sha256 "@LINUX_SHA@"
+    end
+  end
+
+  def install
+    bin.install "yoo"
+    generate_completions_from_executable(bin/"yoo", "completions", shells: [:bash, :zsh, :fish], shell_parameter_format: :arg)
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/yoo --version")
+  end
+end

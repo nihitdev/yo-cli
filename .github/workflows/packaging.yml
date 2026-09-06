@@ -1,0 +1,163 @@
+name: Packaging
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'Cargo.*'
+      - 'src/**'
+      - 'tests/**'
+      - 'packaging/**'
+      - 'snap/**'
+      - 'flake.*'
+      - 'scripts/package-*.sh'
+      - 'scripts/flatpak-source.sh'
+      - '.github/workflows/*'
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        id: tools
+        with:
+          path: |
+            ~/.cargo/bin/cargo-deb
+            ~/.cargo/bin/cargo-generate-rpm
+          key: packaging-tools-${{ runner.os }}-deb-3.8.0-rpm-0.21.0
+      - if: steps.tools.outputs.cache-hit != 'true'
+        run: |
+          cargo install cargo-deb --version 3.8.0 --locked
+          cargo install cargo-generate-rpm --version 0.21.0 --locked
+      - run: |
+          set -euo pipefail
+          cargo build --release --locked
+          bash scripts/package-completions.sh
+          git diff --exit-code -- packaging/completions
+          cargo deb --no-build
+          cargo generate-rpm
+          dpkg-deb --info target/debian/*.deb
+          dpkg-deb --contents target/debian/*.deb
+          dpkg-deb -f target/debian/*.deb Depends | grep -q libc6
+          dpkg-deb -f target/debian/*.deb Depends | grep -q libgcc-s1
+          sudo apt-get update
+          sudo apt-get install -y rpm
+          rpm -qp --requires target/generate-rpm/*.rpm
+          mkdir -p target/deb-extract target/rpm-extract
+          dpkg-deb -x target/debian/*.deb target/deb-extract
+          target/deb-extract/usr/bin/yoo --version
+          rpm2cpio target/generate-rpm/*.rpm | (cd target/rpm-extract && cpio -id)
+          target/rpm-extract/usr/bin/yoo --version
+          mkdir -p dist
+          cp target/debian/*.deb target/generate-rpm/*.rpm dist/
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-packages
+          path: dist/*
+          if-no-files-found: error
+
+  metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - run: |
+          set -euo pipefail
+          bash -n scripts/package-*.sh scripts/flatpak-source.sh packaging/aur/PKGBUILD
+          ruby -c packaging/homebrew/yoo.rb
+          cargo build --release --locked
+          version=$(bash scripts/package-version.sh)
+          mkdir -p target/metadata-assets
+          # Exercise generation without requiring an already published tag.
+          for platform in linux-x86_64 macos-aarch64; do
+            tar -czf "target/metadata-assets/yoo-v$version-$platform.tar.gz" -C target/release yoo
+          done
+          bash scripts/package-metadata.sh target/metadata-assets target/metadata
+          ruby -c target/metadata/homebrew/yoo.rb
+
+  aur:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - run: pacman -Syu --noconfirm git
+      - uses: actions/checkout@v6
+      - run: |
+          set -euo pipefail
+          useradd -m builder
+          cp -r packaging/aur /tmp/yoo-aur
+          chown -R builder:builder /tmp/yoo-aur
+          su builder -c 'cd /tmp/yoo-aur && makepkg --printsrcinfo' > /tmp/SRCINFO
+          diff -u packaging/aur/.SRCINFO /tmp/SRCINFO
+          su builder -c 'cd /tmp/yoo-aur && makepkg --verifysource && makepkg --nodeps'
+          version=$(bash scripts/package-version.sh)
+          mkdir -p target/metadata-assets
+          for platform in linux-x86_64 macos-aarch64; do
+            tar -czf "target/metadata-assets/yoo-v$version-$platform.tar.gz" LICENSE
+          done
+          bash scripts/package-metadata.sh target/metadata-assets /tmp/yoo-generated
+          chown -R builder:builder /tmp/yoo-generated
+          su builder -c 'cd /tmp/yoo-generated/aur && makepkg --printsrcinfo' > /tmp/generated.SRCINFO
+          diff -u /tmp/yoo-generated/aur/.SRCINFO /tmp/generated.SRCINFO
+
+  nix:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+      - run: nix flake check
+      - run: nix run . -- --version
+      - name: Install and test Homebrew formula
+        if: runner.os == 'macOS'
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+        run: |
+          set -euo pipefail
+          brew tap-new local/yoo
+          cp packaging/homebrew/yoo.rb "$(brew --repository local/yoo)/Formula/yoo.rb"
+          brew install local/yoo/yoo
+          brew test local/yoo/yoo
+
+  snap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: snapcore/action-build@v1
+        id: build
+      - run: |
+          sudo snap install --dangerous "${{ steps.build.outputs.snap }}"
+          snap run yoo --version
+      - uses: actions/upload-artifact@v7
+        with:
+          name: snap-package
+          path: ${{ steps.build.outputs.snap }}
+          if-no-files-found: error
+
+  flatpak:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08 org.freedesktop.Sdk.Extension.rust-stable//25.08
+          bash scripts/flatpak-source.sh
+          flatpak-builder --user --disable-rofiles-fuse --repo=target/flatpak-repo target/flatpak-build packaging/flatpak/io.github.nihitdev.yoo.yml
+          flatpak build-bundle target/flatpak-repo "target/yoo-$(bash scripts/package-version.sh)-x86_64.flatpak" io.github.nihitdev.yoo
+          flatpak-builder --run target/flatpak-build packaging/flatpak/io.github.nihitdev.yoo.yml yoo --version
+      - uses: actions/upload-artifact@v7
+        with:
+          name: flatpak-package
+          path: target/*.flatpak
+          if-no-files-found: error

@@ -1,0 +1,34 @@
+name: yoo
+base: core24
+adopt-info: yoo
+summary: Project, Git, and development environment information
+description: |
+  A local CLI for inspecting projects and running coding-session timers.
+  Strict confinement limits inspection to accessible home projects.
+  Host development tools and editors are not available inside the sandbox.
+grade: stable
+confinement: strict
+license: GPL-3.0-or-later
+
+platforms:
+  amd64:
+  arm64:
+
+apps:
+  yoo:
+    command: bin/yoo
+    plugs: [home, removable-media]
+
+parts:
+  yoo:
+    plugin: rust
+    source: .
+    rust-channel: stable
+    build-packages: [pkg-config]
+    stage-packages: [git]
+    override-build: |
+      set -eu
+      craftctl set version="$(bash scripts/package-version.sh)"
+      craftctl default
+      install -Dm644 LICENSE "$CRAFT_PART_INSTALL/share/licenses/yoo/LICENSE"
+      install -Dm644 README.md "$CRAFT_PART_INSTALL/share/doc/yoo/README.md"

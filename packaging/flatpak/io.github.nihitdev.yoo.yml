@@ -1,0 +1,26 @@
+app-id: io.github.nihitdev.yoo
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: yoo
+finish-args:
+  - --filesystem=host:ro
+modules:
+  - name: yoo
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/rust-stable/bin
+      env:
+        CARGO_HOME: /run/build/yoo/cargo
+    build-commands:
+      - mkdir -p .cargo
+      - cp cargo-config.toml .cargo/config.toml
+      - cargo build --release --locked --offline
+      - install -Dm755 target/release/yoo /app/bin/yoo
+      - install -Dm644 LICENSE /app/share/licenses/yoo/LICENSE
+      - install -Dm644 README.md /app/share/doc/yoo/README.md
+    sources:
+      - type: archive
+        path: ../../target/flatpak/yoo-source.tar.gz

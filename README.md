@@ -121,6 +121,31 @@ Use `--editor` to choose an editor explicitly, or run `yoo edit` to use `VISUAL`
 
 ## Installation
 
+### Linux and macOS package managers
+
+| Platform | Install |
+| :-- | :-- |
+| Linux / macOS | `cargo install yoo` or `cargo binstall yoo` |
+| Apple Silicon / Linux x86_64 | Homebrew: see below |
+| Arch Linux x86_64 | `yay -S yoo-bin` (after AUR publication) |
+| Nix | `nix run github:nihitdev/yo-cli` |
+| Debian / Ubuntu x86_64 | `sudo dpkg -i yoo_*.deb` |
+| RPM Linux x86_64 | `sudo rpm -i yoo-*.rpm` |
+| Snap | `sudo snap install yoo` (after Store publication) |
+| Flatpak | `flatpak install --user ./yoo-*.flatpak`; `flatpak run io.github.nihitdev.yoo` |
+
+Download native packages from GitHub Releases. New package artifacts will appear
+with the next tagged release. The Homebrew tap must first be created and populated:
+
+```bash
+brew tap nihitdev/tap
+brew install yoo
+```
+
+Until then, use the [direct formula instructions](docs/installation.md#homebrew).
+Snap and Flatpak restrict host tool/editor detection; read their limitations in
+the [installation guide](docs/installation.md#snap).
+
 ### Installer script
 
 On supported Linux x86-64 and Apple Silicon macOS systems:

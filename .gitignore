@@ -9,3 +9,13 @@ packages/npm/vendor/
 
 # Temporary package-manager contribution checkouts
 winget-pkgs-update/
+
+# Local packaging build output
+packaging/aur/src/
+packaging/aur/pkg/
+packaging/aur/*.tar.gz
+packaging/aur/*.pkg.tar.*
+result
+*.snap
+
+.flatpak-builder/

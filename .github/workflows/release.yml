@@ -9,7 +9,14 @@ permissions:
   contents: write
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: bash scripts/package-version.sh
+
   build:
+    needs: version
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
 
@@ -17,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             archive: yoo-${{ github.ref_name }}-linux-x86_64
             binstall_archive: yoo-${{ github.ref_name }}-x86_64-unknown-linux-gnu
@@ -143,9 +150,13 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
+  native-packages:
+    needs: version
+    uses: ./.github/workflows/packaging.yml
+
   publish:
     name: Publish GitHub Release
-    needs: build
+    needs: [build, native-packages]
     runs-on: ubuntu-latest
 
     steps:
@@ -161,12 +172,13 @@ jobs:
       - name: List release files
         run: ls -lah release
 
-      - name: Generate SHA-256 checksums
-        working-directory: release
+      - name: Generate Homebrew and AUR publication bundle
         run: |
-          set -euo pipefail
-          sha256sum * > SHA256SUMS
-          cat SHA256SUMS
+          bash scripts/package-metadata.sh release target/package-metadata
+          tar -czf release/yoo-packaging.tar.gz -C target/package-metadata homebrew aur
+
+      - name: Generate SHA-256 checksums
+        run: bash scripts/package-checksums.sh release
 
       - name: Build release notes from changelog
         shell: bash
@@ -179,3 +191,63 @@ jobs:
           body_path: release-notes.md
           overwrite_files: true
           files: release/*
+
+  publish-tap:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check optional tap credentials
+        id: credentials
+        env:
+          TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then echo "enabled=true" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@v6
+        if: steps.credentials.outputs.enabled == 'true'
+        with:
+          repository: nihitdev/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+      - name: Update formula
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern yoo-packaging.tar.gz
+          tar -xzf yoo-packaging.tar.gz homebrew/yoo.rb
+          mkdir -p tap/Formula
+          cp homebrew/yoo.rb tap/Formula/yoo.rb
+          cd tap
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add Formula/yoo.rb
+          if ! git diff --cached --quiet; then
+            git commit -m "Update yoo to $RELEASE_TAG"
+            git push
+          fi
+
+  publish-snap:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check optional Snap Store credentials
+        id: credentials
+        env:
+          TOKEN: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        run: |
+          if [ -n "$TOKEN" ]; then echo "enabled=true" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/download-artifact@v8
+        if: steps.credentials.outputs.enabled == 'true'
+        with:
+          name: snap-package
+          path: snap-artifacts
+      - name: Publish to Snap Store candidate channel
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        run: |
+          set -euo pipefail
+          sudo snap install snapcraft --classic
+          snapcraft upload snap-artifacts/*.snap --release=candidate

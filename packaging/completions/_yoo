@@ -1,0 +1,45 @@
+#compdef yoo
+
+_yoo() {
+  local -a commands themes shells
+  commands=(
+    'init:Create the default config and sample tip pack'
+    'config:Print the config file location'
+    'doctor:Check tools and project setup'
+    'edit:Open the current directory in an editor'
+    'fetch:Show environment and project information'
+    'status:Alias for fetch'
+    'project:Show a structured project overview'
+    'session:Start a coding-session timer'
+    'tip:Print a random tip'
+    'tips:List installed tip packs'
+    'completions:Generate shell completions'
+    'version:Print version'
+    'help:Print help'
+  )
+  themes=(neon ocean mono dracula tokyo-night gruvbox nord rose-pine catppuccin)
+  shells=(bash zsh fish powershell)
+
+  _arguments -C \
+    '--fast[skip the typewriter animation]' \
+    '--no-art[hide the ASCII logo]' \
+    '--plain[disable ANSI colours]' \
+    '--name[override the profile name]:name:' \
+    '--theme[override the theme]:theme:($themes)' \
+    '1:command:->command' \
+    '*::argument:->args'
+
+  case "$state" in
+    command) _describe 'command' commands ;;
+    args)
+      case "$words[2]" in
+        fetch|status|project)
+          _arguments '--json[machine-readable JSON]' '--no-art[hide art]' '--plain[disable colours]' '--theme[override theme]:theme:($themes)' ;;
+        session) _arguments '--minutes[session length]:minutes:' '1:minutes:' ;;
+        edit) _arguments '--editor[use a specific editor]:editor:_command_names' ;;
+        completions) _values 'shell' $shells ;;
+      esac ;;
+  esac
+}
+
+_yoo "$@"
