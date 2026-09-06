@@ -13,5 +13,5 @@ sed -E -e "s/^pkgver=.*/pkgver=$version/" \
   /workspace/packaging/alpine/APKBUILD > /home/builder/APKBUILD
 chown -R builder:builder /home/builder
 su builder -c 'abuild-keygen -a -n'
-su builder -c 'cd /home/builder && abuild -r APKBUILD'
+su builder -c 'cd /home/builder && abuild -r'
 find /home/builder/packages -name 'yoo-*.apk' -exec cp {} /workspace/dist-alpine/ \;

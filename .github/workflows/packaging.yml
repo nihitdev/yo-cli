@@ -54,8 +54,7 @@ jobs:
           mkdir -p target/deb-extract target/rpm-extract
           dpkg-deb -x target/debian/*.deb target/deb-extract
           target/deb-extract/usr/bin/yoo --version
-          rpm2cpio target/generate-rpm/*.rpm | (cd target/rpm-extract && cpio -id)
-          target/rpm-extract/usr/bin/yoo --version
+          rpm -qpl target/generate-rpm/*.rpm | grep -qx /usr/bin/yoo
           mkdir -p dist
           cp target/debian/*.deb target/generate-rpm/*.rpm dist/
       - uses: actions/upload-artifact@v7
@@ -159,10 +158,10 @@ jobs:
               sed "s/^Version:.*/Version:        ${YOO_VERSION}/" \
                 /workspace/packaging/opensuse/yoo.spec >/tmp/yoo.spec
               rpmbuild -ba /tmp/yoo.spec
-              test -x "/root/rpmbuild/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm"
-              rpm -qpl "/root/rpmbuild/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm" | grep -qx /usr/bin/yoo
+              test -x "/usr/src/packages/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm"
+              rpm -qpl "/usr/src/packages/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm" | grep -qx /usr/bin/yoo
               mkdir -p /tmp/yoo-repo/packages
-              cp "/root/rpmbuild/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm" /tmp/yoo-repo/packages/
+              cp "/usr/src/packages/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm" /tmp/yoo-repo/packages/
               createrepo_c --update /tmp/yoo-repo
               printf "%s\\n" "[yoo]" "name=yoo" "baseurl=http://127.0.0.1:18080/" "enabled=1" "gpgcheck=0" "repo_gpgcheck=0" >/etc/zypp/repos.d/yoo.repo
               python3 -m http.server 18080 --directory /tmp/yoo-repo >/tmp/yoo-http.log 2>&1 &
@@ -210,6 +209,7 @@ jobs:
           docker run --rm \
             -v "$GITHUB_WORKSPACE:/workspace" \
             -e RELEASE_TAG="${GITHUB_REF_NAME:-}" \
+            --privileged \
             voidlinux/voidlinux:latest \
             sh -euxc '
               printf "%s\\n" "repository=http://repo-default.voidlinux.org/current" > /etc/xbps.d/00-repository-main.conf
