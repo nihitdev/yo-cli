@@ -16,7 +16,7 @@ sed -e "s/^version=.*/version=$version/" \
 
 cd /tmp/void-packages
 ./xbps-src binary-bootstrap
-./xbps-src pkg yoo
+./xbps-src -Q pkg yoo
 mkdir -p /workspace/dist-void
 find hostdir/binpkgs -maxdepth 1 -type f -name 'yoo-*.xbps' -exec cp {} /workspace/dist-void/ \;
 package=$(find /workspace/dist-void -maxdepth 1 -type f -name 'yoo-*.xbps' -print -quit)

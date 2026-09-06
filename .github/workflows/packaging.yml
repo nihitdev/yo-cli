@@ -158,7 +158,7 @@ jobs:
               sed "s/^Version:.*/Version:        ${YOO_VERSION}/" \
                 /workspace/packaging/opensuse/yoo.spec >/tmp/yoo.spec
               rpmbuild -ba /tmp/yoo.spec
-              test -x "/usr/src/packages/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm"
+              test -f "/usr/src/packages/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm"
               rpm -qpl "/usr/src/packages/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm" | grep -qx /usr/bin/yoo
               mkdir -p /tmp/yoo-repo/packages
               cp "/usr/src/packages/RPMS/x86_64/yoo-${YOO_VERSION}-0.x86_64.rpm" /tmp/yoo-repo/packages/
