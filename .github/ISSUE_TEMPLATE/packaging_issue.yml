@@ -1,0 +1,47 @@
+name: Packaging issue
+description: Report a problem with a package or repository
+title: "[Packaging]: "
+labels: [packaging]
+body:
+  - type: dropdown
+    id: ecosystem
+    attributes:
+      label: Package ecosystem
+      options:
+        - Cargo / crates.io
+        - npm
+        - WinGet
+        - Scoop
+        - Chocolatey
+        - AUR
+        - Homebrew
+        - Nix
+        - Debian / APT
+        - RPM / DNF
+        - openSUSE / Zypper
+        - Alpine / APK
+        - Flatpak
+        - Snap
+        - Void / XBPS
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes:
+      label: yoo version
+    validations: { required: true }
+  - type: input
+    id: platform
+    attributes:
+      label: OS and architecture
+    validations: { required: true }
+  - type: textarea
+    id: command
+    attributes:
+      label: Installation or update command
+    validations: { required: true }
+  - type: textarea
+    id: output
+    attributes:
+      label: Logs and output
+      render: shell
+    validations: { required: true }

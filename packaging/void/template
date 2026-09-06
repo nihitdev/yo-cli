@@ -1,0 +1,22 @@
+# Template file for 'yoo'
+pkgname=yoo
+version=1.0.0
+revision=1
+build_style=cargo
+hostmakedepends="pkg-config"
+short_desc="Local CLI for project, Git, and development environment information"
+maintainer="Nihit <nihitdev@users.noreply.github.com>"
+license="GPL-3.0-or-later"
+homepage="https://github.com/nihitdev/yo-cli"
+distfiles="https://github.com/nihitdev/yo-cli/archive/refs/tags/v${version}.tar.gz"
+checksum=a4f3987032771eecc373e4be36d6e096aebfb6f9701e614e447e6c63f7b9eaceb9f792a2c50044fe8bc99de9418f817b05c0c3aaef76e96c00bae451f92cca83
+
+post_install() {
+	vlicense LICENSE
+	vdoc README.md
+
+	for shell in bash zsh fish; do
+		vtargetrun "${DESTDIR}/usr/bin/yoo" completions "${shell}" > "yoo.${shell}"
+		vcompletion "yoo.${shell}" "${shell}" yoo
+	done
+}

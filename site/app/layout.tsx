@@ -10,12 +10,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
-  const metadataBase = new URL(host ? `${protocol}://${host}` : "https://github.com/nihitdev/yo-cli");
+  const metadataBase = new URL(host ? `${protocol}://${host}` : "https://yo-cli.vercel.app/");
   const title = "yoo — local project and environment CLI";
-  const description = "Open-source CLI for project metadata, Git status, development environment checks, local session timers, and configurable reminders.";
+  const description = "A fast, local-first CLI for understanding your project and development environment.";
 
   return {
     metadataBase,
+    alternates: { canonical: "https://yo-cli.vercel.app/" },
     title,
     description,
     openGraph: {

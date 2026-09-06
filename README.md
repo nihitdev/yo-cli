@@ -1,427 +1,148 @@
 # yoo
 
-<p align="center">
-  A small, local-first CLI for viewing project, Git, and development environment information.
-</p>
+**What the hell is going on with this project?**
 
-<p align="center">
-  🌐 <strong><a href="https://yo-cli.vercel.app">Website</a></strong>
-  &nbsp;·&nbsp;
-  📚 <strong><a href="docs/README.md">Documentation</a></strong>
-</p>
+A fast, local-first CLI for understanding your project and development environment. `yoo` reads project files, Git state, installed tooling, and your local configuration, then reports what matters in the terminal.
 
-<p align="center">
-  <a href="https://crates.io/crates/yoo"><img src="https://img.shields.io/crates/v/yoo?style=for-the-badge&logo=rust&label=crates.io" alt="Crates.io version"></a>
-  <a href="https://www.npmjs.com/package/@nihitde_v/yoo"><img src="https://img.shields.io/npm/v/@nihitde_v/yoo?style=for-the-badge&logo=npm&label=npm" alt="npm version"></a>
-  <a href="https://github.com/nihitdev/yo-cli/releases/latest"><img src="https://img.shields.io/github/v/release/nihitdev/yo-cli?style=for-the-badge&logo=github" alt="Latest release"></a>
-</p>
+[![CI](https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/nihitdev/yo-cli?sort=semver)](https://github.com/nihitdev/yo-cli/releases)
+[![crates.io](https://img.shields.io/crates/v/yoo.svg)](https://crates.io/crates/yoo)
+[![npm](https://img.shields.io/npm/v/%40nihit_dev%2Fyoo)](https://www.npmjs.com/package/@nihit_dev/yoo)
+[![License](https://img.shields.io/github/license/nihitdev/yo-cli)](LICENSE)
+[![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-8b8b9a)](docs/installation.md)
 
-<p align="center">
-  <a href="https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/nihitdev/yo-cli/ci.yml?branch=main&style=flat-square&logo=githubactions&label=CI" alt="CI status"></a>
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=flat-square" alt="Supported platforms">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue?style=flat-square" alt="GPL-3.0-or-later license"></a>
-</p>
+## Why yoo?
 
-## Overview
+- **Local-first:** project data stays on your machine.
+- **Fast:** one small Rust executable with no daemon or account.
+- **Useful context:** project identity, Git status, toolchain health, and session reminders in one place.
+- **Terminal-native:** readable output by default, stable JSON when another tool needs it.
+- **Cross-platform:** Linux, macOS, and Windows, with package channels for each.
+- **No telemetry or AI requirement.**
 
-`yoo` collects common project and environment checks in a few commands:
+## Quick start
 
 ```bash
-yoo             # show a session summary
-yoo doctor      # check development tools and configuration
-yoo project     # inspect the current repository
-```
-
-The project is:
-
-- local-only, with no telemetry, accounts, daemon, or AI service
-- written in Rust
-- available on Windows, Linux, and macOS
-- usable in scripts through `yoo fetch --json` and `yoo project --json`
-
-## Screenshots
-
-### 1. Start a coding session
-
-```bash
+cargo install yoo
+cd path/to/a/project
 yoo --fast
 ```
 
-This displays the current project, Git branch, working-tree state, and a configured reminder.
-
-<p align="center">
-  <img src="docs/images/hero.png" alt="yoo developer session starter" width="780">
-</p>
-
-### 2. Check your setup
+The verified installer is convenient when Rust is not already installed:
 
 ```bash
-yoo doctor
+curl --proto '=https' --tlsv1.2 -LsSf https://yo-cli.vercel.app/yo-setup | sh
 ```
-
-Check Rust, Cargo, Git, Rustfmt, Clippy, yoo configuration, project detection, and repository state. Project detection works with Rust, Node.js, Python, Go, Java, and .NET repositories.
-
-<p align="center">
-  <img src="docs/images/doctor.png" alt="yoo doctor checking the local development setup" width="780">
-</p>
-
-### 3. Understand the project
-
-```bash
-yoo project
-```
-
-Get project metadata, package-manager detection, source statistics, Git details, and common repository-file checks.
-
-<p align="center">
-  <img src="docs/images/projects.png" alt="yoo project showing repository details" width="780">
-</p>
-
-### 4. Inspect the environment
-
-```bash
-yoo fetch
-```
-
-<p align="center">
-  <img src="docs/images/fetch.png" alt="yoo fetch showing developer environment information" width="780">
-</p>
-
-### 5. Start a local session timer
-
-```bash
-yoo session 25
-```
-
-<p align="center">
-  <img src="docs/images/session.png" alt="yoo local coding-session timer" width="780">
-</p>
-
-### 6. View installed tip packs
-
-```bash
-yoo tips
-```
-
-<p align="center">
-  <img src="docs/images/tips.png" alt="yoo installed tip packs" width="780">
-</p>
-
-### 7. Open the current project in your editor
-
-```bash
-yoo edit --editor code
-```
-
-Use `--editor` to choose an editor explicitly, or run `yoo edit` to use `VISUAL`, `EDITOR`, or an automatically detected editor.
-
-<p align="center">
-  <img src="docs/images/edit.png" alt="yoo edit opening the current project in Visual Studio Code" width="780">
-</p>
 
 ## Installation
 
-### Linux and macOS package managers
+Choose one method. The full platform notes and verification steps are in [docs/installation.md](docs/installation.md).
 
-| Platform | Install |
-| :-- | :-- |
-| Linux / macOS | `cargo install yoo` or `cargo binstall yoo` |
-| Apple Silicon / Linux x86_64 | Homebrew: see below |
-| Arch Linux x86_64 | `yay -S yoo-bin` (after AUR publication) |
-| Nix | `nix run github:nihitdev/yo-cli` |
-| Debian / Ubuntu x86_64 | `sudo dpkg -i yoo_*.deb` |
-| RPM Linux x86_64 | `sudo rpm -i yoo-*.rpm` |
-| Snap | `sudo snap install yoo` (after Store publication) |
-| Flatpak | `flatpak install --user ./yoo-*.flatpak`; `flatpak run io.github.nihitdev.yoo` |
+### Linux
 
-Download native packages from GitHub Releases. New package artifacts will appear
-with the next tagged release. The Homebrew tap must first be created and populated:
+| Channel | Install | Status |
+| --- | --- | --- |
+| APT (Debian/Ubuntu) | `curl -fsSL https://yo-cli.vercel.app/apt/setup.sh \| sudo sh` then `sudo apt install yoo` | Self-hosted signed repository |
+| DNF (Fedora/RHEL) | `sudo dnf config-manager addrepo --from-repofile=https://yo-cli.vercel.app/rpm/yoo.repo` then `sudo dnf install yoo` | Self-hosted signed repository |
+| Alpine | Add `https://yo-cli.vercel.app/alpine` to `/etc/apk/repositories`, then `sudo apk add yoo` | Self-hosted APK repository |
+| openSUSE Tumbleweed | `sudo zypper ar -f https://yo-cli.vercel.app/opensuse yoo && sudo zypper refresh && sudo zypper install yoo` | Self-hosted signed repository |
+| Arch / AUR | `yay -S yoo-bin` | Community package |
+| Nix | `nix run github:nihitdev/yo-cli` | GitHub flake |
+| Flatpak | `flatpak remote-add --user yoo https://yo-cli.vercel.app/flatpak/yoo.flatpakrepo && flatpak install --user yoo io.github.nihitdev.yoo` | Self-hosted repository |
+| Cargo Binstall | `cargo binstall yoo` | Prebuilt GitHub Release binary |
+
+`.deb`, `.rpm`, `.apk`, `.xbps`, and `.snap` files are also attached to each GitHub Release for direct installation. Void packages are built and tested in CI; there is no hosted XBPS repository, and Snap Store publication is disabled.
+
+### macOS
 
 ```bash
 brew tap nihitdev/tap
 brew install yoo
 ```
 
-Until then, use the [direct formula instructions](docs/installation.md#homebrew).
-Snap and Flatpak restrict host tool/editor detection; read their limitations in
-the [installation guide](docs/installation.md#snap).
+Or use `cargo install yoo`, `cargo binstall yoo`, or the verified installer.
 
-### Installer script
-
-On supported Linux x86-64 and Apple Silicon macOS systems:
-
-```bash
-curl --proto '=https' --tlsv1.2 -LsSf \
-  https://yo-cli.vercel.app/yo-setup | sh
-```
-
-The installer verifies the downloaded binary against the release's published SHA-256 checksum and installs it to `~/.local/bin`. Override the destination with `YOO_INSTALL_DIR` or install a specific release with `YOO_VERSION=1.0.0`.
-
-See the [installation guide](docs/installation.md) for platform details, updates, uninstallation, and installer security options.
-
-### Prebuilt binary with Cargo Binstall
-
-```bash
-cargo binstall yoo
-```
-
-If needed, install Cargo Binstall first with `cargo install cargo-binstall`.
-
-### Cargo
-
-```bash
-cargo install yoo
-```
-
-### npm
-
-```bash
-npm install -g @nihitde_v/yoo
-```
-
-### pnpm
-
-```bash
-pnpm add -g @nihitde_v/yoo
-```
-
-### Bun
-
-```bash
-bun add -g @nihitde_v/yoo
-```
-
-These packages download the matching prebuilt binary from GitHub Releases.
-
-### WinGet
+### Windows
 
 ```powershell
-winget source update
 winget install --id Nihitdev.yoo --exact
+choco install yoo
 ```
 
-### Scoop
+Scoop metadata is generated with releases, but the community bucket is not currently published. Chocolatey and WinGet community review can delay availability of a new version.
 
-```powershell
-scoop bucket add nihitdev https://github.com/nihitdev/scoop-bucket
-scoop install yoo
-```
+### JavaScript
 
-The Chocolatey package is awaiting registry review.
-
-### Build from source
+The npm package downloads the matching native release binary during installation. pnpm and Bun use the same package:
 
 ```bash
-git clone https://github.com/nihitdev/yo-cli.git
-cd yo-cli
-cargo install --path .
+npm install -g @nihit_dev/yoo
+pnpm add -g @nihit_dev/yoo
+bun add -g @nihit_dev/yoo
 ```
+
+Snap builds are attached to GitHub Releases. Snap Store publishing is currently disabled; install a downloaded artifact with `snap install --dangerous` when needed.
 
 ## Commands
 
+Run `yoo` inside a project, or pass a path where the command supports it.
+
 | Command | Purpose |
-| :-- | :-- |
-| `yoo` | Start a developer session |
-| `yoo doctor` | Check local tools, configuration, project detection, and Git |
-| `yoo edit [--editor <EDITOR>]` | Open the current directory in your preferred editor |
-| `yoo project` | Show project metadata, source stats, Git details, and repository files |
-| `yoo fetch` | Show the developer environment and current project |
-| `yoo status` | Alias for `yoo fetch` |
-| `yoo session [MINUTES]` | Start a local focus timer |
-| `yoo tip [PACK]` | Print a tip from a built-in or local pack |
-| `yoo tips` | List available tip packs |
-| `yoo completions <SHELL>` | Generate Bash, Zsh, Fish, or PowerShell completions |
-| `yoo init` | Create the default config and sample tip pack |
-| `yoo config` | Print the active config path |
-| `yoo help` | Show complete CLI help |
+| --- | --- |
+| `yoo` | Session summary with project and Git context |
+| `yoo doctor` | Check local tools, project detection, and configuration |
+| `yoo project` | Project metadata, source counts, and Git details |
+| `yoo fetch` | Project plus development environment report |
+| `yoo status` | Alias for the project status view |
+| `yoo session [MINUTES]` | Start a local coding-session timer |
+| `yoo tip` / `yoo tips` | Show a configured reminder or tip pack |
+| `yoo edit` | Open the current project in the configured editor |
+| `yoo init` / `yoo config` | Create or inspect local configuration |
+| `yoo completions SHELL` | Generate Bash, Zsh, Fish, or PowerShell completions |
 
-Useful display options:
+Useful output flags include `--fast`, `--plain`, `--no-art`, `--theme NAME`, and `--json` for `project` and `fetch`.
 
 ```bash
-yoo --fast
-yoo --theme tokyo-night
-yoo --plain
-yoo --no-art
-yoo project --plain
-```
-
-## Shell completions
-
-Generate completions from the installed binary:
-
-```bash
-# Bash
-mkdir -p ~/.local/share/bash-completion/completions
-yoo completions bash > ~/.local/share/bash-completion/completions/yoo
-
-# Zsh
-mkdir -p ~/.zfunc
-yoo completions zsh > ~/.zfunc/_yoo
-
-# Fish
-mkdir -p ~/.config/fish/completions
-yoo completions fish > ~/.config/fish/completions/yoo.fish
-```
-
-For Zsh, ensure `~/.zfunc` is included in `fpath` before `compinit` runs.
-
-For PowerShell, add this line to your profile:
-
-```powershell
-yoo completions powershell | Out-String | Invoke-Expression
-```
-
-See the [shell completion guide](docs/completions.md) for persistent setup and troubleshooting on every supported shell.
-
-## Project detection
-
-| Project type | Marker | Package manager |
-| :-- | :-- | :-- |
-| Rust | `Cargo.toml` | Cargo |
-| Node.js | `package.json` | npm, pnpm, Yarn, or Bun |
-| Python | `pyproject.toml` | pip, uv, Poetry, or Pipenv |
-| Go | `go.mod` | Go modules |
-| Java | `pom.xml` or Gradle files | Maven or Gradle |
-| .NET | `.sln` or `.csproj` | .NET SDK |
-
-Generated and dependency directories such as `.git`, `target`, `node_modules`, `dist`, `build`, `.next`, `.venv`, and `vendor` are skipped while counting source files.
-
-## JSON output
-
-Use undecorated JSON in scripts and editor integrations:
-
-```bash
-yoo fetch --json
+yoo doctor
 yoo project --json
+yoo fetch --plain
+yoo session 25
 ```
 
-Example project fields:
-
-```json
-{
-  "yoo_version": "1.0.0",
-  "project": {
-    "name": "yoo",
-    "language": "Rust",
-    "version": "1.0.0"
-  },
-  "git": {
-    "branch": "main",
-    "changed_files": 0
-  }
-}
-```
-
-Example terminal output:
+The default report includes the installed version and current project context:
 
 ```text
-📦 Name:            yoo
-🔧 Language:        Rust
-🏷 Version:         1.0.0
+Version:         1.0.0
+Project:         yoo
+Git:             main · clean
 ```
 
-`--json` cannot be combined with display options such as `--plain`, `--no-art`, or `--theme`.
+## Themes
 
-## Configuration
-
-Create the default TOML file and a sample community tip pack:
-
-```bash
-yoo init
-yoo config
-```
-
-Config locations:
-
-```text
-Windows: %USERPROFILE%\.config\yoo\config.toml
-Linux:   ~/.config/yoo/config.toml
-macOS:   ~/Library/Application Support/yoo/config.toml
-```
-
-The main settings are:
-
-```toml
-[profile]
-name = "developer"
-
-[appearance]
-theme = "neon"
-ascii = true
-colors = true
-typing_speed_ms = 12
-
-[editor]
-# Leave empty to detect an editor automatically.
-command = "code"
-
-[git]
-show_branch = true
-show_status = true
-
-[tips]
-enabled = true
-pack = "general"
-
-[session]
-default_minutes = 25
-show_complete_message = true
-```
-
-Available themes: `neon`, `ocean`, `mono`, `dracula`, `tokyo-night`, `gruvbox`, `nord`, `rose-pine`, and `catppuccin`.
-
-## Tip packs
-
-Built-in packs include `general`, `git`, `linux`, and `rust`.
-
-```bash
-yoo tip rust
-yoo tips
-```
-
-Local packs are simple YAML files stored in the `tips` directory beside the yoo config:
-
-```yaml
-name: team
-description: Team workflow reminders.
-tips:
-  - Keep pull requests small enough to review carefully.
-  - Write down the command that fixed the problem.
-```
+`yoo` includes **neon**, **ocean**, **mono**, **dracula**, **tokyo-night**, **gruvbox**, **nord**, **rose-pine**, and **catppuccin**. Set one in `~/.config/yoo/config.toml` or pass `--theme NAME`.
 
 ## Privacy
 
-`yoo` reads local environment, project, and Git information and prints it to the terminal or requested JSON output. It does not transmit or retain project data.
+Normal operation is local. `yoo` does not require an account, daemon, cloud service, telemetry, or network connection. It reads the current project and development environment and prints the result; project data is not uploaded.
 
-## Development
+## Building from source
+
+Rust 1.85 or newer and Cargo are required for the CLI:
 
 ```bash
 git clone https://github.com/nihitdev/yo-cli.git
 cd yo-cli
-cargo fmt --check
-cargo test --locked
-cargo clippy --locked -- -D warnings
 cargo build --release --locked
+cargo test --locked
 ```
+
+Node.js is only needed when working on the npm wrapper or the website in `site/`.
+
+Release maintainers should follow [docs/releasing.md](docs/releasing.md). Packaging notes live in [packaging/README.md](packaging/README.md).
 
 ## Contributing
 
-`yoo` is free software released under GPL-3.0-or-later. Source code, development history, and release automation are maintained in this repository.
-
-- Read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a change.
-- Use the [issue tracker](https://github.com/nihitdev/yo-cli/issues) for reproducible bugs and scoped feature proposals.
-- Run the formatting, test, and Clippy commands in the Development section before opening a pull request.
-- Keep contributions local-first and avoid adding telemetry, accounts, background services, or required network access.
-
-## Troubleshooting
-
-| Problem | What to try |
-| :-- | :-- |
-| Missing config warning | Run `yoo init`; defaults already work without a config file |
-| No colours | Check whether output is redirected or use a terminal with ANSI support |
-| Missing Git information | Run yoo inside a Git repository and ensure `git` is in `PATH` |
-| Slow Cargo installation | Use `cargo binstall yoo` for a prebuilt binary |
-| JSON rejects an option | Remove display flags when using `--json` |
+Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before making a change. Security reports belong in [SECURITY.md](SECURITY.md).
 
 ## License
 

@@ -1,9 +1,9 @@
-# @nihitde_v/yoo
+# @nihit_dev/yoo
 
 npm installer for the `yoo` local project and development-environment CLI.
 
 ```bash
-npm install -g @nihitde_v/yoo
+npm install -g @nihit_dev/yoo
 yoo
 ```
 

@@ -1,0 +1,48 @@
+name: Bug report
+description: Report a reproducible problem with yoo
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: yoo version
+      placeholder: yoo 1.1.0
+    validations: { required: true }
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and distribution
+    validations: { required: true }
+  - type: input
+    id: shell
+    attributes:
+      label: Shell
+    validations: { required: true }
+  - type: input
+    id: installation
+    attributes:
+      label: Installation method
+      placeholder: cargo, apt, Homebrew, npm, etc.
+    validations: { required: true }
+  - type: textarea
+    id: command
+    attributes:
+      label: Command executed
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations: { required: true }
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and logs
+      render: shell
+    validations: { required: true }
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+    validations: { required: true }

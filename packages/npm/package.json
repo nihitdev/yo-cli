@@ -1,12 +1,12 @@
 {
-  "name": "@nihitde_v/yoo",
+  "name": "@nihit_dev/yoo",
   "version": "1.0.0",
   "description": "Local CLI for project, Git, and development environment information.",
   "license": "GPL-3.0-or-later",
   "homepage": "https://github.com/nihitdev/yo-cli#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nihitdev/yo-cli.git",
+    "url": "https://github.com/nihitdev/yo-cli",
     "directory": "packages/npm"
   },
   "bugs": {

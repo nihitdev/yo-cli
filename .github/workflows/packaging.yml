@@ -9,10 +9,12 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'packaging/**'
+      - 'site/public/opensuse/**'
       - 'snap/**'
       - 'flake.*'
       - 'scripts/package-*.sh'
       - 'scripts/flatpak-source.sh'
+      - 'scripts/opensuse-repository.sh'
       - '.github/workflows/*'
 
 permissions:
@@ -78,6 +80,10 @@ jobs:
           for platform in linux-x86_64 macos-aarch64; do
             tar -czf "target/metadata-assets/yoo-v$version-$platform.tar.gz" -C target/release yoo
           done
+          mkdir -p target/metadata-windows
+          cp LICENSE target/metadata-windows/
+          : > target/metadata-windows/yoo.exe
+          (cd target/metadata-windows && zip -q "../metadata-assets/yoo-v$version-windows-x86_64.zip" yoo.exe LICENSE)
           bash scripts/package-metadata.sh target/metadata-assets target/metadata
           ruby -c target/metadata/homebrew/yoo.rb
 
@@ -100,6 +106,10 @@ jobs:
           for platform in linux-x86_64 macos-aarch64; do
             tar -czf "target/metadata-assets/yoo-v$version-$platform.tar.gz" LICENSE
           done
+          mkdir -p target/metadata-windows
+          cp LICENSE target/metadata-windows/
+          : > target/metadata-windows/yoo.exe
+          (cd target/metadata-windows && zip -q "../metadata-assets/yoo-v$version-windows-x86_64.zip" yoo.exe LICENSE)
           bash scripts/package-metadata.sh target/metadata-assets /tmp/yoo-generated
           chown -R builder:builder /tmp/yoo-generated
           su builder -c 'cd /tmp/yoo-generated/aur && makepkg --printsrcinfo' > /tmp/generated.SRCINFO
@@ -125,6 +135,90 @@ jobs:
           cp packaging/homebrew/yoo.rb "$(brew --repository local/yoo)/Formula/yoo.rb"
           brew install local/yoo/yoo
           brew test local/yoo/yoo
+
+  opensuse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build and install from the static repository in Tumbleweed
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace:ro" \
+            opensuse/tumbleweed \
+            bash -euxo pipefail -c '
+              zypper --non-interactive refresh
+              zypper --non-interactive install --no-recommends \
+                cargo cargo-packaging rust rpm-build createrepo_c gpg2
+              rpmbuild -ba /workspace/packaging/opensuse/yoo.spec
+              test -x /root/rpmbuild/RPMS/x86_64/yoo-1.0.0-0.x86_64.rpm
+              rpm -qpl /root/rpmbuild/RPMS/x86_64/yoo-1.0.0-0.x86_64.rpm | grep -qx /usr/bin/yoo
+              python3 -m http.server 18080 --directory /workspace/site/public >/tmp/yoo-http.log 2>&1 &
+              server=$!
+              trap "kill $server" EXIT
+              rpm --import /workspace/site/public/opensuse/RPM-GPG-KEY-yoo
+              sed \
+                -e "s#^baseurl=.*#baseurl=http://127.0.0.1:18080/opensuse/#" \
+                -e "s#^gpgkey=.*#gpgkey=file:///workspace/site/public/opensuse/RPM-GPG-KEY-yoo#" \
+                /workspace/site/public/opensuse/yoo.repo \
+                >/etc/zypp/repos.d/yoo.repo
+              zypper --non-interactive --gpg-auto-import-keys refresh
+              zypper --non-interactive install --no-recommends yoo
+              test "$(yoo --version)" = "yoo 1.0.0"
+            '
+
+  alpine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build APK natively on Alpine
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/dist-alpine"
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            -e RELEASE_TAG="${GITHUB_REF_NAME:-}" \
+            alpine:3.22 \
+            sh -euxc '
+              apk add --no-cache alpine-sdk cargo rust
+              adduser -D builder
+              addgroup builder abuild
+              mkdir -p /home/builder/packages/yoo /home/builder/.abuild
+              sh /workspace/scripts/alpine-build.sh
+            '
+          test -n "$(find dist-alpine -name 'yoo-*.apk' -print -quit)"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: alpine-package
+          path: dist-alpine/*.apk
+          if-no-files-found: error
+
+  void:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build XBPS package natively on Void Linux
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/dist-void"
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            -e RELEASE_TAG="${GITHUB_REF_NAME:-}" \
+            voidlinux/voidlinux:latest \
+            sh -euxc '
+              printf "%s\\n" "repository=http://repo-default.voidlinux.org/current" > /etc/xbps.d/00-repository-main.conf
+              xbps-install -Su xbps -y
+              xbps-install -Syu -y
+              xbps-install -y bash git wget base-devel
+              git clone --depth 1 https://github.com/void-linux/void-packages.git /tmp/void-packages
+              bash /workspace/scripts/void-build.sh
+            '
+          test -n "$(find dist-void -name 'yoo-*.xbps' -print -quit)"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: void-package
+          path: dist-void/*.xbps
+          if-no-files-found: error
 
   snap:
     runs-on: ubuntu-latest

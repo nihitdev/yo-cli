@@ -1,0 +1,22 @@
+# Generated from this template by the release metadata job.
+pkgname=yoo
+version=@VERSION@
+revision=1
+build_style=cargo
+hostmakedepends="pkg-config"
+short_desc="Local CLI for project, Git, and development environment information"
+maintainer="Nihit <nihitdev@users.noreply.github.com>"
+license="GPL-3.0-or-later"
+homepage="https://github.com/nihitdev/yo-cli"
+distfiles="https://github.com/nihitdev/yo-cli/archive/refs/tags/v${version}.tar.gz"
+checksum=@SOURCE_SHA512@
+
+post_install() {
+	vlicense LICENSE
+	vdoc README.md
+
+	for shell in bash zsh fish; do
+		vtargetrun "${DESTDIR}/usr/bin/yoo" completions "${shell}" > "yoo.${shell}"
+		vcompletion "yoo.${shell}" "${shell}" yoo
+	done
+}

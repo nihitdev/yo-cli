@@ -1,16 +1,29 @@
 import { CopyButton } from "./CopyButton";
 import { SiteExtras } from "./SiteExtras";
+import Image from "next/image";
 
 const installs = [
   { label: "Installer", command: "curl --proto '=https' --tlsv1.2 -LsSf https://yo-cli.vercel.app/yo-setup | sh" },
   { label: "APT", command: "curl -fsSL https://yo-cli.vercel.app/apt/setup.sh | sudo sh\nsudo apt install yoo" },
+  { label: "DNF", command: "sudo dnf config-manager addrepo --from-repofile=https://yo-cli.vercel.app/rpm/yoo.repo\nsudo dnf install yoo" },
+  { label: "Alpine", command: "echo 'https://yo-cli.vercel.app/alpine' | sudo tee -a /etc/apk/repositories\nsudo apk add yoo" },
+  { label: "openSUSE", command: "sudo zypper ar -f https://yo-cli.vercel.app/opensuse yoo\nsudo zypper refresh\nsudo zypper install yoo" },
+  { label: "Flatpak", command: "flatpak remote-add --user --if-not-exists yoo https://yo-cli.vercel.app/flatpak/yoo.flatpakrepo\nflatpak install --user yoo io.github.nihitdev.yoo" },
+  { label: "Nix", command: "nix run github:nihitdev/yo-cli" },
   { label: "Cargo", command: "cargo install yoo" },
-  { label: "npm", command: "npm install -g @nihitde_v/yoo" },
+  { label: "npm", command: "npm install -g @nihit_dev/yoo" },
   { label: "WinGet", command: "winget install --id Nihitdev.yoo --exact" },
-  {
-    label: "Scoop",
-    command: "scoop bucket add nihitdev https://github.com/nihitdev/scoop-bucket\nscoop install yoo",
-  },
+];
+
+const packageStatuses = [
+  ["Cargo", "Official registry", "Linux · macOS · Windows"],
+  ["npm / pnpm / Bun", "Official npm package", "Cross-platform wrapper"],
+  ["APT · DNF · Alpine · openSUSE", "Self-hosted repositories", "Linux x86_64"],
+  ["Homebrew · AUR", "Community packaging", "macOS · Arch Linux"],
+  ["Nix · Flatpak", "GitHub flake · self-hosted repo", "Source build · static repository"],
+  ["WinGet · Chocolatey", "Community channels", "Windows"],
+  ["Void / XBPS", "GitHub Release artifact", "Build and validation automated"],
+  ["Snap", "GitHub Release artifact", "Store publishing disabled"],
 ];
 
 const commands = [
@@ -81,6 +94,7 @@ export default function Home() {
           <div className="nav-links">
             <a href="#features">Features</a>
             <a href="#install">Install</a>
+            <a href="#packages">Packages</a>
             <a href="#commands">Commands</a>
             <a href="#configure">Configure</a>
             <a href="https://github.com/nihitdev/yo-cli/tree/main/docs">Docs</a>
@@ -94,10 +108,10 @@ export default function Home() {
       <section className="hero" id="top">
         <div className="hero-copy">
           <div className="eyebrow"><span className="status-dot" /> Open source · GPL-3.0-or-later</div>
-          <h1>Project context,<br /><span>without leaving the terminal.</span></h1>
+          <h1>What the hell is going on<br /><span>with this project?</span></h1>
           <p className="hero-lede">
-            A local-first CLI for project metadata, Git status, development environment checks,
-            session timers, and configurable reminders.
+            yoo is a fast, local-first CLI for project metadata, Git state, development environment
+            checks, session timers, and configurable reminders.
           </p>
           <div className="hero-actions">
             <a className="button primary" href="#install">Install yoo</a>
@@ -114,7 +128,7 @@ export default function Home() {
               <span>~/projects/yoo</span>
               <span className="version">v1.0.0</span>
             </div>
-            <img src="/hero.png" alt="yoo displaying a terminal project session summary" />
+            <Image src="/hero.png" alt="yoo displaying a terminal project session summary" width={1366} height={768} priority />
           </div>
           <div className="accent-grid" aria-hidden="true" />
         </div>
@@ -151,7 +165,7 @@ export default function Home() {
                 <span>{shot.label}</span>
                 <code>$ {shot.command}</code>
               </div>
-              <img src={shot.src} alt={`${shot.label} shown in the yoo terminal interface`} loading="lazy" />
+              <Image src={shot.src} alt={`${shot.label} shown in the yoo terminal interface`} width={1366} height={768} />
             </article>
           ))}
         </div>
@@ -178,6 +192,23 @@ export default function Home() {
             <p>The installer checks release binaries against the published SHA-256 checksum before installation.</p>
             <a href="https://github.com/nihitdev/yo-cli/blob/main/docs/installation.md">Installation guide <span>→</span></a>
           </aside>
+        </div>
+      </section>
+
+      <section className="section packages" id="packages">
+        <div className="section-heading compact">
+          <p className="kicker">Distribution</p>
+          <h2>Pick the channel that fits your machine.</h2>
+          <p>Package status is stated plainly: self-hosted repositories and release artifacts are maintained here, while community channels may have their own review timelines.</p>
+        </div>
+        <div className="package-status-grid">
+          {packageStatuses.map(([name, status, detail]) => (
+            <article className="package-status-card" key={name}>
+              <strong>{name}</strong>
+              <span>{status}</span>
+              <small>{detail}</small>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -313,7 +344,7 @@ default_minutes = 25`}</code></pre>
         <p>Local project and development environment information.</p>
         <div className="footer-links">
           <a href="https://crates.io/crates/yoo">crates.io</a>
-          <a href="https://www.npmjs.com/package/@nihitde_v/yoo">npm</a>
+          <a href="https://www.npmjs.com/package/@nihit_dev/yoo">npm</a>
           <a href="https://github.com/nihitdev/yo-cli/releases">Releases</a>
           <a href="https://github.com/nihitdev/yo-cli/blob/main/LICENSE">License</a>
         </div>

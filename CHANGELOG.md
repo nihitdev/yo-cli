@@ -74,7 +74,7 @@ The format follows the spirit of Keep a Changelog: user-visible changes are grou
 ### Changed
 
 - Reworked the README around yoo's core developer-session workflow with a shorter, screenshot-first presentation.
-- Corrected all npm package references to the published `@nihitde_v/yoo` scope.
+- Corrected all npm package references to the published `@nihit_dev/yoo` scope.
 
 ## [0.6.3] - 2026-07-13
 

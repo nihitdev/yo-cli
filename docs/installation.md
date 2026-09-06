@@ -72,15 +72,15 @@ cargo install yoo
 The JavaScript wrapper downloads the matching prebuilt binary during installation:
 
 ```bash
-npm install -g @nihitde_v/yoo
+npm install -g @nihit_dev/yoo
 ```
 
 ```bash
-pnpm add -g @nihitde_v/yoo
+pnpm add -g @nihit_dev/yoo
 ```
 
 ```bash
-bun add -g @nihitde_v/yoo
+bun add -g @nihit_dev/yoo
 ```
 
 ## Windows package managers
@@ -94,34 +94,19 @@ winget install --id Nihitdev.yoo --exact
 
 ### Scoop
 
-```powershell
-scoop bucket add nihitdev https://github.com/nihitdev/scoop-bucket
-scoop install yoo
-```
+Scoop metadata is generated with each release, but a public `nihitdev` bucket is
+not currently published. Use the installer or another Windows channel below.
 
 ## Homebrew
 
-Supports Apple Silicon macOS and Linux x86_64. The public
-`nihitdev/homebrew-tap` repository was not found during implementation.
-Once its owner creates it and installs the generated formula:
+Supports Apple Silicon macOS and Linux x86_64 through the `nihitdev/tap`
+community tap:
 
 ```bash
 brew tap nihitdev/tap
 brew install yoo
 ```
 
-Until then, download `yoo-packaging.tar.gz` from the desired GitHub Release,
-verify its checksum, and install its formula into a local tap:
-
-```bash
-tar -xzf yoo-packaging.tar.gz
-brew tap-new local/yoo
-cp homebrew/yoo.rb "$(brew --repository local/yoo)/Formula/yoo.rb"
-brew install local/yoo/yoo
-brew test local/yoo/yoo
-```
-
-The checked-in `packaging/homebrew/yoo.rb` can also be copied to that tap.
 The formula verifies SHA-256. Linux release binaries are built on Ubuntu 22.04;
 older glibc systems should use Cargo or Nix.
 
@@ -202,9 +187,36 @@ cargo generate-rpm
 ```
 
 Output is in `target/generate-rpm/`. Runtime library requirements are automatically
-detected. These are unsigned standalone packages, not an apt/yum repository.
-The release baseline is Ubuntu 22.04's glibc; older distributions may need a
-native source build.
+detected. Standalone release RPMs are signed; Fedora users can also use the
+hosted DNF repository at `https://yo-cli.vercel.app/rpm/`. The openSUSE-specific
+repository is documented below. The release baseline is Ubuntu 22.04's glibc;
+older distributions may need a native source build.
+
+## openSUSE Tumbleweed
+
+The hosted repository targets x86_64 Tumbleweed and keeps both package and
+repository GPG verification enabled:
+
+```bash
+sudo zypper ar -f https://yo-cli.vercel.app/opensuse yoo
+sudo zypper refresh
+sudo zypper install yoo
+```
+
+Future releases are picked up with `sudo zypper refresh && sudo zypper update yoo`.
+The repository metadata and RPM are signed with the yoo RPM key exposed at
+`https://yo-cli.vercel.app/opensuse/RPM-GPG-KEY-yoo`. Do not disable GPG checks.
+
+Build the package locally on Tumbleweed with the spec in
+`packaging/opensuse/yoo.spec`:
+
+```bash
+sudo zypper install cargo cargo-packaging createrepo_c rpm-build gpg2
+rpmbuild -ba packaging/opensuse/yoo.spec
+```
+
+Repository maintenance, signing-key setup, and the required release secrets are
+documented in [packaging/opensuse/README.md](../packaging/opensuse/README.md).
 
 ## Snap
 
@@ -295,7 +307,7 @@ Repeat the command for the installation method originally used. Examples:
 
 ```bash
 cargo install yoo --force
-npm update -g @nihitde_v/yoo
+npm update -g @nihit_dev/yoo
 ```
 
 ```powershell
@@ -309,7 +321,7 @@ Use the matching package manager:
 
 ```bash
 cargo uninstall yoo
-npm uninstall -g @nihitde_v/yoo
+npm uninstall -g @nihit_dev/yoo
 ```
 
 For an installer-script installation:

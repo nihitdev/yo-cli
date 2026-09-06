@@ -1,0 +1,82 @@
+name: Publish Alpine repository
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+    secrets:
+      ALPINE_SIGNING_KEY:
+        required: false
+      ALPINE_PUBLISH_TOKEN:
+        required: false
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yoo-alpine-production
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check optional signing and publication credentials
+        id: credentials
+        env:
+          KEY: ${{ secrets.ALPINE_SIGNING_KEY }}
+          TOKEN: ${{ secrets.ALPINE_PUBLISH_TOKEN }}
+        run: |
+          if [ -n "$KEY" ] && [ -n "$TOKEN" ]; then echo enabled=true >> "$GITHUB_OUTPUT"; else echo 'Alpine publication skipped: configure ALPINE_SIGNING_KEY and ALPINE_PUBLISH_TOKEN.' >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/checkout@v6
+        if: steps.credentials.outputs.enabled == 'true'
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          token: ${{ secrets.ALPINE_PUBLISH_TOKEN }}
+      - name: Download release APK
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          mkdir -p target/alpine-download
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern 'yoo-*.apk' --dir target/alpine-download
+          files=(target/alpine-download/yoo-*.apk)
+          [[ ${#files[@]} == 1 && -f "${files[0]}" ]]
+          echo "APK_FILE=${files[0]}" >> "$GITHUB_ENV"
+      - name: Generate and sign repository
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          ALPINE_SIGNING_KEY: ${{ secrets.ALPINE_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$ALPINE_SIGNING_KEY" > target/alpine-key.rsa
+          chmod 600 target/alpine-key.rsa
+          trap 'rm -f target/alpine-key.rsa' EXIT
+          docker run --rm -v "$GITHUB_WORKSPACE:/workspace" -e APK_FILE="/workspace/$APK_FILE" alpine:3.22 sh -euxc '
+            apk add --no-cache alpine-sdk
+            ALPINE_SIGNING_KEY_FILE=/workspace/target/alpine-key.rsa sh /workspace/scripts/alpine-repository.sh "$APK_FILE"
+          '
+      - name: Commit public repository for Vercel Git deployment
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add site/public/alpine
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update signed yoo Alpine repository'
+            git push origin "HEAD:$BRANCH"
+          fi

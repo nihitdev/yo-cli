@@ -6,14 +6,24 @@ on:
       - "v*"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   version:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - run: bash scripts/package-version.sh
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Validate tag and project version
+        run: |
+          set -euo pipefail
+          version=$(bash scripts/package-version.sh "$GITHUB_REF_NAME")
+          echo "Release version: $version" >> "$GITHUB_STEP_SUMMARY"
+      - run: cargo fmt --check
+      - run: cargo test --locked
+      - run: cargo clippy --locked --all-targets --all-features -- -D warnings
 
   build:
     needs: version
@@ -158,6 +168,8 @@ jobs:
     name: Publish GitHub Release
     needs: [build, native-packages]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -175,7 +187,7 @@ jobs:
       - name: Generate Homebrew and AUR publication bundle
         run: |
           bash scripts/package-metadata.sh release target/package-metadata
-          tar -czf release/yoo-packaging.tar.gz -C target/package-metadata homebrew aur
+          tar -czf release/yoo-packaging.tar.gz -C target/package-metadata homebrew aur winget scoop chocolatey void
 
       - name: Generate SHA-256 checksums
         run: bash scripts/package-checksums.sh release
@@ -195,6 +207,8 @@ jobs:
   publish-tap:
     needs: publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Check optional tap credentials
         id: credentials
@@ -228,29 +242,169 @@ jobs:
             git push
           fi
 
-  publish-snap:
+  publish-aur:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check optional AUR credentials
+        id: credentials
+        env:
+          KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then echo enabled=true >> "$GITHUB_OUTPUT"; else echo 'AUR publication skipped: AUR_SSH_PRIVATE_KEY is not configured.' >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Download generated metadata
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --pattern yoo-packaging.tar.gz
+          tar -xzf yoo-packaging.tar.gz aur
+      - name: Publish yoo-bin to AUR
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          key=$(mktemp)
+          home=$(mktemp -d)
+          trap 'rm -f "$key"; rm -rf "$home"' EXIT
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > "$key"
+          chmod 600 "$key"
+          mkdir -p "$home/.ssh"
+          ssh-keyscan -H aur.archlinux.org > "$home/.ssh/known_hosts"
+          GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$home/.ssh/known_hosts" \
+            git clone ssh://aur@aur.archlinux.org/yoo-bin.git aur-repo
+          cp aur/PKGBUILD aur/.SRCINFO aur-repo/
+          cd aur-repo
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add PKGBUILD .SRCINFO
+          if ! git diff --cached --quiet; then
+            git commit -m "Update yoo-bin to $GITHUB_REF_NAME"
+            GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$home/.ssh/known_hosts" git push
+          fi
+          echo 'AUR: PUBLISHED' >> "$GITHUB_STEP_SUMMARY"
+
+  publish-cargo:
     needs: publish
     runs-on: ubuntu-latest
     steps:
-      - name: Check optional Snap Store credentials
+      - name: Check crates.io credentials
         id: credentials
         env:
-          TOKEN: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+          TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
-          if [ -n "$TOKEN" ]; then echo "enabled=true" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/download-artifact@v8
+          if [ -n "$TOKEN" ]; then echo enabled=true >> "$GITHUB_OUTPUT"; else echo 'Cargo publication skipped: CARGO_REGISTRY_TOKEN is not configured.' >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/checkout@v6
         if: steps.credentials.outputs.enabled == 'true'
         with:
-          name: snap-package
-          path: snap-artifacts
-      - name: Publish to Snap Store candidate channel
+          ref: ${{ github.ref_name }}
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.credentials.outputs.enabled == 'true'
+      - name: Validate and publish crate
         if: steps.credentials.outputs.enabled == 'true'
         env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           set -euo pipefail
-          sudo snap install snapcraft --classic
-          snapcraft upload snap-artifacts/*.snap --release=candidate
+          version=$(bash scripts/package-version.sh "$GITHUB_REF_NAME")
+          if curl --fail --silent --show-error "https://crates.io/api/v1/crates/yoo/$version" >/dev/null; then
+            echo "Cargo yoo@$version already exists: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          cargo package --locked --allow-dirty
+          cargo publish --locked --token "$CARGO_REGISTRY_TOKEN"
+          echo "Cargo $version: PUBLISHED" >> "$GITHUB_STEP_SUMMARY"
+
+  publish-npm:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Set up Node.js for npm trusted publishing
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Publish versioned npm package
+        run: |
+          set -euo pipefail
+          version=$(bash scripts/package-version.sh "$GITHUB_REF_NAME")
+          work=$(mktemp -d)
+          trap 'rm -rf "$work"' EXIT
+          cp -a packages/npm/. "$work/"
+          npm --prefix "$work" pkg set version="$version"
+          (cd "$work" && npm pack --dry-run --ignore-scripts)
+          if npm view "@nihit_dev/yoo@$version" version --silent >/dev/null 2>&1; then
+            echo "npm @nihit_dev/yoo@$version already exists: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          (cd "$work" && npm publish --access public)
+          echo "npm @nihit_dev/yoo@$version: PUBLISHED via Trusted Publishing (pnpm/Bun consume the npm registry)" >> "$GITHUB_STEP_SUMMARY"
+
+  publish-chocolatey:
+    needs: publish
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check Chocolatey credentials
+        id: credentials
+        shell: pwsh
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+        run: |
+          if ($env:CHOCOLATEY_API_KEY) { 'enabled=true' >> $env:GITHUB_OUTPUT } else { 'Chocolatey publication skipped: CHOCOLATEY_API_KEY is not configured.' >> $env:GITHUB_STEP_SUMMARY }
+      - name: Download generated package metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          gh release download $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY --pattern yoo-packaging.tar.gz
+          tar -xzf yoo-packaging.tar.gz chocolatey
+      - name: Pack Chocolatey package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          choco pack chocolatey/yoo.nuspec --outputdirectory chocolatey-out
+          choco install chocolatey-out/yoo.*.nupkg --yes --source chocolatey-out --no-progress
+          yoo --version
+          gh release upload $env:GITHUB_REF_NAME chocolatey-out/yoo.*.nupkg --repo $env:GITHUB_REPOSITORY --clobber
+      - name: Refresh release checksums after adding Chocolatey package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --pattern '*' --dir release-assets
+          bash scripts/package-checksums.sh release-assets
+          gh release upload "$GITHUB_REF_NAME" release-assets/SHA256SUMS --repo "$GITHUB_REPOSITORY" --clobber
+      - name: Publish to Chocolatey Community Repository
+        if: steps.credentials.outputs.enabled == 'true'
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $package = Get-ChildItem chocolatey-out/yoo.*.nupkg | Select-Object -First 1
+          choco push $package.FullName --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY --fail-on-error
+          'Chocolatey: SUBMITTED FOR REVIEW (moderation may delay availability).' >> $env:GITHUB_STEP_SUMMARY
+      - name: Report missing Chocolatey credentials
+        if: steps.credentials.outputs.enabled != 'true'
+        shell: pwsh
+        run: "'Chocolatey package: BUILT; publication skipped because CHOCOLATEY_API_KEY is missing.' >> $env:GITHUB_STEP_SUMMARY"
 
   publish-apt:
     needs: publish
@@ -261,3 +415,75 @@ jobs:
       APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
       APT_SIGNING_PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
       APT_PUBLISH_TOKEN: ${{ secrets.APT_PUBLISH_TOKEN }}
+
+  publish-alpine:
+    needs: publish
+    uses: ./.github/workflows/alpine-repository.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets:
+      ALPINE_SIGNING_KEY: ${{ secrets.ALPINE_SIGNING_KEY }}
+      ALPINE_PUBLISH_TOKEN: ${{ secrets.ALPINE_PUBLISH_TOKEN }}
+
+  publish-opensuse:
+    needs: publish-apt
+    uses: ./.github/workflows/opensuse-repository.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets:
+      RPM_SIGNING_KEY: ${{ secrets.RPM_SIGNING_KEY }}
+      RPM_SIGNING_PASSPHRASE: ${{ secrets.RPM_SIGNING_PASSPHRASE }}
+      RPM_PUBLISH_TOKEN: ${{ secrets.RPM_PUBLISH_TOKEN }}
+
+  release-summary:
+    if: always()
+    needs:
+      - publish
+      - publish-cargo
+      - publish-npm
+      - publish-chocolatey
+      - publish-tap
+      - publish-aur
+      - publish-apt
+      - publish-alpine
+      - publish-opensuse
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write release status summary
+        env:
+          PUBLISH: ${{ needs.publish.result }}
+          CARGO: ${{ needs.publish-cargo.result }}
+          NPM: ${{ needs.publish-npm.result }}
+          CHOCOLATEY: ${{ needs.publish-chocolatey.result }}
+          HOMEBREW: ${{ needs.publish-tap.result }}
+          AUR: ${{ needs.publish-aur.result }}
+          APT: ${{ needs.publish-apt.result }}
+          ALPINE: ${{ needs.publish-alpine.result }}
+          OPENSUSE: ${{ needs.publish-opensuse.result }}
+        run: |
+          {
+            echo "## yoo ${GITHUB_REF_NAME} release"
+            echo
+            echo '| Ecosystem | Workflow status | Notes |'
+            echo '| --- | --- | --- |'
+            echo "| GitHub Release | $PUBLISH | Release assets and checksums |"
+            echo "| Cargo | $CARGO | Skips cleanly without CARGO_REGISTRY_TOKEN |"
+            echo "| npm (pnpm/Bun) | $NPM | Uses npm Trusted Publishing via GitHub OIDC |"
+            echo "| Chocolatey | $CHOCOLATEY | Submitted packages remain subject to moderation |"
+            echo "| Homebrew tap | $HOMEBREW | Skips cleanly without HOMEBREW_TAP_TOKEN |"
+            echo "| AUR | $AUR | Requires AUR_SSH_PRIVATE_KEY |"
+            echo '| Snap | BUILT | Store publishing disabled; .snap attached to GitHub Release |'
+            echo
+            echo '### Snap status'
+            echo '- BUILD AUTOMATED: YES'
+            echo '- STORE PUBLISHING: DISABLED'
+            echo '- GITHUB RELEASE ARTIFACT: YES'
+            echo "| APT | $APT | Signed static repository publication |"
+            echo "| Alpine/APK | $ALPINE | Signed APKINDEX publication |"
+            echo "| openSUSE/RPM | $OPENSUSE | Signed static repository publication |"
+            echo '| WinGet | BUILT | Manifest included in yoo-packaging.tar.gz; community PR remains external |'
+            echo '| Scoop | BUILT | Manifest included; no nihitdev/scoop-bucket repository exists |'
+            echo '| Void/XBPS | BUILT / VALIDATED | XBPS attached to the GitHub Release; no official or hosted repository |'
+            echo
+            echo 'WinGet manifests, Scoop metadata, and package metadata are attached in yoo-packaging.tar.gz.'
+          } >> "$GITHUB_STEP_SUMMARY"

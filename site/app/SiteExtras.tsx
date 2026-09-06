@@ -41,24 +41,6 @@ export function SiteExtras() {
         >
           <span className="chat-icon" aria-hidden="true"><i /><i /><i /></span>
         </a>
-        <a
-          className="contact-action discord-action"
-          href="https://discord.com/users/1518630007323361393"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Message nihitdev on Discord"
-          title="Discord · nihitdev"
-        >
-          <span className="discord-icon" aria-hidden="true"><i /><i /></span>
-        </a>
-        <a
-          className="contact-action mail-action"
-          href="mailto:nihit429@gmail.com"
-          aria-label="Email yoo maintainer"
-          title="Email"
-        >
-          <span className="mail-icon" aria-hidden="true">@</span>
-        </a>
       </aside>
     </>
   );

@@ -17,7 +17,7 @@ function target() {
   const match = targets[key];
 
   if (!match) {
-    throw new Error(`Unsupported platform for @nihitde_v/yoo: ${key}`);
+    throw new Error(`Unsupported platform for @nihit_dev/yoo: ${key}`);
   }
 
   return match;

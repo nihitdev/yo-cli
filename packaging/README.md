@@ -37,20 +37,32 @@ changing completions, run `cargo build --release --locked` followed by
 - **Homebrew:** create `nihitdev/homebrew-tap` with an initial default branch.
   Optional `HOMEBREW_TAP_TOKEN` needs contents-write access to that repository.
   The release job commits only `Formula/yoo.rb`. Without the secret it skips.
-- **AUR:** register an account and SSH key, request/create `yoo-bin`, copy the
-  release bundle's `aur/PKGBUILD` and `aur/.SRCINFO` into that AUR Git checkout,
-  run `makepkg --verifysource`, `makepkg` and `makepkg --printsrcinfo`, then
-  review, commit and push. There is deliberately no automatic AUR publishing.
-- **Snap:** register `yoo` in the Snap Store. Optional
-  `SNAPCRAFT_STORE_CREDENTIALS` is an exported credential scoped for this snap.
-  Release automation uploads to **candidate**, allowing confinement review
-  before manually promoting to stable. Without the secret it skips.
+- **AUR:** register an account and SSH key, request/create `yoo-bin`, and store
+  the deploy key as `AUR_SSH_PRIVATE_KEY`. The release job then copies the
+  generated `PKGBUILD` and `.SRCINFO`, validates the package metadata, and
+  pushes the AUR checkout. Without the secret, the release bundle remains ready
+  for manual review and upload.
+- **Snap:** Snap Store publishing is currently disabled. Packaging CI still
+  builds, smoke-tests, and attaches the `.snap` artifact to each GitHub Release.
 - **Flatpak:** bundles require no account. A Flathub submission would require
   separate review and repository setup; the broad read-only filesystem grant
   and terminal-only interface must be evaluated there.
 - **Nix:** no registry account is required for GitHub flake URLs.
-- **Deb/RPM:** no accounts required for unsigned release artifacts. Signed apt
-  or RPM repositories are outside this setup.
+- **Deb/RPM:** release artifacts are generated without registry accounts. The
+  signed APT and Fedora DNF repositories use their optional publication jobs;
+  openSUSE publication is documented below.
+- **openSUSE:** the Tumbleweed x86_64 repository is maintained from
+  `site/public/opensuse` using `scripts/opensuse-repository.sh`. Its package and
+  RPM-MD metadata use the dedicated RPM signing key; see
+  `packaging/opensuse/README.md` for the exact secrets and key procedure.
+- **Void:** `packaging/void/template` is a current x86_64 XBPS template and
+  `scripts/void-build.sh` builds and smoke-tests it in Void Linux. Tagged
+  releases attach the resulting `.xbps` artifact; there is no official or
+  hosted XBPS repository.
+- **WinGet, Scoop, and Chocolatey:** release metadata is generated from the
+  immutable Windows asset. Chocolatey can be submitted automatically; WinGet
+  manifests are ready for a community PR, and Scoop publication requires a
+  maintained bucket repository.
 
 See [installation and sandbox limitations](../docs/installation.md). Optional
 publication jobs run only after the GitHub Release exists; absent credentials
@@ -92,6 +104,12 @@ Validated on Linux x86_64:
   snap was produced; the dedicated CI job builds and smoke-tests it.
 - Release archive SHA-256 verification, metadata rendering, repeatable checksum
   regeneration and rejection of a mismatched release tag.
+- openSUSE Tumbleweed container build of `packaging/opensuse/yoo.spec`, including
+  the locked Cargo build and tests, plus a zypper install from the static
+  `site/public/opensuse` repository with GPG checks enabled.
+- Alpine-native APK build in an Alpine container; the generated APK is attached
+  to tagged releases. With `ALPINE_SIGNING_KEY` and `ALPINE_PUBLISH_TOKEN`, the
+  release workflow also regenerates and signs the hosted APKINDEX.
 
 Local native/AUR packages and the publication bundle are under
 `target/packaging-dist/`, with `SHA256SUMS`. These are validation outputs;
