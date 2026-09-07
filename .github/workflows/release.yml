@@ -379,7 +379,9 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           choco pack chocolatey/yoo.nuspec --outputdirectory chocolatey-out
-          choco install chocolatey-out/yoo.*.nupkg --yes --source chocolatey-out --no-progress
+          $package = Get-ChildItem chocolatey-out/yoo.*.nupkg | Select-Object -First 1
+          if (-not $package) { throw 'Chocolatey package was not created.' }
+          choco install yoo --yes --source (Resolve-Path chocolatey-out).Path --no-progress
           yoo --version
           gh release upload $env:GITHUB_REF_NAME chocolatey-out/yoo.*.nupkg --repo $env:GITHUB_REPOSITORY --clobber
       - name: Refresh release checksums after adding Chocolatey package
