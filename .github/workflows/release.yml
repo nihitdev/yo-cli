@@ -188,7 +188,7 @@ jobs:
       - name: Generate Homebrew and AUR publication bundle
         run: |
           bash scripts/package-metadata.sh release target/package-metadata
-          tar -czf release/yoo-packaging.tar.gz -C target/package-metadata homebrew aur winget scoop chocolatey void
+          tar -czf release/yoo-packaging.tar.gz -C target/package-metadata homebrew aur winget scoop void
 
       - name: Generate SHA-256 checksums
         run: bash scripts/package-checksums.sh release
@@ -351,64 +351,6 @@ jobs:
           (cd "$work" && npm publish --access public)
           echo "npm @nihit_dev/yoo@$version: PUBLISHED via Trusted Publishing (pnpm/Bun consume the npm registry)" >> "$GITHUB_STEP_SUMMARY"
 
-  publish-chocolatey:
-    needs: publish
-    runs-on: windows-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6
-      - name: Check Chocolatey credentials
-        id: credentials
-        shell: pwsh
-        env:
-          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
-        run: |
-          if ($env:CHOCOLATEY_API_KEY) { 'enabled=true' >> $env:GITHUB_OUTPUT } else { 'Chocolatey publication skipped: CHOCOLATEY_API_KEY is not configured.' >> $env:GITHUB_STEP_SUMMARY }
-      - name: Download generated package metadata
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: pwsh
-        run: |
-          gh release download $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY --pattern yoo-packaging.tar.gz
-          tar -xzf yoo-packaging.tar.gz chocolatey
-      - name: Pack Chocolatey package
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          choco pack chocolatey/yoo.nuspec --outputdirectory chocolatey-out
-          $package = Get-ChildItem chocolatey-out/yoo.*.nupkg | Select-Object -First 1
-          if (-not $package) { throw 'Chocolatey package was not created.' }
-          choco install yoo --yes --source (Resolve-Path chocolatey-out).Path --no-progress
-          yoo --version
-          gh release upload $env:GITHUB_REF_NAME chocolatey-out/yoo.*.nupkg --repo $env:GITHUB_REPOSITORY --clobber
-      - name: Refresh release checksums after adding Chocolatey package
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p release-assets
-          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --pattern '*' --dir release-assets
-          bash scripts/package-checksums.sh release-assets
-          gh release upload "$GITHUB_REF_NAME" release-assets/SHA256SUMS --repo "$GITHUB_REPOSITORY" --clobber
-      - name: Publish to Chocolatey Community Repository
-        if: steps.credentials.outputs.enabled == 'true'
-        env:
-          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $package = Get-ChildItem chocolatey-out/yoo.*.nupkg | Select-Object -First 1
-          choco push $package.FullName --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY --fail-on-error
-          'Chocolatey: SUBMITTED FOR REVIEW (moderation may delay availability).' >> $env:GITHUB_STEP_SUMMARY
-      - name: Report missing Chocolatey credentials
-        if: steps.credentials.outputs.enabled != 'true'
-        shell: pwsh
-        run: "'Chocolatey package: BUILT; publication skipped because CHOCOLATEY_API_KEY is missing.' >> $env:GITHUB_STEP_SUMMARY"
-
   publish-apt:
     needs: publish
     uses: ./.github/workflows/apt-repository.yml
@@ -444,7 +386,6 @@ jobs:
       - publish
       - publish-cargo
       - publish-npm
-      - publish-chocolatey
       - publish-tap
       - publish-aur
       - publish-apt
@@ -457,7 +398,6 @@ jobs:
           PUBLISH: ${{ needs.publish.result }}
           CARGO: ${{ needs.publish-cargo.result }}
           NPM: ${{ needs.publish-npm.result }}
-          CHOCOLATEY: ${{ needs.publish-chocolatey.result }}
           HOMEBREW: ${{ needs.publish-tap.result }}
           AUR: ${{ needs.publish-aur.result }}
           APT: ${{ needs.publish-apt.result }}
@@ -472,7 +412,6 @@ jobs:
             echo "| GitHub Release | $PUBLISH | Release assets and checksums |"
             echo "| Cargo | $CARGO | Skips cleanly without CARGO_REGISTRY_TOKEN |"
             echo "| npm (pnpm/Bun) | $NPM | Uses npm Trusted Publishing via GitHub OIDC |"
-            echo "| Chocolatey | $CHOCOLATEY | Submitted packages remain subject to moderation |"
             echo "| Homebrew tap | $HOMEBREW | Skips cleanly without HOMEBREW_TAP_TOKEN |"
             echo "| AUR | $AUR | Requires AUR_SSH_PRIVATE_KEY |"
             echo '| Snap | BUILT | Store publishing disabled; .snap attached to GitHub Release |'
