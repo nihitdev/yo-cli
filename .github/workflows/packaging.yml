@@ -198,39 +198,6 @@ jobs:
           path: dist-alpine/*.apk
           if-no-files-found: error
 
-  void:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v6
-      - name: Build XBPS package natively on Void Linux
-        run: |
-          set -euo pipefail
-          mkdir -p "$GITHUB_WORKSPACE/dist-void"
-          docker run --rm \
-            -v "$GITHUB_WORKSPACE:/workspace" \
-            -e RELEASE_TAG="${GITHUB_REF_NAME:-}" \
-            --privileged \
-            voidlinux/voidlinux:latest \
-            sh -euxc '
-              printf "%s\\n" "repository=http://repo-default.voidlinux.org/current" > /etc/xbps.d/00-repository-main.conf
-              xbps-install -Su xbps -y
-              xbps-install -Syu -y
-              xbps-install -y bash git wget base-devel
-              git clone --depth 1 https://github.com/void-linux/void-packages.git /tmp/void-packages
-              useradd -m builder
-              chown -R builder:builder /tmp/void-packages /workspace/dist-void
-              su builder -c "bash /workspace/scripts/void-build.sh"
-              xbps-install -y -R /tmp/void-packages/hostdir/binpkgs yoo
-              test "$(yoo --version)" = "yoo $(bash /workspace/scripts/package-version.sh)"
-            '
-          test -n "$(find dist-void -name 'yoo-*.xbps' -print -quit)"
-      - uses: actions/upload-artifact@v7
-        with:
-          name: void-package
-          path: dist-void/*.xbps
-          if-no-files-found: warn
-
   snap:
     runs-on: ubuntu-latest
     steps:

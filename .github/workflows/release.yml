@@ -205,44 +205,6 @@ jobs:
           overwrite_files: true
           files: release/*
 
-  publish-tap:
-    needs: publish
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Check optional tap credentials
-        id: credentials
-        env:
-          TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-        run: |
-          if [ -n "$TOKEN" ]; then echo "enabled=true" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/checkout@v6
-        if: steps.credentials.outputs.enabled == 'true'
-        with:
-          repository: nihitdev/homebrew-tap
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          path: tap
-      - name: Update formula
-        if: steps.credentials.outputs.enabled == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern yoo-packaging.tar.gz
-          tar -xzf yoo-packaging.tar.gz homebrew/yoo.rb
-          mkdir -p tap/Formula
-          cp homebrew/yoo.rb tap/Formula/yoo.rb
-          cd tap
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add Formula/yoo.rb
-          if ! git diff --cached --quiet; then
-            git commit -m "Update yoo to $RELEASE_TAG"
-            git push
-          fi
-
   publish-aur:
     needs: publish
     runs-on: ubuntu-latest
@@ -289,37 +251,6 @@ jobs:
           fi
           echo 'AUR: PUBLISHED' >> "$GITHUB_STEP_SUMMARY"
 
-  publish-cargo:
-    needs: publish
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check crates.io credentials
-        id: credentials
-        env:
-          TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: |
-          if [ -n "$TOKEN" ]; then echo enabled=true >> "$GITHUB_OUTPUT"; else echo 'Cargo publication skipped: CARGO_REGISTRY_TOKEN is not configured.' >> "$GITHUB_STEP_SUMMARY"; fi
-      - uses: actions/checkout@v6
-        if: steps.credentials.outputs.enabled == 'true'
-        with:
-          ref: ${{ github.ref_name }}
-      - uses: dtolnay/rust-toolchain@stable
-        if: steps.credentials.outputs.enabled == 'true'
-      - name: Validate and publish crate
-        if: steps.credentials.outputs.enabled == 'true'
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: |
-          set -euo pipefail
-          version=$(bash scripts/package-version.sh "$GITHUB_REF_NAME")
-          if curl --fail --silent --show-error "https://crates.io/api/v1/crates/yoo/$version" >/dev/null; then
-            echo "Cargo yoo@$version already exists: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          cargo package --locked --allow-dirty
-          cargo publish --locked --token "$CARGO_REGISTRY_TOKEN"
-          echo "Cargo $version: PUBLISHED" >> "$GITHUB_STEP_SUMMARY"
-
   publish-npm:
     needs: publish
     runs-on: ubuntu-latest
@@ -351,16 +282,6 @@ jobs:
           (cd "$work" && npm publish --access public)
           echo "npm @nihit_dev/yoo@$version: PUBLISHED via Trusted Publishing (pnpm/Bun consume the npm registry)" >> "$GITHUB_STEP_SUMMARY"
 
-  publish-apt:
-    needs: publish
-    uses: ./.github/workflows/apt-repository.yml
-    with:
-      tag: ${{ github.ref_name }}
-    secrets:
-      APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
-      APT_SIGNING_PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
-      APT_PUBLISH_TOKEN: ${{ secrets.APT_PUBLISH_TOKEN }}
-
   publish-alpine:
     needs: publish
     uses: ./.github/workflows/alpine-repository.yml
@@ -370,39 +291,21 @@ jobs:
       ALPINE_SIGNING_KEY: ${{ secrets.ALPINE_SIGNING_KEY }}
       ALPINE_PUBLISH_TOKEN: ${{ secrets.ALPINE_PUBLISH_TOKEN }}
 
-  publish-opensuse:
-    needs: publish-apt
-    uses: ./.github/workflows/opensuse-repository.yml
-    with:
-      tag: ${{ github.ref_name }}
-    secrets:
-      RPM_SIGNING_KEY: ${{ secrets.RPM_SIGNING_KEY }}
-      RPM_SIGNING_PASSPHRASE: ${{ secrets.RPM_SIGNING_PASSPHRASE }}
-      RPM_PUBLISH_TOKEN: ${{ secrets.RPM_PUBLISH_TOKEN }}
-
   release-summary:
     if: always()
     needs:
       - publish
-      - publish-cargo
       - publish-npm
-      - publish-tap
       - publish-aur
-      - publish-apt
       - publish-alpine
-      - publish-opensuse
     runs-on: ubuntu-latest
     steps:
       - name: Write release status summary
         env:
           PUBLISH: ${{ needs.publish.result }}
-          CARGO: ${{ needs.publish-cargo.result }}
           NPM: ${{ needs.publish-npm.result }}
-          HOMEBREW: ${{ needs.publish-tap.result }}
           AUR: ${{ needs.publish-aur.result }}
-          APT: ${{ needs.publish-apt.result }}
           ALPINE: ${{ needs.publish-alpine.result }}
-          OPENSUSE: ${{ needs.publish-opensuse.result }}
         run: |
           {
             echo "## yoo ${GITHUB_REF_NAME} release"
@@ -410,9 +313,7 @@ jobs:
             echo '| Ecosystem | Workflow status | Notes |'
             echo '| --- | --- | --- |'
             echo "| GitHub Release | $PUBLISH | Release assets and checksums |"
-            echo "| Cargo | $CARGO | Skips cleanly without CARGO_REGISTRY_TOKEN |"
             echo "| npm (pnpm/Bun) | $NPM | Uses npm Trusted Publishing via GitHub OIDC |"
-            echo "| Homebrew tap | $HOMEBREW | Skips cleanly without HOMEBREW_TAP_TOKEN |"
             echo "| AUR | $AUR | Requires AUR_SSH_PRIVATE_KEY |"
             echo '| Snap | BUILT | Store publishing disabled; .snap attached to GitHub Release |'
             echo
@@ -420,12 +321,9 @@ jobs:
             echo '- BUILD AUTOMATED: YES'
             echo '- STORE PUBLISHING: DISABLED'
             echo '- GITHUB RELEASE ARTIFACT: YES'
-            echo "| APT | $APT | Signed static repository publication |"
             echo "| Alpine/APK | $ALPINE | Signed APKINDEX publication |"
-            echo "| openSUSE/RPM | $OPENSUSE | Signed static repository publication |"
             echo '| WinGet | BUILT | Manifest included in yoo-packaging.tar.gz; community PR remains external |'
             echo '| Scoop | BUILT | Manifest included; no nihitdev/scoop-bucket repository exists |'
-            echo '| Void/XBPS | BUILT / VALIDATED | XBPS attached to the GitHub Release; no official or hosted repository |'
             echo
             echo 'WinGet manifests, Scoop metadata, and package metadata are attached in yoo-packaging.tar.gz.'
           } >> "$GITHUB_STEP_SUMMARY"
