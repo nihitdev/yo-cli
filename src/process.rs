@@ -115,10 +115,10 @@ pub fn run(command: &mut Command, timeout: Duration) -> Result<String, CommandEr
             ErrorKind::OutputLimit,
             "output exceeded 8 MiB per stream".into(),
         )),
-        Ok(_) => cleanup
-            .as_ref()
-            .err()
-            .map(|error| (ErrorKind::Io, format!("process cleanup failed: {error}"))),
+        // Once the command itself completed successfully, process-group cleanup
+        // is best-effort. Restricted environments may reject signalling the
+        // group even though the leader exited successfully.
+        Ok(_) => None,
     };
     if let Some((kind, mut message)) = failure {
         if kind != ErrorKind::Io {
