@@ -7,12 +7,13 @@ mod doctor;
 mod editor;
 mod fetch;
 mod git;
+mod process;
 mod project;
 mod timer;
 mod tips;
 mod ui;
 
-use std::{env, process};
+use std::{env, process::exit};
 
 fn main() {
     let raw_args: Vec<String> = env::args().skip(1).collect();
@@ -21,12 +22,12 @@ fn main() {
         Ok(command) => command,
         Err(error) => {
             eprintln!("error: {error}\n\n{}", args::help_text());
-            process::exit(2);
+            exit(2);
         }
     };
 
     if let Err(error) = app::execute(command) {
         eprintln!("yoo: {error}");
-        process::exit(1);
+        exit(1);
     }
 }

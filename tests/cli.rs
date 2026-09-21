@@ -44,7 +44,7 @@ fn readme_version_example_matches_the_package_version() {
     let readme = fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("README.md"))
         .expect("README should be readable");
 
-    assert!(readme.contains(&format!("Version:         {}", env!("CARGO_PKG_VERSION"))));
+    assert!(readme.contains(&format!("yoo {}", env!("CARGO_PKG_VERSION"))));
 }
 
 #[test]
@@ -152,4 +152,95 @@ version = "4.3.2"
     assert!(report["project"]["version"].is_null());
 
     fs::remove_dir_all(directory).expect("test directory should be removed");
+}
+
+#[cfg(unix)]
+fn fake_tool(directory: &Path, name: &str, script: &str) {
+    use std::os::unix::fs::PermissionsExt;
+    let path = directory.join(name);
+    fs::write(&path, format!("#!/bin/sh\n{script}\n")).unwrap();
+    fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn doctor_exit_status_distinguishes_failures_from_advisory_warnings() {
+    let root = tempfile::tempdir().unwrap();
+    let bin = root.path().join("bin");
+    fs::create_dir(&bin).unwrap();
+    for tool in ["rustc", "cargo", "rustfmt"] {
+        fake_tool(&bin, tool, "echo 'tool 1.0'");
+    }
+    fake_tool(
+        &bin,
+        "git",
+        "if [ \"$1\" = rev-parse ]; then echo 'fatal: not a git repository (or any of the parent directories): .git' >&2; exit 128; fi; echo 'git 1.0'",
+    );
+    let run = || {
+        Command::new(env!("CARGO_BIN_EXE_yoo"))
+            .arg("doctor")
+            .current_dir(root.path())
+            .env("PATH", &bin)
+            .env("HOME", root.path())
+            .env("USERPROFILE", root.path())
+            .env("XDG_CONFIG_HOME", root.path())
+            .output()
+            .unwrap()
+    };
+    let success = run();
+    assert!(
+        success.status.success(),
+        "{}",
+        String::from_utf8_lossy(&success.stderr)
+    );
+    assert!(String::from_utf8_lossy(&success.stdout).contains("0 failed"));
+    fake_tool(&bin, "rustc", "echo 'compiler broken' >&2; exit 7");
+    let failed = run();
+    assert_eq!(failed.status.code(), Some(1));
+    let report = String::from_utf8_lossy(&failed.stdout);
+    assert!(report.contains("1 failed"));
+    assert!(report.contains("compiler broken"));
+    assert!(String::from_utf8_lossy(&failed.stderr).contains("doctor check(s) failed"));
+}
+
+#[cfg(unix)]
+#[test]
+fn git_failure_in_json_mode_is_an_error_not_a_clean_report() {
+    let root = tempfile::tempdir().unwrap();
+    fake_tool(root.path(), "git", "echo 'git is broken' >&2; exit 128");
+    for command in ["project", "fetch", "status"] {
+        let output = Command::new(env!("CARGO_BIN_EXE_yoo"))
+            .args([command, "--json"])
+            .env("PATH", root.path())
+            .current_dir(root.path())
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(1));
+        assert!(output.stdout.is_empty());
+        assert!(String::from_utf8_lossy(&output.stderr).contains("git is broken"));
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn git_status_timeout_is_reported_and_exits_nonzero() {
+    let root = tempfile::tempdir().unwrap();
+    fake_tool(
+        root.path(),
+        "git",
+        "case \"$1\" in rev-parse) echo .git;; symbolic-ref) echo main;; status) /bin/sleep 30;; esac",
+    );
+    let start = std::time::Instant::now();
+    let output = Command::new(env!("CARGO_BIN_EXE_yoo"))
+        .args(["project", "--json"])
+        .env("PATH", root.path())
+        .current_dir(root.path())
+        .output()
+        .unwrap();
+    assert!(start.elapsed() < std::time::Duration::from_secs(10));
+    assert_eq!(output.status.code(), Some(1));
+    assert!(output.stdout.is_empty());
+    let error = String::from_utf8_lossy(&output.stderr);
+    assert!(error.contains("git status"));
+    assert!(error.contains("timed out"));
 }

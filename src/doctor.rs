@@ -22,6 +22,18 @@ pub struct Report {
 }
 
 impl Report {
+    /// Warnings are advisory; every failed check makes doctor unsuitable as a CI gate.
+    pub fn result(&self) -> std::io::Result<()> {
+        if self.fail_count() == 0 {
+            Ok(())
+        } else {
+            Err(std::io::Error::other(format!(
+                "{} doctor check(s) failed",
+                self.fail_count()
+            )))
+        }
+    }
+
     pub fn pass_count(&self) -> usize {
         self.checks
             .iter()
@@ -91,15 +103,15 @@ pub fn print(report: &Report) {
 
 fn command_check(label: &'static str, program: &str, arguments: &[&str]) -> Check {
     match git::run_command(program, arguments) {
-        Some(version) => Check {
+        Ok(version) => Check {
             label,
             status: Status::Pass,
             detail: version,
         },
-        None => Check {
+        Err(error) => Check {
             label,
             status: Status::Fail,
-            detail: "not found in PATH".to_owned(),
+            detail: error.to_string(),
         },
     }
 }
@@ -152,7 +164,7 @@ fn project_check(directory: &Path) -> Check {
 
 fn repository_check(directory: &Path) -> Check {
     match git::inspect(directory) {
-        Some(info) => Check {
+        Ok(Some(info)) => Check {
             label: "Git repository",
             status: Status::Pass,
             detail: format!(
@@ -160,10 +172,15 @@ fn repository_check(directory: &Path) -> Check {
                 info.branch, info.changed_files
             ),
         },
-        None => Check {
+        Ok(None) => Check {
             label: "Git repository",
             status: Status::Warn,
             detail: "not a Git repository".to_owned(),
+        },
+        Err(error) => Check {
+            label: "Git repository",
+            status: Status::Fail,
+            detail: error.to_string(),
         },
     }
 }
@@ -197,6 +214,20 @@ mod tests {
         assert_eq!(report.pass_count(), 1);
         assert_eq!(report.warn_count(), 1);
         assert_eq!(report.fail_count(), 1);
+    }
+
+    #[test]
+    fn only_failed_checks_make_doctor_fail() {
+        for status in [Status::Pass, Status::Warn, Status::Fail] {
+            let report = Report {
+                checks: vec![Check {
+                    label: "test",
+                    status,
+                    detail: String::new(),
+                }],
+            };
+            assert_eq!(report.result().is_err(), status == Status::Fail);
+        }
     }
 
     #[test]

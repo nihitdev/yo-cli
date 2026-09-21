@@ -20,7 +20,9 @@ pub fn execute(command: Command) -> Result<(), Box<dyn Error>> {
         }
         Command::Doctor => {
             let directory = std::env::current_dir()?;
-            doctor::print(&doctor::collect(&directory));
+            let report = doctor::collect(&directory);
+            doctor::print(&report);
+            report.result()?;
             Ok(())
         }
         Command::Edit(options) => edit(options.editor.as_deref()),
@@ -106,7 +108,7 @@ fn run(options: RunOptions) -> Result<(), Box<dyn Error>> {
     ui.info("📁", "Project:", project_name)?;
 
     if config.git.show_branch {
-        if let Some(info) = git::inspect(&directory) {
+        if let Some(info) = git::inspect(&directory)? {
             ui.info("🌿", "Git branch:", &info.branch)?;
 
             if config.git.show_status {
@@ -132,7 +134,7 @@ fn run(options: RunOptions) -> Result<(), Box<dyn Error>> {
 
 fn run_fetch(options: FetchOptions) -> Result<(), Box<dyn Error>> {
     let directory = std::env::current_dir()?;
-    let report = fetch::collect(&directory);
+    let report = fetch::collect(&directory)?;
 
     if options.json {
         println!("{}", fetch::to_json(&report)?);
@@ -153,7 +155,7 @@ fn run_fetch(options: FetchOptions) -> Result<(), Box<dyn Error>> {
 
 fn run_project(options: ProjectOptions) -> Result<(), Box<dyn Error>> {
     let directory = std::env::current_dir()?;
-    let report = project::collect(&directory);
+    let report = project::collect(&directory)?;
 
     if options.json {
         println!("{}", project::to_json(&report)?);

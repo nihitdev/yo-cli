@@ -18,3 +18,13 @@ The Rust crate is available as `yoo` on crates.io:
 ```bash
 cargo install yoo
 ```
+
+Downloads are checked against the matching release's `SHA256SUMS` before the
+binary is atomically installed. Failed downloads leave any existing executable
+untouched. Downloads require HTTPS, allow up to five redirects, and have a
+60-second deadline per file. No additional npm dependencies are required.
+
+For local builds, set `YOO_BINARY_PATH` to a nonempty native executable. This
+explicit override copies your file without downloading or checking release hashes.
+
+Maintainers can run the local HTTP-fixture regression suite with `npm test`.

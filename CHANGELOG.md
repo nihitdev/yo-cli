@@ -12,6 +12,15 @@ The format follows the spirit of Keep a Changelog: user-visible changes are grou
 
 ## [Unreleased]
 
+### Fixed
+
+- Bound command output capture independently of inherited handles, and clean up command process trees.
+- Report Git failures/timeouts explicitly and recognize repositories before their first commit.
+- Verify npm downloads against release checksums with timeouts, bounded redirects, and atomic installation.
+- Return a failing exit status from `doctor` when checks fail.
+- Count mixed-language sources while respecting ignore rules and excluding generated files.
+- Align README examples, configuration paths, command aliases, and exit semantics with the CLI.
+
 ## [1.0.0] - 2026-08-08
 
 🎉 **yoo 1.0.0 is here—the first stable release!** 🚀

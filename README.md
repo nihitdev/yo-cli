@@ -85,7 +85,7 @@ Snap builds are attached to GitHub Releases. Snap Store publishing is currently 
 
 ## Commands
 
-Run `yoo` inside a project, or pass a path where the command supports it.
+Commands inspect the current directory. Use `cd path/to/project` first; positional project paths are not supported.
 
 | Command | Purpose |
 | --- | --- |
@@ -93,11 +93,11 @@ Run `yoo` inside a project, or pass a path where the command supports it.
 | `yoo doctor` | Check local tools, project detection, and configuration |
 | `yoo project` | Project metadata, source counts, and Git details |
 | `yoo fetch` | Project plus development environment report |
-| `yoo status` | Alias for the project status view |
+| `yoo status` | Alias for `yoo fetch` (environment and project report) |
 | `yoo session [MINUTES]` | Start a local coding-session timer |
 | `yoo tip` / `yoo tips` | Show a configured reminder or tip pack |
 | `yoo edit` | Open the current project in the configured editor |
-| `yoo init` / `yoo config` | Create or inspect local configuration |
+| `yoo init` / `yoo config` | Create configuration and a sample tip pack / print the configuration file path |
 | `yoo completions SHELL` | Generate Bash, Zsh, Fish, or PowerShell completions |
 
 Useful output flags include `--fast`, `--plain`, `--no-art`, `--theme NAME`, and `--json` for `project` and `fetch`.
@@ -109,17 +109,57 @@ yoo fetch --plain
 yoo session 25
 ```
 
-The default report includes the installed version and current project context:
+Check the installed CLI version with `yoo --version`:
 
 ```text
-Version:         1.1.1
-Project:         yoo
-Git:             main · clean
+yoo 1.1.1
 ```
+
+`project --json` and `fetch --json` include `yoo_version`. Their `project.version`
+field is the inspected project's version, when available. `--json` cannot be
+combined with `--plain`, `--no-art`, or `--theme`.
+
+Git inspection distinguishes clean and dirty repositories, repositories before
+their first commit, and non-Git directories. Git failures and timeouts are
+reported on stderr with exit status 1 (including in JSON mode), rather than
+being reported as a clean tree. Exit status 2 indicates invalid CLI arguments.
+
+`yoo doctor` prints all checks and exits 1 if any check fails; warnings alone
+exit 0. The tool checks currently require Rust, Cargo, Git, Rustfmt, and Clippy.
+These are development health checks, not dependencies needed to launch `yoo`.
+
+Source totals include all supported source extensions across languages, respect
+nested `.gitignore` rules, `.git/info/exclude`, and global Git excludes, and skip
+symlinks and common generated/vendor directories (`target`, `node_modules`,
+`dist`, `build`, `.next`, `.venv`, `venv`, `vendor`, `__pycache__`, `.git`). Counts
+also honor `.ignore` files. Files that cannot be read are skipped.
+
+## Configuration
+
+Run `yoo init` to create the default configuration without overwriting an
+existing file. Run `yoo config` to print its exact location, then edit that file.
+See [examples/config.toml](examples/config.toml) for supported settings.
+
+Default locations:
+
+- Linux: `$XDG_CONFIG_HOME/yoo/config.toml`, or `~/.config/yoo/config.toml`.
+- macOS: `~/Library/Application Support/yoo/config.toml`.
+- Windows: `%USERPROFILE%\.config\yoo\config.toml`.
+
+The editor setting accepts a single executable name or path, not a shell command
+with arguments. `yoo edit --editor` overrides it for one invocation; otherwise
+`VISUAL`, `EDITOR`, and automatic detection are used when it is empty.
+
+## Troubleshooting
+
+Run `yoo doctor` for tool, configuration, project, and Git diagnostics. Use
+`yoo config` to locate invalid configuration. If Git inspection fails, check
+`git status` in the same directory; commands have a five-second execution timeout.
+For installation and PATH issues, see [the installation guide](docs/installation.md).
 
 ## Themes
 
-`yoo` includes **neon**, **ocean**, **mono**, **dracula**, **tokyo-night**, **gruvbox**, **nord**, **rose-pine**, and **catppuccin**. Set one in `~/.config/yoo/config.toml` or pass `--theme NAME`.
+`yoo` includes **neon**, **ocean**, **mono**, **dracula**, **tokyo-night**, **gruvbox**, **nord**, **rose-pine**, and **catppuccin**. Set one in the file reported by `yoo config`, or pass `--theme NAME`.
 
 ## Privacy
 

@@ -1,12 +1,6 @@
-use std::{
-    io::Read,
-    path::Path,
-    process::{Command, Stdio},
-    thread,
-    time::{Duration, Instant},
-};
+use std::{path::Path, process::Command};
 
-const COMMAND_TIMEOUT: Duration = Duration::from_secs(5);
+use crate::process::{self, CommandError, ErrorKind};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GitInfo {
@@ -14,21 +8,55 @@ pub struct GitInfo {
     pub changed_files: usize,
 }
 
-pub fn inspect(directory: &Path) -> Option<GitInfo> {
-    let branch = run_git(directory, &["rev-parse", "--abbrev-ref", "HEAD"])?;
+/// `Ok(None)` means positively identified as a non-repository. Command errors,
+/// including missing Git and timeouts, must never be reported as a clean tree.
+pub fn inspect(directory: &Path) -> Result<Option<GitInfo>, CommandError> {
+    inspect_with(|arguments| run_git(directory, arguments))
+}
 
-    if branch.is_empty() {
-        return None;
+fn inspect_with(
+    mut run: impl FnMut(&[&str]) -> Result<String, CommandError>,
+) -> Result<Option<GitInfo>, CommandError> {
+    match run(&["rev-parse", "--git-dir"]) {
+        Ok(_) => {}
+        Err(error)
+            if error.kind == ErrorKind::Failed
+                && error
+                    .stderr
+                    .starts_with("fatal: not a git repository (or any") =>
+        {
+            return Ok(None);
+        }
+        Err(error) => return Err(error),
     }
-
-    let changed_files = run_git(directory, &["status", "--porcelain"])
-        .map(|status| status.lines().count())
-        .unwrap_or(0);
-
-    Some(GitInfo {
-        branch,
+    // symbolic-ref works before the first commit. Detached HEAD is the only
+    // expected failure (exit 1); other failures must remain visible.
+    let branch = match run(&["symbolic-ref", "--quiet", "--short", "HEAD"]) {
+        Ok(branch) => branch,
+        Err(error) if error.kind == ErrorKind::Failed && error.exit_code == Some(1) => {
+            run(&["rev-parse", "--short", "HEAD"])?
+        }
+        Err(error) => return Err(error),
+    };
+    let status = run(&["status", "--porcelain=v1", "-z", "--untracked-files=all"])?;
+    // With -z a rename/copy has two path records. Paths can contain newlines.
+    let mut records = status.split('\0').filter(|record| !record.is_empty());
+    let mut changed_files = 0;
+    while let Some(record) = records.next() {
+        changed_files += 1;
+        if record
+            .as_bytes()
+            .iter()
+            .take(2)
+            .any(|byte| matches!(byte, b'R' | b'C'))
+        {
+            records.next();
+        }
+    }
+    Ok(Some(GitInfo {
+        branch: branch.trim().to_owned(),
         changed_files,
-    })
+    }))
 }
 
 pub fn change_status(changed_files: usize) -> String {
@@ -39,94 +67,173 @@ pub fn change_status(changed_files: usize) -> String {
     }
 }
 
-pub fn commit_count(directory: &Path) -> Option<usize> {
-    run_git(directory, &["rev-list", "--count", "HEAD"])
-        .and_then(|value| value.parse::<usize>().ok())
+pub fn commit_count(directory: &Path) -> Result<Option<usize>, CommandError> {
+    match run_git(directory, &["rev-parse", "--verify", "--quiet", "HEAD"]) {
+        Err(error) if error.kind == ErrorKind::Failed && error.exit_code == Some(1) => {
+            return Ok(None);
+        }
+        Err(error) => return Err(error),
+        Ok(_) => {}
+    }
+    let output = run_git(directory, &["rev-list", "--count", "HEAD"])?;
+    output
+        .trim()
+        .parse()
+        .map(Some)
+        .map_err(|error| CommandError {
+            kind: ErrorKind::Failed,
+            command: "git rev-list --count HEAD".into(),
+            message: format!("invalid commit count: {error}"),
+            stdout: output,
+            stderr: String::new(),
+            exit_code: Some(0),
+        })
 }
 
-pub fn latest_tag(directory: &Path) -> Option<String> {
-    run_git(directory, &["describe", "--tags", "--abbrev=0"])
+pub fn latest_tag(directory: &Path) -> Result<Option<String>, CommandError> {
+    match run_git(directory, &["describe", "--tags", "--abbrev=0"]) {
+        Ok(value) => Ok(Some(value.trim().to_owned())),
+        Err(error)
+            if error.kind == ErrorKind::Failed
+                && error.exit_code == Some(128)
+                && (error.stderr.starts_with("fatal: No names found")
+                    || error.stderr.starts_with("fatal: No tags can describe")) =>
+        {
+            Ok(None)
+        }
+        Err(error) => Err(error),
+    }
 }
 
-fn run_git(directory: &Path, arguments: &[&str]) -> Option<String> {
-    run_command_in(directory, "git", arguments)
-}
-
-pub fn run_command(program: &str, arguments: &[&str]) -> Option<String> {
-    command_stdout(Command::new(program).args(arguments), COMMAND_TIMEOUT)
-}
-
-pub fn run_command_in(directory: &Path, program: &str, arguments: &[&str]) -> Option<String> {
-    command_stdout(
-        Command::new(program).args(arguments).current_dir(directory),
-        COMMAND_TIMEOUT,
+fn run_git(directory: &Path, arguments: &[&str]) -> Result<String, CommandError> {
+    process::run(
+        Command::new("git")
+            .args(arguments)
+            .current_dir(directory)
+            // Stable diagnostics for repository detection; no prompts or optional writes.
+            .env("LC_ALL", "C")
+            .env("GIT_TERMINAL_PROMPT", "0")
+            .env("GIT_OPTIONAL_LOCKS", "0"),
+        process::TIMEOUT,
     )
 }
 
-fn command_stdout(command: &mut Command, timeout: Duration) -> Option<String> {
-    let mut child = command
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .spawn()
-        .ok()?;
-    let mut stdout = child.stdout.take()?;
-    let output_reader = thread::spawn(move || {
-        let mut output = Vec::new();
-        stdout.read_to_end(&mut output).map(|_| output)
-    });
-    let deadline = Instant::now() + timeout;
-
-    let status = loop {
-        match child.try_wait() {
-            Ok(Some(status)) => break status,
-            Ok(None) if Instant::now() < deadline => thread::sleep(Duration::from_millis(10)),
-            Ok(None) | Err(_) => {
-                let _ = child.kill();
-                let _ = child.wait();
-                let _ = output_reader.join();
-                return None;
-            }
-        }
-    };
-    let output = output_reader.join().ok()?.ok()?;
-
-    if !status.success() {
-        return None;
-    }
-
-    String::from_utf8(output)
-        .ok()
-        .map(|text| text.trim().to_owned())
+pub fn run_command(program: &str, arguments: &[&str]) -> Result<String, CommandError> {
+    process::run(Command::new(program).args(arguments), process::TIMEOUT)
+        .map(|value| value.trim().to_owned())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn inspect_never_panics_for_a_temp_directory() {
-        let directory = std::env::temp_dir();
-        let _ = inspect(&directory);
+    fn git(directory: &Path, args: &[&str]) {
+        let output = Command::new("git")
+            .current_dir(directory)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
 
     #[test]
-    fn git_helpers_never_panic_for_a_temp_directory() {
-        let directory = std::env::temp_dir();
-        let _ = commit_count(&directory);
-        let _ = latest_tag(&directory);
+    fn recognizes_unborn_clean_dirty_and_detached_repositories() {
+        let dir = tempfile::tempdir().unwrap();
+        git(dir.path(), &["init", "-b", "main"]);
+        let unborn = inspect(dir.path()).unwrap().unwrap();
+        assert_eq!(unborn.branch, "main");
+        assert_eq!(unborn.changed_files, 0);
+        assert_eq!(commit_count(dir.path()).unwrap(), None);
+        std::fs::write(dir.path().join("file.txt"), "one\n").unwrap();
+        assert_eq!(inspect(dir.path()).unwrap().unwrap().changed_files, 1);
+        git(dir.path(), &["add", "."]);
+        git(
+            dir.path(),
+            &[
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.invalid",
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "-m",
+                "initial",
+            ],
+        );
+        assert_eq!(inspect(dir.path()).unwrap().unwrap().changed_files, 0);
+        assert_eq!(commit_count(dir.path()).unwrap(), Some(1));
+        assert_eq!(latest_tag(dir.path()).unwrap(), None);
+        git(dir.path(), &["-c", "tag.gpgSign=false", "tag", "v1"]);
+        assert_eq!(latest_tag(dir.path()).unwrap().as_deref(), Some("v1"));
+        git(dir.path(), &["mv", "file.txt", "renamed.txt"]);
+        assert_eq!(inspect(dir.path()).unwrap().unwrap().changed_files, 1);
+        git(dir.path(), &["checkout", "--detach"]);
+        assert!(!inspect(dir.path()).unwrap().unwrap().branch.is_empty());
+    }
+
+    #[test]
+    fn recognizes_non_repository() {
+        let dir = tempfile::tempdir().unwrap();
+        assert_eq!(inspect(dir.path()).unwrap(), None);
+    }
+
+    #[test]
+    fn missing_commands_and_invalid_directories_are_errors() {
+        assert_eq!(
+            run_command("yoo-command-that-does-not-exist", &[])
+                .unwrap_err()
+                .kind,
+            ErrorKind::Io
+        );
+        let dir = tempfile::tempdir().unwrap();
+        assert!(inspect(&dir.path().join("missing")).is_err());
+    }
+
+    #[test]
+    fn failures_and_timeouts_are_not_clean_or_non_repositories() {
+        for kind in [ErrorKind::Failed, ErrorKind::Timeout] {
+            for failing_command in ["rev-parse", "symbolic-ref", "status"] {
+                let expected = CommandError {
+                    kind,
+                    command: "git".into(),
+                    message: "test failure".into(),
+                    stdout: String::new(),
+                    stderr: "broken".into(),
+                    exit_code: Some(128),
+                };
+                let result = inspect_with(|args| {
+                    if args[0] == failing_command {
+                        Err(expected.clone())
+                    } else {
+                        Ok("main".into())
+                    }
+                });
+                assert_eq!(result.unwrap_err(), expected);
+            }
+        }
+    }
+
+    #[test]
+    fn counts_paths_with_newlines_and_rename_records() {
+        let report = inspect_with(|args| {
+            Ok(match args[0] {
+                "status" => "R  new\nname\0old\nname\0?? other\nfile\0",
+                _ => "main",
+            }
+            .into())
+        })
+        .unwrap()
+        .unwrap();
+        assert_eq!(report.changed_files, 2);
     }
 
     #[test]
     fn formats_change_status() {
         assert_eq!(change_status(0), "clean");
         assert_eq!(change_status(3), "3 changed file(s)");
-    }
-
-    #[test]
-    fn missing_commands_return_none() {
-        assert_eq!(
-            run_command("yoo-command-that-does-not-exist", &["--version"]),
-            None
-        );
     }
 }

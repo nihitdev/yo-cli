@@ -48,7 +48,7 @@ pub struct ProjectFiles {
     pub ci: bool,
 }
 
-pub fn collect(directory: &Path) -> ProjectReport {
+pub fn collect(directory: &Path) -> Result<ProjectReport, crate::process::CommandError> {
     let detected = fetch::detect_project(directory);
 
     let manifest_contents = detected
@@ -73,14 +73,24 @@ pub fn collect(directory: &Path) -> ProjectReport {
         find_license_file(directory)
     };
 
-    let git = git::inspect(directory).map(|info| GitProjectSummary {
-        branch: info.branch,
-        changed_files: info.changed_files,
-        commits: git::commit_count(directory),
-        latest_tag: git::latest_tag(directory),
-    });
+    let git = if let Some(info) = git::inspect(directory)? {
+        let commits = git::commit_count(directory)?;
+        let latest_tag = if commits.is_some() {
+            git::latest_tag(directory)?
+        } else {
+            None
+        };
+        Some(GitProjectSummary {
+            branch: info.branch,
+            changed_files: info.changed_files,
+            commits,
+            latest_tag,
+        })
+    } else {
+        None
+    };
 
-    ProjectReport {
+    Ok(ProjectReport {
         yoo_version: env!("CARGO_PKG_VERSION").to_owned(),
         project: ProjectDetails {
             name: detected.name,
@@ -92,7 +102,7 @@ pub fn collect(directory: &Path) -> ProjectReport {
             license,
             directory: detected.directory,
         },
-        source: count_source(directory, &detected.kind),
+        source: count_source(directory),
         git,
         files: ProjectFiles {
             readme: any_file_exists(directory, &["README.md", "README", "readme.md"]),
@@ -104,7 +114,7 @@ pub fn collect(directory: &Path) -> ProjectReport {
             gitignore: directory.join(".gitignore").is_file(),
             ci: has_ci_workflow(directory),
         },
-    }
+    })
 }
 
 pub fn to_json(report: &ProjectReport) -> Result<String, serde_json::Error> {
@@ -233,51 +243,71 @@ fn package_manager(directory: &Path, language: &str) -> Option<String> {
     }
 }
 
-fn count_source(directory: &Path, language: &str) -> SourceSummary {
+const SOURCE_EXTENSIONS: &[&str] = &[
+    "rs", "js", "cjs", "mjs", "jsx", "ts", "tsx", "py", "go", "java", "kt", "kts", "cs", "fs",
+    "vb", "c", "cpp", "h", "hpp",
+];
+
+fn count_source(directory: &Path) -> SourceSummary {
+    use std::io::{BufRead, Read};
     let mut summary = SourceSummary { files: 0, lines: 0 };
-    visit_source_files(directory, source_extensions(language), &mut summary);
-    summary
-}
-
-fn visit_source_files(directory: &Path, extensions: &[&str], summary: &mut SourceSummary) {
-    let Ok(entries) = fs::read_dir(directory) else {
-        return;
-    };
-
-    for entry in entries.filter_map(Result::ok) {
+    // The ignore crate handles nested rules, negation, parent rules, global Git
+    // excludes, and .git/info/exclude without starting a process per directory.
+    let walker = ignore::WalkBuilder::new(directory)
+        .hidden(false)
+        .require_git(false)
+        .follow_links(false)
+        .filter_entry(|entry| {
+            entry.depth() == 0
+                || !entry
+                    .file_type()
+                    .is_some_and(|kind| kind.is_dir() && should_skip_directory(entry.path()))
+        })
+        .build();
+    for entry in walker.filter_map(Result::ok) {
+        if !entry.file_type().is_some_and(|kind| kind.is_file()) {
+            continue;
+        }
         let path = entry.path();
-        let Ok(file_type) = entry.file_type() else {
+        if !path
+            .extension()
+            .and_then(|value| value.to_str())
+            .is_some_and(|value| {
+                SOURCE_EXTENSIONS
+                    .iter()
+                    .any(|extension| value.eq_ignore_ascii_case(extension))
+            })
+        {
+            continue;
+        }
+        let Ok(file) = fs::File::open(path) else {
             continue;
         };
-
-        if file_type.is_symlink() {
+        // Stream through fixed-size buffers, even for a very large single line.
+        let Ok(metadata) = file.metadata() else {
             continue;
-        }
-
-        if file_type.is_dir() {
-            if should_skip_directory(&path) {
-                continue;
+        };
+        let mut reader = io::BufReader::new(file.take(metadata.len()));
+        let mut lines = 0;
+        let mut last = None;
+        let readable = loop {
+            match reader.fill_buf() {
+                Ok([]) => break true,
+                Ok(bytes) => {
+                    lines += bytes.iter().filter(|&&byte| byte == b'\n').count();
+                    last = bytes.last().copied();
+                    let length = bytes.len();
+                    reader.consume(length);
+                }
+                Err(_) => break false,
             }
-
-            visit_source_files(&path, extensions, summary);
-            continue;
+        };
+        if readable {
+            summary.files += 1;
+            summary.lines += lines + usize::from(last.is_some_and(|byte| byte != b'\n'));
         }
-
-        let extension = path.extension().and_then(|value| value.to_str());
-
-        if !extension.is_some_and(|value| {
-            extensions
-                .iter()
-                .any(|extension| value.eq_ignore_ascii_case(extension))
-        }) {
-            continue;
-        }
-
-        summary.files += 1;
-        summary.lines += fs::read_to_string(path)
-            .map(|contents| contents.lines().count())
-            .unwrap_or(0);
     }
+    summary
 }
 
 fn should_skip_directory(path: &Path) -> bool {
@@ -288,22 +318,17 @@ fn should_skip_directory(path: &Path) -> bool {
 
     matches!(
         name,
-        ".git" | "target" | "node_modules" | "dist" | "build" | ".next" | ".venv" | "vendor"
+        ".git"
+            | "target"
+            | "node_modules"
+            | "dist"
+            | "build"
+            | ".next"
+            | ".venv"
+            | "venv"
+            | "vendor"
+            | "__pycache__"
     )
-}
-
-fn source_extensions(language: &str) -> &'static [&'static str] {
-    match language {
-        "Rust" => &["rs"],
-        "Node.js" => &["js", "cjs", "mjs", "jsx", "ts", "tsx"],
-        "Python" => &["py"],
-        "Go" => &["go"],
-        "Java" => &["java", "kt", "kts"],
-        ".NET" => &["cs", "fs", "vb"],
-        _ => &[
-            "rs", "py", "go", "java", "js", "ts", "tsx", "cs", "c", "cpp", "h", "hpp",
-        ],
-    }
 }
 
 fn any_file_exists(directory: &Path, candidates: &[&str]) -> bool {
@@ -416,7 +441,7 @@ license = "MIT"
         fs::write(directory.join("README.md"), "# Demo\n").expect("README should be written");
         fs::write(directory.join("LICENSE"), "MIT\n").expect("license should be written");
 
-        let report = collect(&directory);
+        let report = collect(&directory).expect("report should collect");
 
         assert_eq!(report.project.name, "demo");
         assert_eq!(report.project.language, "Rust");
@@ -452,7 +477,7 @@ license = "MIT"
         fs::write(directory.join("ReadMe.MD"), "# Demo\n").expect("README should be written");
         fs::write(directory.join("license"), "MIT\n").expect("license should be written");
 
-        let report = collect(&directory);
+        let report = collect(&directory).expect("report should collect");
 
         assert!(report.files.readme);
         assert!(report.files.license);
@@ -478,6 +503,54 @@ license = "MIT"
     }
 
     #[test]
+    fn counts_mixed_languages_and_respects_nested_ignore_rules() {
+        let directory = tempfile::tempdir().unwrap();
+        let root = directory.path();
+        fs::create_dir_all(root.join("src/nested")).unwrap();
+        fs::create_dir_all(root.join("ignored")).unwrap();
+        fs::create_dir_all(root.join("node_modules")).unwrap();
+        fs::write(root.join(".gitignore"), "ignored/\n*.generated.ts\n").unwrap();
+        fs::write(root.join("src/.gitignore"), "*.py\n!keep.py\n").unwrap();
+        for name in [
+            "src/main.rs",
+            "src/app.tsx",
+            "src/keep.py",
+            "src/native.cpp",
+        ] {
+            fs::write(root.join(name), "first\nsecond").unwrap();
+        }
+        for name in [
+            "ignored/file.rs",
+            "node_modules/file.js",
+            "src/file.generated.ts",
+            "src/skip.py",
+            "src/nested/skip.py",
+        ] {
+            fs::write(root.join(name), "ignored\n").unwrap();
+        }
+        let summary = count_source(root);
+        assert_eq!(summary.files, 4);
+        assert_eq!(summary.lines, 8);
+        // Parent rules still apply when invoked below the repository root.
+        assert_eq!(count_source(&root.join("src")).files, 4);
+    }
+
+    #[test]
+    fn respects_git_info_exclude() {
+        let directory = tempfile::tempdir().unwrap();
+        let status = std::process::Command::new("git")
+            .args(["init", "--quiet"])
+            .current_dir(directory.path())
+            .status()
+            .unwrap();
+        assert!(status.success());
+        fs::write(directory.path().join(".git/info/exclude"), "local.rs\n").unwrap();
+        fs::write(directory.path().join("local.rs"), "ignored\n").unwrap();
+        fs::write(directory.path().join("main.rs"), "included\n").unwrap();
+        assert_eq!(count_source(directory.path()).files, 1);
+    }
+
+    #[test]
     fn formats_numbers_for_display() {
         assert_eq!(format_number(0), "0");
         assert_eq!(format_number(123), "123");
@@ -495,7 +568,7 @@ license = "MIT"
         symlink(&directory, directory.join("src").join("loop"))
             .expect("test symlink should be created");
 
-        let summary = count_source(&directory, "Rust");
+        let summary = count_source(&directory);
 
         assert_eq!(summary.files, 1);
         fs::remove_dir_all(directory).expect("test directory should be removed");

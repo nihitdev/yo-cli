@@ -143,6 +143,11 @@ jobs:
         run: |
           set -euo pipefail
           version=$(bash scripts/package-version.sh)
+          git archive \
+            --format=tar.gz \
+            --prefix="yoo-$version/" \
+            --output=target/yoo-checkout.tar.gz \
+            HEAD
           docker run --rm \
             -v "$GITHUB_WORKSPACE:/workspace:ro" \
             -e YOO_VERSION="$version" \
@@ -152,8 +157,8 @@ jobs:
               zypper --non-interactive install --no-recommends \
                 cargo cargo-packaging rust rpm-build createrepo_c gpg2
               mkdir -p /usr/src/packages/SOURCES
-              curl -fsSL "https://github.com/nihitdev/yo-cli/archive/refs/tags/v${YOO_VERSION}.tar.gz" \
-                -o "/usr/src/packages/SOURCES/yoo-${YOO_VERSION}.tar.gz"
+              cp /workspace/target/yoo-checkout.tar.gz \
+                "/usr/src/packages/SOURCES/yoo-${YOO_VERSION}.tar.gz"
               cp /workspace/packaging/opensuse/vendor.tar.zst /usr/src/packages/SOURCES/
               sed "s/^Version:.*/Version:        ${YOO_VERSION}/" \
                 /workspace/packaging/opensuse/yoo.spec >/tmp/yoo.spec
@@ -182,7 +187,7 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/dist-alpine"
           docker run --rm \
             -v "$GITHUB_WORKSPACE:/workspace" \
-            -e RELEASE_TAG="${GITHUB_REF_NAME:-}" \
+            -e RELEASE_TAG="${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}" \
             alpine:3.22 \
             sh -euxc '
               apk add --no-cache alpine-sdk cargo rust

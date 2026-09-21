@@ -77,7 +77,7 @@ pub fn parse(arguments: &[String]) -> Result<Command, String> {
 fn parse_edit(arguments: &[String]) -> Result<Command, String> {
     match arguments {
         [] => Ok(Command::Edit(EditOptions::default())),
-        [flag, editor] if flag == "--editor" => Ok(Command::Edit(EditOptions {
+        [flag, _] if flag == "--editor" => Ok(Command::Edit(EditOptions {
             editor: Some(required_value(arguments, 1, "--editor")?),
         })),
         _ => Err("usage: yoo edit [--editor <EDITOR>]".to_owned()),
@@ -259,10 +259,12 @@ USAGE:
   yoo [OPTIONS]
   yoo <COMMAND>
 
+Commands inspect the current directory; change directory first to inspect another project.
+
 COMMANDS:
   init                    Create the default TOML config and a sample community tip pack
   config                  Print the TOML config file location
-  doctor                  Check Rust, Cargo, Git, config, and current-project setup
+  doctor                  Check development setup (exit 1 if any check fails)
   edit [OPTIONS]          Open the current directory in your preferred editor
   fetch [OPTIONS]         Show developer environment and current-project information
   status [OPTIONS]        Alias for `yoo fetch`
@@ -443,6 +445,17 @@ mod tests {
             Ok(Command::Completions(crate::completions::Shell::Powershell))
         );
         assert!(parse(&values(&["completions", "unknown"])).is_err());
+    }
+
+    #[test]
+    fn status_is_fetch_and_project_paths_are_not_accepted() {
+        assert_eq!(
+            parse(&values(&["status", "--json"])),
+            parse(&values(&["fetch", "--json"]))
+        );
+        for command in ["project", "fetch", "status"] {
+            assert!(parse(&values(&[command, "/some/project"])).is_err());
+        }
     }
 
     #[test]

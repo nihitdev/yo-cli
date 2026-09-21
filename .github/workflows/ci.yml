@@ -23,4 +23,16 @@ jobs:
           components: rustfmt, clippy
       - run: cargo fmt --check
       - run: cargo test --locked
-      - run: cargo clippy --locked -- -D warnings
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm test --prefix packages/npm
+
+  msrv:
+    name: Rust 1.85 compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.85.0
+      - run: cargo test --locked

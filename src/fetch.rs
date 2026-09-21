@@ -42,8 +42,8 @@ pub struct GitSummary {
     pub changed_files: usize,
 }
 
-pub fn collect(directory: &Path) -> FetchReport {
-    FetchReport {
+pub fn collect(directory: &Path) -> Result<FetchReport, crate::process::CommandError> {
+    Ok(FetchReport {
         yoo_version: env!("CARGO_PKG_VERSION").to_owned(),
         environment: EnvironmentInfo {
             os: display_os(),
@@ -56,11 +56,11 @@ pub fn collect(directory: &Path) -> FetchReport {
             git: command_version("git", &["--version"]),
         },
         project: detect_project(directory),
-        git: git::inspect(directory).map(|info| GitSummary {
+        git: git::inspect(directory)?.map(|info| GitSummary {
             branch: info.branch,
             changed_files: info.changed_files,
         }),
-    }
+    })
 }
 
 pub fn to_json(report: &FetchReport) -> Result<String, serde_json::Error> {
@@ -129,7 +129,7 @@ fn print_tool(ui: &Ui, icon: &str, label: &str, version: Option<&str>) -> io::Re
 }
 
 fn command_version(program: &str, arguments: &[&str]) -> Option<String> {
-    git::run_command(program, arguments)
+    git::run_command(program, arguments).ok()
 }
 
 fn display_os() -> String {
@@ -393,7 +393,7 @@ version = "0.6.1" # inline comment
 
     #[test]
     fn collect_never_panics_for_a_temp_directory() {
-        let report = collect(&std::env::temp_dir());
+        let report = collect(&std::env::temp_dir()).expect("report should collect");
         assert!(!report.environment.os.is_empty());
         assert!(!report.project.name.is_empty());
     }
