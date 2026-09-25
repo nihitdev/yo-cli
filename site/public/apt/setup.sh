@@ -18,10 +18,10 @@ curl --proto '=https' --proto-redir '=https' --tlsv1.2 --fail --silent --show-er
 # Pin the repository identity before modifying any system files.
 fingerprints=$(gpg --homedir "$work/gnupg" --batch --show-keys --with-colons "$work/key.gpg" |
   awk -F: '$1 == "pub" { primary=1; next } primary && $1 == "fpr" { print $10; primary=0 }')
-[ "$fingerprints" = 'B1769D06BA65E1B8F90B46812B5A9155C5529113' ] || fail 'repository signing key fingerprint mismatch'
+[ "$fingerprints" = 'AFCE5B7211D9E7F2F7A726D279AA74963D28F032' ] || fail 'repository signing key fingerprint mismatch'
 gpg --homedir "$work/gnupg" --batch --import "$work/key.gpg" >/dev/null 2>&1
 gpg --homedir "$work/gnupg" --batch --export-options export-minimal \
-  --export 'B1769D06BA65E1B8F90B46812B5A9155C5529113' > "$work/keyring.gpg"
+  --export 'AFCE5B7211D9E7F2F7A726D279AA74963D28F032' > "$work/keyring.gpg"
 [ -s "$work/keyring.gpg" ] || fail 'empty repository key'
 
 cat > "$work/yoo.sources" <<'SOURCES'
