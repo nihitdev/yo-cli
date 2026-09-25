@@ -32,7 +32,11 @@ gpg --batch --export-options export-minimal --export "$APT_SIGNING_FINGERPRINT" 
 [[ -s "$stage/public-key.gpg" ]]
 if [[ -f "$out/yoo-archive-keyring.gpg" ]]; then
   old=$(gpg --batch --show-keys --with-colons "$out/yoo-archive-keyring.gpg" | awk -F: '$1 == "fpr" {print $10; exit}')
-  [[ "$old" == "$APT_SIGNING_FINGERPRINT" ]] || { echo 'Key rotation requires a separate reviewed migration' >&2; exit 1; }
+  if [[ "$old" != "$APT_SIGNING_FINGERPRINT" ]]; then
+    [[ "${APT_ALLOW_KEY_ROTATION:-false}" == true ]] || { echo 'APT signing key changed; explicitly enable APT_ALLOW_KEY_ROTATION for the reviewed migration' >&2; exit 1; }
+    reviewed=$(gpg --batch --show-keys --with-colons packaging/apt/yoo-archive-keyring.gpg | awk -F: '$1 == "fpr" {print $10; exit}')
+    [[ "$reviewed" == "$APT_SIGNING_FINGERPRINT" ]] || { echo 'APT signing key does not match the reviewed public key in packaging/apt' >&2; exit 1; }
+  fi
 fi
 mv "$stage/public-key.gpg" "$stage/yoo-archive-keyring.gpg"
 sed "s/@FINGERPRINT@/$APT_SIGNING_FINGERPRINT/g" packaging/apt/setup.sh.in > "$stage/setup.sh"

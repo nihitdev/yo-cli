@@ -51,6 +51,10 @@ Choose one method. The full platform notes and verification steps are in [docs/i
 | Flatpak | `flatpak remote-add --user yoo https://yo-cli.vercel.app/flatpak/yoo.flatpakrepo && flatpak install --user yoo io.github.nihitdev.yoo` | Self-hosted repository |
 | Cargo Binstall | `cargo binstall yoo` | Prebuilt GitHub Release binary |
 
+If you already use the APT repository, rerun its setup command whenever the
+repository signing key is rotated. Existing systems trust the key they first
+installed and will reject repository updates signed by a replacement key.
+
 `.deb`, `.rpm`, `.apk`, `.xbps`, and `.snap` files are also attached to each GitHub Release for direct installation. Void packages are built and tested in CI; there is no hosted XBPS repository, and Snap Store publication is disabled.
 
 ### macOS

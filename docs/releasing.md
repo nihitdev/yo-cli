@@ -39,6 +39,15 @@ instead of failing unrelated release jobs. WinGet community submissions still
 require a pull request to `microsoft/winget-pkgs`; the generated manifests are
 available in the release metadata bundle for review.
 
+The reviewed APT archive public key is tracked at
+`packaging/apt/yoo-archive-keyring.gpg`. To rotate it, update that file and the
+Actions signing secrets together, then explicitly dispatch the APT workflow
+with `rotate_key: true`. The workflow checks that the imported private key
+matches the reviewed public key, publishes a newly signed repository, and
+commits its keyring and setup script atomically with the new repository
+signatures. Existing APT clients must rerun the hosted setup command to trust
+the replacement key.
+
 The repository currently has no `nihitdev/scoop-bucket` remote to update, so
 Scoop metadata is generated but not pushed. Void XBPS packages are built and
 smoke-tested in Void Linux and attached to the GitHub Release, but there is no

@@ -6,6 +6,11 @@ on:
       tag:
         required: true
         type: string
+      rotate_key:
+        description: 'Allow replacement of the previously published APT signing key'
+        required: false
+        type: boolean
+        default: false
     secrets:
       APT_SIGNING_KEY:
         required: false
@@ -19,6 +24,10 @@ on:
         description: 'Release tag (blank refreshes the current repository signatures)'
         type: string
         default: ''
+      rotate_key:
+        description: 'Allow replacement of the previously published APT signing key'
+        type: boolean
+        default: false
   schedule:
     - cron: '21 5 * * 1'
 
@@ -87,27 +96,41 @@ jobs:
         env:
           APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
           APT_SIGNING_PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+          APT_ALLOW_KEY_ROTATION: ${{ inputs.rotate_key }}
         run: |
           set -euo pipefail
           export GNUPGHOME
           GNUPGHOME=$(mktemp -d)
-          trap 'gpgconf --kill gpg-agent; rm -rf "$GNUPGHOME"' EXIT
+          signing_log=$(mktemp)
+          trap 'gpgconf --homedir "$GNUPGHOME" --kill gpg-agent || true; rm -f "$signing_log"; rm -rf "$GNUPGHOME"' EXIT
           chmod 700 "$GNUPGHOME"
           printf '%s' "$APT_SIGNING_KEY" | gpg --batch --import
           export APT_SIGNING_FINGERPRINT
-          APT_SIGNING_FINGERPRINT=$(gpg --batch --show-keys --with-colons site/public/apt/yoo-archive-keyring.gpg | awk -F: '$1 == "fpr" {print $10; exit}')
-          signing_log=$(mktemp)
-          trap 'rm -f "$signing_log"' EXIT
+          APT_SIGNING_FINGERPRINT=$(gpg --batch --show-keys --with-colons packaging/apt/yoo-archive-keyring.gpg | awk -F: '$1 == "fpr" {print $10; exit}')
+          imported_fingerprint=$(gpg --batch --with-colons --list-secret-keys | awk -F: '$1 == "fpr" {print $10; exit}')
+          if [[ -z "$APT_SIGNING_FINGERPRINT" || "$imported_fingerprint" != "$APT_SIGNING_FINGERPRINT" ]]; then
+            echo 'APT_SIGNING_KEY does not match the reviewed public key in packaging/apt.' >&2
+            exit 1
+          fi
           if ! bash scripts/apt-repository.sh "$APT_DEB" >"$signing_log" 2>&1; then
             cat "$signing_log" >&2
-            if grep -Fq 'signing failed: Bad passphrase' "$signing_log"; then
-              echo 'APT publication skipped: the configured signing passphrase was rejected. No repository files were published; update APT_SIGNING_PASSPHRASE and rerun.' >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
             exit 1
           fi
           cat "$signing_log"
           bash scripts/apt-validate.sh
+          test_repo="$RUNNER_TEMP/yoo-apt-update-test"
+          mkdir -p "$test_repo/lists/partial" "$test_repo/cache/archives/partial"
+          printf 'deb [arch=amd64 signed-by=%s] file:%s stable main\n' \
+            "$GITHUB_WORKSPACE/site/public/apt/yoo-archive-keyring.gpg" \
+            "$GITHUB_WORKSPACE/site/public/apt" > "$test_repo/sources.list"
+          apt-get \
+            -o Dir::Etc::sourcelist="$test_repo/sources.list" \
+            -o Dir::Etc::sourceparts=- \
+            -o Dir::State::lists="$test_repo/lists" \
+            -o Dir::Cache="$test_repo/cache" \
+            -o Debug::NoLocking=1 \
+            -o Acquire::Languages=none \
+            update
       - name: Commit public repository for Vercel Git deployment
         if: steps.credentials.outputs.enabled == 'true'
         env:

@@ -148,6 +148,23 @@ Host Git, development tools and editors are detected from PATH.
 
 ## Debian / Ubuntu
 
+### Hosted APT repository
+
+Install or refresh the hosted repository and its trusted signing key with:
+
+```bash
+curl -fsSL https://yo-cli.vercel.app/apt/setup.sh | sudo sh
+sudo apt install yoo
+```
+
+When the repository signing key is rotated, existing installations must rerun
+the setup command before their next `apt update`. APT continues to trust the
+old key already installed on the machine; it does not switch to the new key
+automatically. The setup script verifies the downloaded key fingerprint,
+replaces the installed keyring, and runs `apt-get update`.
+
+### Downloaded Debian package
+
 Download `yoo_<version>-1_amd64.deb` and `SHA256SUMS` from the same release:
 
 ```bash
