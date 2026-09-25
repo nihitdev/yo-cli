@@ -3,6 +3,7 @@ import { SiteExtras } from "./SiteExtras";
 import Image from "next/image";
 
 const installs = [
+  { label: "Arch / AUR", command: "yay -S yoo-bin\n# or\nparu -S yoo-bin" },
   { label: "Installer", command: "curl --proto '=https' --tlsv1.2 -LsSf https://yo-cli.vercel.app/yo-setup | sh" },
   { label: "APT", command: "curl -fsSL https://yo-cli.vercel.app/apt/setup.sh | sudo sh\nsudo apt install yoo" },
   { label: "DNF", command: "sudo dnf config-manager addrepo --from-repofile=https://yo-cli.vercel.app/rpm/yoo.repo\nsudo dnf install yoo" },

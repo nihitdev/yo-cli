@@ -42,11 +42,11 @@ Choose one method. The full platform notes and verification steps are in [docs/i
 
 | Channel | Install | Status |
 | --- | --- | --- |
+| Arch / AUR | `yay -S yoo-bin` or `paru -S yoo-bin` | Community package |
 | APT (Debian/Ubuntu) | `curl -fsSL https://yo-cli.vercel.app/apt/setup.sh \| sudo sh` then `sudo apt install yoo` | Self-hosted signed repository |
 | DNF (Fedora/RHEL) | `sudo dnf config-manager addrepo --from-repofile=https://yo-cli.vercel.app/rpm/yoo.repo` then `sudo dnf install yoo` | Self-hosted signed repository |
 | Alpine | Add `https://yo-cli.vercel.app/alpine` to `/etc/apk/repositories`, then `sudo apk add yoo` | Self-hosted APK repository |
 | openSUSE Tumbleweed | `sudo zypper ar -f https://yo-cli.vercel.app/opensuse yoo && sudo zypper refresh && sudo zypper install yoo` | Self-hosted signed repository |
-| Arch / AUR | `yay -S yoo-bin` | Community package |
 | Nix | `nix run github:nihitdev/yo-cli` | GitHub flake |
 | Flatpak | `flatpak remote-add --user yoo https://yo-cli.vercel.app/flatpak/yoo.flatpakrepo && flatpak install --user yoo io.github.nihitdev.yoo` | Self-hosted repository |
 | Cargo Binstall | `cargo binstall yoo` | Prebuilt GitHub Release binary |
