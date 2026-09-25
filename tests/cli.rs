@@ -225,10 +225,21 @@ fn git_failure_in_json_mode_is_an_error_not_a_clean_report() {
 #[test]
 fn git_status_timeout_is_reported_and_exits_nonzero() {
     let root = tempfile::tempdir().unwrap();
+    let path_directories = std::env::var_os("PATH")
+        .map(|path| std::env::split_paths(&path).collect::<Vec<_>>())
+        .unwrap_or_default();
+    let sleep = path_directories
+        .into_iter()
+        .map(|directory| directory.join("sleep"))
+        .find(|path| path.is_file())
+        .expect("sleep should be available on Unix");
+    let sleep = sleep.to_string_lossy().replace('\'', "'\\''");
     fake_tool(
         root.path(),
         "git",
-        "case \"$1\" in rev-parse) echo .git;; symbolic-ref) echo main;; status) /bin/sleep 30;; esac",
+        &format!(
+            "case \"$1\" in rev-parse) echo .git;; symbolic-ref) echo main;; status) '{sleep}' 30;; esac"
+        ),
     );
     let start = std::time::Instant::now();
     let output = Command::new(env!("CARGO_BIN_EXE_yoo"))
