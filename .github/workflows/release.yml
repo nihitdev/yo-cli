@@ -210,13 +210,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      status: ${{ steps.publish.outputs.status || steps.credentials.outputs.status }}
     steps:
       - name: Check optional AUR credentials
         id: credentials
         env:
           KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         run: |
-          if [ -n "$KEY" ]; then echo enabled=true >> "$GITHUB_OUTPUT"; else echo 'AUR publication skipped: AUR_SSH_PRIVATE_KEY is not configured.' >> "$GITHUB_STEP_SUMMARY"; fi
+          if [ -n "$KEY" ]; then
+            echo enabled=true >> "$GITHUB_OUTPUT"
+            echo status=ATTEMPTING >> "$GITHUB_OUTPUT"
+          else
+            echo status='SKIPPED (AUR_SSH_PRIVATE_KEY is not configured)' >> "$GITHUB_OUTPUT"
+            echo 'AUR publication skipped: AUR_SSH_PRIVATE_KEY is not configured.' >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Download generated metadata
         if: steps.credentials.outputs.enabled == 'true'
         env:
@@ -226,6 +234,7 @@ jobs:
           gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --pattern yoo-packaging.tar.gz
           tar -xzf yoo-packaging.tar.gz aur
       - name: Publish yoo-bin to AUR
+        id: publish
         if: steps.credentials.outputs.enabled == 'true'
         env:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
@@ -237,9 +246,17 @@ jobs:
           printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > "$key"
           chmod 600 "$key"
           mkdir -p "$home/.ssh"
-          ssh-keyscan -H aur.archlinux.org > "$home/.ssh/known_hosts"
-          GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$home/.ssh/known_hosts" \
-            git clone ssh://aur@aur.archlinux.org/yoo-bin.git aur-repo
+          if ! ssh-keyscan -H aur.archlinux.org > "$home/.ssh/known_hosts"; then
+            echo 'status=WARNING (could not retrieve the AUR SSH host key)' >> "$GITHUB_OUTPUT"
+            echo 'AUR publication warning: could not retrieve the AUR SSH host key; update the package manually.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          ssh_command="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$home/.ssh/known_hosts"
+          if ! GIT_SSH_COMMAND="$ssh_command" git clone ssh://aur@aur.archlinux.org/yoo-bin.git aur-repo; then
+            echo 'status=WARNING (AUR SSH authentication or clone failed)' >> "$GITHUB_OUTPUT"
+            echo 'AUR publication warning: SSH authentication or clone failed; update the package manually.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           cp aur/PKGBUILD aur/.SRCINFO aur-repo/
           cd aur-repo
           git config user.name github-actions[bot]
@@ -247,9 +264,16 @@ jobs:
           git add PKGBUILD .SRCINFO
           if ! git diff --cached --quiet; then
             git commit -m "Update yoo-bin to $GITHUB_REF_NAME"
-            GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$home/.ssh/known_hosts" git push
+            if ! GIT_SSH_COMMAND="$ssh_command" git push; then
+              echo 'status=WARNING (AUR push failed)' >> "$GITHUB_OUTPUT"
+              echo 'AUR publication warning: the AUR push failed; update the package manually.' >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo 'status=PUBLISHED' >> "$GITHUB_OUTPUT"
+          else
+            echo 'status=ALREADY CURRENT' >> "$GITHUB_OUTPUT"
           fi
-          echo 'AUR: PUBLISHED' >> "$GITHUB_STEP_SUMMARY"
+          echo "AUR: $(tail -n 1 "$GITHUB_OUTPUT" | cut -d= -f2-)" >> "$GITHUB_STEP_SUMMARY"
 
   publish-npm:
     needs: publish
@@ -304,7 +328,7 @@ jobs:
         env:
           PUBLISH: ${{ needs.publish.result }}
           NPM: ${{ needs.publish-npm.result }}
-          AUR: ${{ needs.publish-aur.result }}
+          AUR: ${{ needs.publish-aur.outputs.status || needs.publish-aur.result }}
           ALPINE: ${{ needs.publish-alpine.result }}
         run: |
           {
@@ -314,7 +338,7 @@ jobs:
             echo '| --- | --- | --- |'
             echo "| GitHub Release | $PUBLISH | Release assets and checksums |"
             echo "| npm (pnpm/Bun) | $NPM | Uses npm Trusted Publishing via GitHub OIDC |"
-            echo "| AUR | $AUR | Requires AUR_SSH_PRIVATE_KEY |"
+            echo "| AUR | $AUR | AUR SSH publishing is optional; warnings are recorded in the publisher job summary |"
             echo '| Snap | BUILT | Store publishing disabled; .snap attached to GitHub Release |'
             echo
             echo '### Snap status'
