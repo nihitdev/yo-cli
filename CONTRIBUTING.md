@@ -20,6 +20,9 @@ cargo run -- --fast --name YourName
 - Run `cargo fmt`, `cargo test`, and `cargo clippy -- -D warnings`.
 - Update the README and changelog when users will notice the change.
 
+Pushing a branch other than the default branch automatically opens a pull request.
+Push additional commits to update that pull request; Dependabot branches are excluded.
+
 ## Community tip packs
 
 Tip packs are YAML files. Keep them practical, short, original, and safe for a broad developer audience.
