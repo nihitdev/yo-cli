@@ -9,6 +9,7 @@ mod fetch;
 mod git;
 mod process;
 mod project;
+mod snapshot;
 mod timer;
 mod tips;
 mod ui;

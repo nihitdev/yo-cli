@@ -35,6 +35,13 @@ pub struct EditOptions {
     pub editor: Option<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SnapshotCommand {
+    Save,
+    List,
+    Compare,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
     Run(RunOptions),
@@ -44,6 +51,7 @@ pub enum Command {
     Edit(EditOptions),
     Fetch(FetchOptions),
     Project(ProjectOptions),
+    Snapshot(SnapshotCommand),
     Session(SessionOptions),
     Tip(Option<String>),
     Tips,
@@ -65,12 +73,25 @@ pub fn parse(arguments: &[String]) -> Result<Command, String> {
         "edit" => parse_edit(&arguments[1..]),
         "fetch" | "status" => parse_fetch(&arguments[1..]),
         "project" => parse_project(&arguments[1..]),
+        "snapshot" => parse_snapshot(&arguments[1..]),
         "tips" => require_standalone(arguments, Command::Tips),
         "completions" => parse_completions(&arguments[1..]),
         "tip" => parse_tip(&arguments[1..]),
         "session" => parse_session(&arguments[1..]),
         "version" | "--version" | "-V" => require_standalone(arguments, Command::Version),
         _ => parse_run(arguments),
+    }
+}
+
+fn parse_snapshot(arguments: &[String]) -> Result<Command, String> {
+    match arguments {
+        [] => Ok(Command::Snapshot(SnapshotCommand::Save)),
+        [subcommand] if subcommand == "list" => Ok(Command::Snapshot(SnapshotCommand::List)),
+        [subcommand] if subcommand == "compare" => Ok(Command::Snapshot(SnapshotCommand::Compare)),
+        [value] => Err(format!(
+            "unknown snapshot action `{value}`; use list or compare"
+        )),
+        _ => Err("usage: yoo snapshot [list|compare]".to_owned()),
     }
 }
 
@@ -269,6 +290,7 @@ COMMANDS:
   fetch [OPTIONS]         Show developer environment and current-project information
   status [OPTIONS]        Alias for `yoo fetch`
   project [OPTIONS]       Show a structured overview of the current project
+  snapshot [ACTION]       Save or inspect local project snapshots (list, compare)
   session [MINUTES]       Start a local coding-session timer (default comes from config)
   tip [PACK]              Print one random tip; PACK defaults to your configured pack
   tips                    List built-in and locally installed community tip packs
@@ -307,6 +329,9 @@ EXAMPLES:
   yoo fetch --json
   yoo project
   yoo project --json
+  yoo snapshot
+  yoo snapshot list
+  yoo snapshot compare
   yoo status --plain
   yoo session 45
   yoo tip rust
@@ -382,6 +407,23 @@ mod tests {
                 ..ProjectOptions::default()
             }))
         );
+    }
+
+    #[test]
+    fn parses_snapshot_actions() {
+        assert_eq!(
+            parse(&values(&["snapshot"])),
+            Ok(Command::Snapshot(crate::args::SnapshotCommand::Save))
+        );
+        assert_eq!(
+            parse(&values(&["snapshot", "list"])),
+            Ok(Command::Snapshot(crate::args::SnapshotCommand::List))
+        );
+        assert_eq!(
+            parse(&values(&["snapshot", "compare"])),
+            Ok(Command::Snapshot(crate::args::SnapshotCommand::Compare))
+        );
+        assert!(parse(&values(&["snapshot", "unknown"])).is_err());
     }
 
     #[test]

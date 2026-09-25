@@ -4,6 +4,16 @@ All notable changes to `yoo` are documented here.
 
 The format follows the spirit of Keep a Changelog: user-visible changes are grouped by release and by type.
 
+## [1.1.2] - 2026-09-25
+
+### Added
+
+- Save, list, and compare local project snapshots with `yoo snapshot`.
+
+### Fixed
+
+- Ignore the local `.yoo/` data directory in Git.
+
 ## [1.1.1] - 2026-09-06
 
 ### Changed

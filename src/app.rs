@@ -4,9 +4,11 @@ use std::{error::Error, io};
 use std::io::IsTerminal;
 
 use crate::{
-    args::{self, Command, FetchOptions, ProjectOptions, RunOptions, SessionOptions},
+    args::{
+        self, Command, FetchOptions, ProjectOptions, RunOptions, SessionOptions, SnapshotCommand,
+    },
     config::{self, WriteResult},
-    content, doctor, editor, fetch, git, project, timer, tips,
+    content, doctor, editor, fetch, git, project, snapshot, timer, tips,
     ui::{Theme, Ui},
 };
 
@@ -28,6 +30,7 @@ pub fn execute(command: Command) -> Result<(), Box<dyn Error>> {
         Command::Edit(options) => edit(options.editor.as_deref()),
         Command::Fetch(options) => run_fetch(options),
         Command::Project(options) => run_project(options),
+        Command::Snapshot(action) => run_snapshot(action),
         Command::Session(options) => session(options),
         Command::Tip(pack) => print_tip(pack),
         Command::Tips => list_tips(),
@@ -44,6 +47,28 @@ pub fn execute(command: Command) -> Result<(), Box<dyn Error>> {
             Ok(())
         }
     }
+}
+
+fn run_snapshot(action: SnapshotCommand) -> Result<(), Box<dyn Error>> {
+    let directory = std::env::current_dir()?;
+    let config = config::load()?;
+    let ui = ui_for_display(&config, None, false, 0)?;
+    match action {
+        SnapshotCommand::Save => {
+            let saved = snapshot::save(&directory)?;
+            ui.heading("yoo snapshot — saved")?;
+            snapshot::print_saved(&saved, &ui)?;
+        }
+        SnapshotCommand::List => snapshot::print_list(&snapshot::load_all(&directory)?, &ui)?,
+        SnapshotCommand::Compare => {
+            let snapshots = snapshot::load_all(&directory)?;
+            let [newest, older, ..] = snapshots.as_slice() else {
+                return Err("at least two snapshots are required for comparison".into());
+            };
+            snapshot::print_compare(older, newest, &ui)?;
+        }
+    }
+    Ok(())
 }
 
 fn edit(override_editor: Option<&str>) -> Result<(), Box<dyn Error>> {

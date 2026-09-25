@@ -1,6 +1,7 @@
 target/
 dist/
 manifests/
+.yoo/
 
 *.pdb
 

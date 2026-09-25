@@ -92,6 +92,9 @@ Commands inspect the current directory. Use `cd path/to/project` first; position
 | `yoo` | Session summary with project and Git context |
 | `yoo doctor` | Check local tools, project detection, and configuration |
 | `yoo project` | Project metadata, source counts, and Git details |
+| `yoo snapshot` | Save a local snapshot of the current project |
+| `yoo snapshot list` | List saved snapshots in reverse chronological order |
+| `yoo snapshot compare` | Compare the two newest local snapshots |
 | `yoo fetch` | Project plus development environment report |
 | `yoo status` | Alias for `yoo fetch` (environment and project report) |
 | `yoo session [MINUTES]` | Start a local coding-session timer |
@@ -106,13 +109,23 @@ Useful output flags include `--fast`, `--plain`, `--no-art`, `--theme NAME`, and
 yoo doctor
 yoo project --json
 yoo fetch --plain
+yoo snapshot
+# make changes, then capture another point in time
+yoo snapshot
+yoo snapshot list
+yoo snapshot compare
 yoo session 25
 ```
+
+Snapshots are saved as JSON files in `.yoo/snapshots/` inside the current
+project. They stay on your machine and are excluded from Git by the default
+`.gitignore` entry. `snapshot compare` compares the two newest saved snapshots;
+save another snapshot after making changes to track progress over time.
 
 Check the installed CLI version with `yoo --version`:
 
 ```text
-yoo 1.1.1
+yoo 1.1.2
 ```
 
 `project --json` and `fetch --json` include `yoo_version`. Their `project.version`

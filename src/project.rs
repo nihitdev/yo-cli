@@ -319,6 +319,7 @@ fn should_skip_directory(path: &Path) -> bool {
     matches!(
         name,
         ".git"
+            | ".yoo"
             | "target"
             | "node_modules"
             | "dist"

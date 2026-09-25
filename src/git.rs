@@ -8,6 +8,12 @@ pub struct GitInfo {
     pub changed_files: usize,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CommitInfo {
+    pub hash: String,
+    pub message: String,
+}
+
 /// `Ok(None)` means positively identified as a non-repository. Command errors,
 /// including missing Git and timeouts, must never be reported as a clean tree.
 pub fn inspect(directory: &Path) -> Result<Option<GitInfo>, CommandError> {
@@ -101,6 +107,20 @@ pub fn latest_tag(directory: &Path) -> Result<Option<String>, CommandError> {
         {
             Ok(None)
         }
+        Err(error) => Err(error),
+    }
+}
+
+pub fn latest_commit(directory: &Path) -> Result<Option<CommitInfo>, CommandError> {
+    match run_git(directory, &["rev-parse", "--verify", "--quiet", "HEAD"]) {
+        Ok(hash) => {
+            let message = run_git(directory, &["log", "-1", "--format=%s", "HEAD"])?;
+            Ok(Some(CommitInfo {
+                hash: hash.trim().to_owned(),
+                message: message.trim().to_owned(),
+            }))
+        }
+        Err(error) if error.kind == ErrorKind::Failed && error.exit_code == Some(1) => Ok(None),
         Err(error) => Err(error),
     }
 }
