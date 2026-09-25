@@ -28,7 +28,7 @@ Existing repository secrets should retain their names:
 | `CARGO_REGISTRY_TOKEN` | Publish `yoo` to crates.io. |
 | npm Trusted Publishing | No secret. Configure npm's trusted publisher for `@nihit_dev/yoo` with GitHub owner `nihitdev`, repository `yo-cli`, workflow `release.yml`, and no environment. |
 | `CHOCOLATEY_API_KEY` | Submit the Windows package to Chocolatey moderation. |
-| `APT_SIGNING_KEY`, `APT_SIGNING_PASSPHRASE`, `APT_PUBLISH_TOKEN` | Sign and publish the hosted APT repository. |
+| `APT_SIGNING_KEY`, `APT_SIGNING_PASSPHRASE` | Sign and publish the hosted APT repository. |
 | `RPM_SIGNING_KEY`, `RPM_SIGNING_PASSPHRASE`, `RPM_PUBLISH_TOKEN` | Sign and publish Fedora and openSUSE repositories. |
 | `HOMEBREW_TAP_TOKEN` | Update `nihitdev/homebrew-tap`. |
 | `ALPINE_SIGNING_KEY`, `ALPINE_PUBLISH_TOKEN` | Sign and publish the hosted APK repository. |
