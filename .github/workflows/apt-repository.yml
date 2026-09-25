@@ -96,7 +96,17 @@ jobs:
           printf '%s' "$APT_SIGNING_KEY" | gpg --batch --import
           export APT_SIGNING_FINGERPRINT
           APT_SIGNING_FINGERPRINT=$(gpg --batch --show-keys --with-colons site/public/apt/yoo-archive-keyring.gpg | awk -F: '$1 == "fpr" {print $10; exit}')
-          bash scripts/apt-repository.sh "$APT_DEB"
+          signing_log=$(mktemp)
+          trap 'rm -f "$signing_log"' EXIT
+          if ! bash scripts/apt-repository.sh "$APT_DEB" >"$signing_log" 2>&1; then
+            cat "$signing_log" >&2
+            if grep -Fq 'signing failed: Bad passphrase' "$signing_log"; then
+              echo 'APT publication skipped: the configured signing passphrase was rejected. No repository files were published; update APT_SIGNING_PASSPHRASE and rerun.' >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            exit 1
+          fi
+          cat "$signing_log"
           bash scripts/apt-validate.sh
       - name: Commit public repository for Vercel Git deployment
         if: steps.credentials.outputs.enabled == 'true'
