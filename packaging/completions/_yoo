@@ -10,6 +10,7 @@ _yoo() {
     'fetch:Show environment and project information'
     'status:Alias for fetch'
     'project:Show a structured project overview'
+    'snapshot:Save or compare local project snapshots'
     'session:Start a coding-session timer'
     'tip:Print a random tip'
     'tips:List installed tip packs'
@@ -37,6 +38,7 @@ _yoo() {
           _arguments '--json[machine-readable JSON]' '--no-art[hide art]' '--plain[disable colours]' '--theme[override theme]:theme:($themes)' ;;
         session) _arguments '--minutes[session length]:minutes:' '1:minutes:' ;;
         edit) _arguments '--editor[use a specific editor]:editor:_command_names' ;;
+        snapshot) _values 'action' 'list' 'compare' ;;
         completions) _values 'shell' $shells ;;
       esac ;;
   esac

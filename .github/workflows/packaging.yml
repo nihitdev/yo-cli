@@ -116,6 +116,7 @@ jobs:
 
   nix:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
@@ -156,7 +157,7 @@ jobs:
             bash -euxo pipefail -c '
               zypper --non-interactive refresh
               zypper --non-interactive install --no-recommends \
-                cargo cargo-packaging rust rpm-build createrepo_c gpg2
+                cargo cargo-packaging rust git rpm-build createrepo_c gpg2
               mkdir -p /usr/src/packages/SOURCES
               cp /workspace/target/yoo-checkout.tar.gz \
                 "/usr/src/packages/SOURCES/yoo-${YOO_VERSION}.tar.gz"

@@ -21,7 +21,7 @@ _yoo() {
     session)
       COMPREPLY=( $(compgen -W "--minutes" -- "$current") ) ;;
     *)
-      COMPREPLY=( $(compgen -W "init config doctor edit fetch status project session tip tips completions version help --fast --no-art --plain --name --theme -h --help -V --version" -- "$current") ) ;;
+      COMPREPLY=( $(compgen -W "init config doctor edit fetch status project snapshot session tip tips completions version help --fast --no-art --plain --name --theme -h --help -V --version" -- "$current") ) ;;
   esac
 }
 complete -F _yoo yoo

@@ -8,7 +8,11 @@
       eachSystem = nixpkgs.lib.genAttrs systems;
     in {
       packages = eachSystem (system: {
-        default = nixpkgs.legacyPackages.${system}.callPackage ./packaging/nix/package.nix { };
+        default = (nixpkgs.legacyPackages.${system}.callPackage ./packaging/nix/package.nix { }).overrideAttrs (old: {
+          # The Rust test suite exercises Git repository detection, so keep Git
+          # available in the isolated Nix build environment.
+          nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ nixpkgs.legacyPackages.${system}.git ];
+        });
       });
       apps = eachSystem (system: {
         default = {
