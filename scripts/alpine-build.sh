@@ -10,7 +10,7 @@ fi
 
 # Package the checkout being tested instead of downloading an already
 # published GitHub tag. This keeps PR validation tied to the actual source.
-source_dir="/tmp/yoo-$version"
+source_dir="/tmp/yo-cli-$version"
 rm -rf "$source_dir"
 mkdir -p "$source_dir"
 
@@ -22,7 +22,7 @@ tar \
   -cf - . |
 tar -C "$source_dir" -xf -
 
-tar -czf "/tmp/yoo-$version.tar.gz" -C /tmp "yoo-$version"
+tar -czf "/tmp/yoo-$version.tar.gz" -C /tmp "yo-cli-$version"
 checksum=$(sha512sum "/tmp/yoo-$version.tar.gz" | cut -d ' ' -f1)
 
 sed -E \
