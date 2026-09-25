@@ -139,7 +139,7 @@ pub fn load_all(directory: &Path) -> Result<Vec<Snapshot>, Box<dyn std::error::E
         }
         snapshots.push(serde_json::from_slice(&fs::read(entry.path())?)?);
     }
-    snapshots.sort_by(|left, right| right.timestamp.cmp(&left.timestamp));
+    snapshots.sort_by_key(|snapshot| std::cmp::Reverse(snapshot.timestamp));
     Ok(snapshots)
 }
 
