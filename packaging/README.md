@@ -37,11 +37,11 @@ changing completions, run `cargo build --release --locked` followed by
 - **Homebrew:** create `nihitdev/homebrew-tap` with an initial default branch.
   Optional `HOMEBREW_TAP_TOKEN` needs contents-write access to that repository.
   The release job commits only `Formula/yoo.rb`. Without the secret it skips.
-- **AUR:** register an account and SSH key, request/create `yoo-bin`, and store
-  the deploy key as `AUR_SSH_PRIVATE_KEY`. The release job then copies the
-  generated `PKGBUILD` and `.SRCINFO`, validates the package metadata, and
-  pushes the AUR checkout. Without the secret, the release bundle remains ready
-  for manual review and upload.
+- **AUR:** the release workflow updates the existing `yoo-bin` package using
+  `AUR_SSH_PRIVATE_KEY`. When setting up a fork, register an AUR account, add
+  its SSH key, and save the private deploy key as that secret. Without the
+  secret, the release bundle still includes the generated package metadata for
+  manual review and upload.
 - **Snap:** Snap Store publishing is currently disabled. Packaging CI still
   builds, smoke-tests, and attaches the `.snap` artifact to each GitHub Release.
 - **Flatpak:** bundles require no account. A Flathub submission would require

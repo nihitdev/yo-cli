@@ -112,13 +112,14 @@ older glibc systems should use Cargo or Nix.
 
 ## Arch Linux / AUR
 
-The binary package is prepared for publication as `yoo-bin`:
+Install the `yoo-bin` package from the AUR with either helper:
 
 ```bash
 yay -S yoo-bin
+# or
+paru -S yoo-bin
 ```
 
-This requires the maintainer to publish the AUR repository first.
 You can build it now from this checkout:
 
 ```bash
