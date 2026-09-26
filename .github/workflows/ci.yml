@@ -36,3 +36,29 @@ jobs:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@1.85.0
       - run: cargo test --locked
+
+  website:
+    name: Website checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+        working-directory: site
+      - name: Check generated installer is in sync
+        run: |
+          npm run sync-installer
+          git -C .. diff --exit-code -- site/app/yo-setup/installer.generated.ts
+        working-directory: site
+      - run: npm run lint
+        working-directory: site
+      - run: ./node_modules/.bin/tsc --noEmit --incremental false
+        working-directory: site
+      - run: npm run build
+        working-directory: site
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
