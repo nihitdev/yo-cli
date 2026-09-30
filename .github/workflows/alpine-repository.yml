@@ -36,7 +36,7 @@ jobs:
           TOKEN: ${{ secrets.ALPINE_PUBLISH_TOKEN }}
         run: |
           if [ -n "$KEY" ] && [ -n "$TOKEN" ]; then echo enabled=true >> "$GITHUB_OUTPUT"; else echo 'Alpine publication skipped: configure ALPINE_SIGNING_KEY and ALPINE_PUBLISH_TOKEN.' >> "$GITHUB_STEP_SUMMARY"; fi
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: steps.credentials.outputs.enabled == 'true'
         with:
           ref: ${{ github.event.repository.default_branch }}
