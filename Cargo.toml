@@ -32,7 +32,7 @@ serde_json = "1"
 serde_yaml = "0.9"
 toml = "0.8"
 # Newer ignore releases use language features beyond our Rust 1.85 MSRV.
-ignore = "=0.4.25"
+ignore = "=0.4.30"
 tempfile = "3"
 
 [target.'cfg(unix)'.dependencies]
