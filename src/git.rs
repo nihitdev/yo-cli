@@ -6,6 +6,43 @@ use crate::process::{self, CommandError, ErrorKind};
 pub struct GitInfo {
     pub branch: String,
     pub changed_files: usize,
+    pub diagnostics: GitDiagnostics,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize)]
+pub struct GitDiagnostics {
+    pub upstream: Option<String>,
+    pub ahead: usize,
+    pub behind: usize,
+    pub operation: Option<String>,
+    pub conflicts: usize,
+    pub deleted_files: usize,
+    pub large_deletion: bool,
+}
+
+impl GitDiagnostics {
+    pub fn summary(&self) -> String {
+        let mut parts = Vec::new();
+        if let Some(upstream) = &self.upstream {
+            parts.push(format!(
+                "{upstream}: {} ahead, {} behind (local refs)",
+                self.ahead, self.behind
+            ));
+        }
+        if let Some(operation) = &self.operation {
+            parts.push(format!("{operation} in progress"));
+        }
+        if self.conflicts > 0 {
+            parts.push(format!("{} conflicted file(s)", self.conflicts));
+        }
+        if self.deleted_files > 0 {
+            parts.push(format!("{} tracked deletion(s)", self.deleted_files));
+        }
+        if self.large_deletion {
+            parts.push("WARNING: unusually large tracked deletion; review before staging".into());
+        }
+        parts.join("; ")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -17,7 +54,54 @@ pub struct CommitInfo {
 /// `Ok(None)` means positively identified as a non-repository. Command errors,
 /// including missing Git and timeouts, must never be reported as a clean tree.
 pub fn inspect(directory: &Path) -> Result<Option<GitInfo>, CommandError> {
-    inspect_with(|arguments| run_git(directory, arguments))
+    let mut info = inspect_with(|arguments| run_git(directory, arguments))?;
+    if let Some(info) = &mut info {
+        for (marker, operation) in [
+            ("rebase-merge", "rebase"),
+            ("rebase-apply", "rebase/apply"),
+            ("MERGE_HEAD", "merge"),
+            ("CHERRY_PICK_HEAD", "cherry-pick"),
+            ("REVERT_HEAD", "revert"),
+            ("BISECT_LOG", "bisect"),
+        ] {
+            let path = run_git(directory, &["rev-parse", "--git-path", marker])?;
+            if directory.join(path.trim()).exists() {
+                info.diagnostics.operation = Some(operation.into());
+                break;
+            }
+        }
+        // --porcelain=v2 provides upstream counts without fetching or failing
+        // for unborn branches, detached HEAD, or branches without an upstream.
+        let status = run_git(
+            directory,
+            &[
+                "status",
+                "--porcelain=v2",
+                "--branch",
+                "-z",
+                "--untracked-files=no",
+            ],
+        )?;
+        for line in status.split('\0') {
+            if let Some(value) = line.strip_prefix("# branch.upstream ") {
+                info.diagnostics.upstream = Some(value.into());
+            }
+            if let Some(value) = line.strip_prefix("# branch.ab ") {
+                let mut counts = value.split_whitespace();
+                info.diagnostics.ahead = counts
+                    .next()
+                    .and_then(|v| v.strip_prefix('+'))
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0);
+                info.diagnostics.behind = counts
+                    .next()
+                    .and_then(|v| v.strip_prefix('-'))
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0);
+            }
+        }
+    }
+    Ok(info)
 }
 
 fn inspect_with(
@@ -48,8 +132,15 @@ fn inspect_with(
     // With -z a rename/copy has two path records. Paths can contain newlines.
     let mut records = status.split('\0').filter(|record| !record.is_empty());
     let mut changed_files = 0;
+    let mut diagnostics = GitDiagnostics::default();
     while let Some(record) = records.next() {
         changed_files += 1;
+        let code = record.as_bytes().get(..2).unwrap_or_default();
+        if matches!(code, b"DD" | b"AU" | b"UD" | b"UA" | b"DU" | b"AA" | b"UU") {
+            diagnostics.conflicts += 1;
+        } else if code.contains(&b'D') {
+            diagnostics.deleted_files += 1;
+        }
         if record
             .as_bytes()
             .iter()
@@ -59,9 +150,11 @@ fn inspect_with(
             records.next();
         }
     }
+    diagnostics.large_deletion = diagnostics.deleted_files >= 10;
     Ok(Some(GitInfo {
         branch: branch.trim().to_owned(),
         changed_files,
+        diagnostics,
     }))
 }
 
@@ -249,6 +342,80 @@ mod tests {
         .unwrap()
         .unwrap();
         assert_eq!(report.changed_files, 2);
+    }
+
+    #[test]
+    fn distinguishes_conflicts_deletions_and_renames() {
+        let status = format!(
+            "UU conflict\0R  renamed\0old\0?? untracked\0{}",
+            (0..10).map(|i| format!(" D file{i}\0")).collect::<String>()
+        );
+        let info = inspect_with(|args| {
+            Ok(if args[0] == "status" {
+                status.clone()
+            } else {
+                "main".into()
+            })
+        })
+        .unwrap()
+        .unwrap();
+        assert_eq!(info.diagnostics.conflicts, 1);
+        assert_eq!(info.diagnostics.deleted_files, 10);
+        assert!(info.diagnostics.large_deletion);
+        assert_eq!(info.changed_files, 13);
+    }
+
+    #[test]
+    fn reports_upstream_divergence_and_worktree_operation() {
+        let dir = tempfile::tempdir().unwrap();
+        git(dir.path(), &["init", "-b", "main"]);
+        std::fs::write(dir.path().join("file"), "one").unwrap();
+        git(dir.path(), &["add", "."]);
+        let commit = |message| {
+            git(
+                dir.path(),
+                &[
+                    "-c",
+                    "user.name=Test",
+                    "-c",
+                    "user.email=test@example.invalid",
+                    "-c",
+                    "commit.gpgsign=false",
+                    "commit",
+                    "--allow-empty",
+                    "-m",
+                    message,
+                ],
+            )
+        };
+        commit("initial");
+        git(dir.path(), &["branch", "upstream"]);
+        git(dir.path(), &["branch", "--set-upstream-to=upstream"]);
+        commit("local");
+        let info = inspect(dir.path()).unwrap().unwrap();
+        assert_eq!(info.diagnostics.upstream.as_deref(), Some("upstream"));
+        assert_eq!(info.diagnostics.ahead, 1);
+        assert_eq!(info.diagnostics.behind, 0);
+        git(dir.path(), &["checkout", "upstream"]);
+        commit("remote");
+        git(dir.path(), &["checkout", "main"]);
+        assert_eq!(inspect(dir.path()).unwrap().unwrap().diagnostics.behind, 1);
+        let worktree = dir.path().join("linked");
+        git(
+            dir.path(),
+            &["worktree", "add", "--detach", worktree.to_str().unwrap()],
+        );
+        let path = run_git(&worktree, &["rev-parse", "--git-path", "rebase-merge"]).unwrap();
+        std::fs::create_dir(worktree.join(path.trim())).unwrap();
+        assert_eq!(
+            inspect(&worktree)
+                .unwrap()
+                .unwrap()
+                .diagnostics
+                .operation
+                .as_deref(),
+            Some("rebase")
+        );
     }
 
     #[test]

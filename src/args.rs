@@ -35,11 +35,13 @@ pub struct EditOptions {
     pub editor: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SnapshotCommand {
     Save,
     List,
     Compare,
+    CompareSelected(String, String),
+    CompareCurrent(Option<String>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -88,11 +90,35 @@ fn parse_snapshot(arguments: &[String]) -> Result<Command, String> {
         [] => Ok(Command::Snapshot(SnapshotCommand::Save)),
         [subcommand] if subcommand == "list" => Ok(Command::Snapshot(SnapshotCommand::List)),
         [subcommand] if subcommand == "compare" => Ok(Command::Snapshot(SnapshotCommand::Compare)),
+        [subcommand, flag] if subcommand == "compare" && flag == "--current" => {
+            Ok(Command::Snapshot(SnapshotCommand::CompareCurrent(None)))
+        }
+        [subcommand, id, flag]
+            if subcommand == "compare" && flag == "--current" && valid_snapshot_id(id) =>
+        {
+            Ok(Command::Snapshot(SnapshotCommand::CompareCurrent(Some(
+                id.clone(),
+            ))))
+        }
+        [subcommand, old, new]
+            if subcommand == "compare" && valid_snapshot_id(old) && valid_snapshot_id(new) =>
+        {
+            Ok(Command::Snapshot(SnapshotCommand::CompareSelected(
+                old.clone(),
+                new.clone(),
+            )))
+        }
         [value] => Err(format!(
             "unknown snapshot action `{value}`; use list or compare"
         )),
-        _ => Err("usage: yoo snapshot [list|compare]".to_owned()),
+        _ => Err("usage: yoo snapshot [list|compare [OLD_ID NEW_ID | [ID] --current]]".to_owned()),
     }
+}
+
+fn valid_snapshot_id(value: &str) -> bool {
+    !value.is_empty()
+        && value.bytes().all(|byte| byte.is_ascii_digit())
+        && value.parse::<u128>().is_ok()
 }
 
 fn parse_edit(arguments: &[String]) -> Result<Command, String> {
@@ -291,6 +317,8 @@ COMMANDS:
   status [OPTIONS]        Alias for `yoo fetch`
   project [OPTIONS]       Show a structured overview of the current project
   snapshot [ACTION]       Save or inspect local project snapshots (list, compare)
+  snapshot compare OLD NEW Compare saved snapshot IDs
+  snapshot compare [ID] --current Compare a snapshot with current project
   session [MINUTES]       Start a local coding-session timer (default comes from config)
   tip [PACK]              Print one random tip; PACK defaults to your configured pack
   tips                    List built-in and locally installed community tip packs
@@ -407,6 +435,29 @@ mod tests {
                 ..ProjectOptions::default()
             }))
         );
+    }
+
+    #[test]
+    fn parses_selected_and_current_snapshot_comparisons() {
+        assert_eq!(
+            parse(&values(&["snapshot", "compare", "10", "20"])).unwrap(),
+            Command::Snapshot(SnapshotCommand::CompareSelected("10".into(), "20".into()))
+        );
+        assert_eq!(
+            parse(&values(&["snapshot", "compare", "--current"])).unwrap(),
+            Command::Snapshot(SnapshotCommand::CompareCurrent(None))
+        );
+        assert_eq!(
+            parse(&values(&["snapshot", "compare", "10", "--current"])).unwrap(),
+            Command::Snapshot(SnapshotCommand::CompareCurrent(Some("10".into())))
+        );
+        for args in [
+            vec!["snapshot", "compare", "../10", "20"],
+            vec!["snapshot", "compare", "10"],
+            vec!["snapshot", "compare", "--current", "20"],
+        ] {
+            assert!(parse(&values(&args)).is_err());
+        }
     }
 
     #[test]

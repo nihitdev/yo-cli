@@ -67,6 +67,23 @@ fn run_snapshot(action: SnapshotCommand) -> Result<(), Box<dyn Error>> {
             };
             snapshot::print_compare(older, newest, &ui)?;
         }
+        SnapshotCommand::CompareSelected(old, new) => {
+            let old = snapshot::load(&directory, &old)?;
+            let new = snapshot::load(&directory, &new)?;
+            snapshot::print_compare(&old, &new, &ui)?;
+        }
+        SnapshotCommand::CompareCurrent(id) => {
+            let old = if let Some(id) = id {
+                snapshot::load(&directory, &id)?
+            } else {
+                snapshot::load_all(&directory)?
+                    .into_iter()
+                    .next()
+                    .ok_or("at least one saved snapshot is required")?
+            };
+            let current = snapshot::Snapshot::collect(&directory)?;
+            snapshot::print_compare(&old, &current, &ui)?;
+        }
     }
     Ok(())
 }
@@ -142,6 +159,10 @@ fn run(options: RunOptions) -> Result<(), Box<dyn Error>> {
                     "Working tree:",
                     &git::change_status(info.changed_files),
                 )?;
+                let diagnostics = info.diagnostics.summary();
+                if !diagnostics.is_empty() {
+                    ui.info("!", "Git diagnostics:", &diagnostics)?;
+                }
             }
         } else {
             ui.info("🌿", "Git:", "not a repository")?;

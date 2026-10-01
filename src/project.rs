@@ -35,6 +35,7 @@ pub struct SourceSummary {
 pub struct GitProjectSummary {
     pub branch: String,
     pub changed_files: usize,
+    pub diagnostics: git::GitDiagnostics,
     pub commits: Option<usize>,
     pub latest_tag: Option<String>,
 }
@@ -83,6 +84,7 @@ pub fn collect(directory: &Path) -> Result<ProjectReport, crate::process::Comman
         Some(GitProjectSummary {
             branch: info.branch,
             changed_files: info.changed_files,
+            diagnostics: info.diagnostics,
             commits,
             latest_tag,
         })
@@ -162,6 +164,10 @@ pub fn print(report: &ProjectReport, ui: &Ui) -> io::Result<()> {
             "Working tree:",
             &git::change_status(git.changed_files),
         )?;
+        let diagnostics = git.diagnostics.summary();
+        if !diagnostics.is_empty() {
+            ui.info("!", "Git diagnostics:", &diagnostics)?;
+        }
 
         if let Some(commits) = git.commits {
             ui.info("📜", "Commits:", &format_number(commits))?;

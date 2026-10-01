@@ -22,6 +22,16 @@ The format follows the spirit of Keep a Changelog: user-visible changes are grou
 
 ## [Unreleased]
 
+### Added
+
+- Show Git upstream ahead/behind counts, active operations, conflicts, and warnings for large tracked deletions in terminal and JSON project reports.
+- Compare selected snapshot IDs or compare a saved snapshot with the current project without saving another snapshot.
+- Display snapshot IDs and latest-commit changes in snapshot output.
+
+### Changed
+
+- Select `doctor` tool checks from the detected project instead of requiring Rust tooling in every directory.
+
 ### Fixed
 
 - Bound command output capture independently of inherited handles, and clean up command process trees.

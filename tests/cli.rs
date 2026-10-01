@@ -166,6 +166,11 @@ fn fake_tool(directory: &Path, name: &str, script: &str) {
 #[test]
 fn doctor_exit_status_distinguishes_failures_from_advisory_warnings() {
     let root = tempfile::tempdir().unwrap();
+    fs::write(
+        root.path().join("Cargo.toml"),
+        "[package]\nname = \"demo\"\n",
+    )
+    .unwrap();
     let bin = root.path().join("bin");
     fs::create_dir(&bin).unwrap();
     for tool in ["rustc", "cargo", "rustfmt"] {
@@ -254,4 +259,99 @@ fn git_status_timeout_is_reported_and_exits_nonzero() {
     let error = String::from_utf8_lossy(&output.stderr);
     assert!(error.contains("git status"));
     assert!(error.contains("timed out"));
+}
+
+#[test]
+fn snapshot_comparison_selects_ids_and_rejects_missing_snapshots() {
+    let root = tempfile::tempdir().unwrap();
+    let directory = root.path().join(".yoo/snapshots");
+    fs::create_dir_all(&directory).unwrap();
+    for (id, lines, commit) in [(10, 5, "abc"), (20, 8, "def"), (30, 100, "ghi")] {
+        let value = serde_json::json!({
+            "timestamp": id, "working_directory": root.path().display().to_string(),
+            "project_name": "demo", "project_type": "Rust", "project_version": null,
+            "git_branch": "main", "git_changed_files": 0,
+            "latest_commit_hash": commit, "latest_commit_message": "example",
+            "source_file_count": 1, "source_line_count": lines,
+            "tools": {"rustc": null, "cargo": null, "git": null}
+        });
+        fs::write(
+            directory.join(format!("{id}.json")),
+            serde_json::to_vec(&value).unwrap(),
+        )
+        .unwrap();
+    }
+    let run = |args: &[&str]| {
+        Command::new(env!("CARGO_BIN_EXE_yoo"))
+            .args(args)
+            .current_dir(root.path())
+            .env("HOME", root.path())
+            .env("USERPROFILE", root.path())
+            .env("XDG_CONFIG_HOME", root.path())
+            .output()
+            .unwrap()
+    };
+    let selected = run(&["snapshot", "compare", "10", "20"]);
+    assert!(
+        selected.status.success(),
+        "{}",
+        String::from_utf8_lossy(&selected.stderr)
+    );
+    let output = String::from_utf8_lossy(&selected.stdout);
+    assert!(output.contains("+3"));
+    assert!(output.contains("abc → def"));
+    assert!(!output.contains("ghi"));
+    let missing = run(&["snapshot", "compare", "10", "999"]);
+    assert_eq!(missing.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&missing.stderr).contains("cannot read snapshot 999"));
+    let invalid = run(&["snapshot", "compare", "../10", "20"]);
+    assert_eq!(invalid.status.code(), Some(2));
+    let current = run(&["snapshot", "compare", "10", "--current"]);
+    assert!(
+        current.status.success(),
+        "{}",
+        String::from_utf8_lossy(&current.stderr)
+    );
+    let latest_current = run(&["snapshot", "compare", "--current"]);
+    assert!(
+        latest_current.status.success(),
+        "{}",
+        String::from_utf8_lossy(&latest_current.stderr)
+    );
+    assert!(String::from_utf8_lossy(&latest_current.stdout).contains("ghi"));
+    assert_eq!(fs::read_dir(&directory).unwrap().count(), 3);
+}
+
+#[cfg(unix)]
+#[test]
+fn node_doctor_does_not_require_rust() {
+    let root = tempfile::tempdir().unwrap();
+    let bin = root.path().join("bin");
+    fs::create_dir(&bin).unwrap();
+    fs::write(root.path().join("package.json"), "{}").unwrap();
+    for tool in ["node", "npm"] {
+        fake_tool(&bin, tool, "echo 'tool 1.0'");
+    }
+    fake_tool(
+        &bin,
+        "git",
+        "if [ \"$1\" = rev-parse ]; then echo 'fatal: not a git repository (or any of the parent directories): .git' >&2; exit 128; fi; echo 'git 1.0'",
+    );
+    let output = Command::new(env!("CARGO_BIN_EXE_yoo"))
+        .arg("doctor")
+        .current_dir(root.path())
+        .env("PATH", &bin)
+        .env("HOME", root.path())
+        .env("USERPROFILE", root.path())
+        .env("XDG_CONFIG_HOME", root.path())
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report = String::from_utf8_lossy(&output.stdout);
+    assert!(report.contains("Node.js"));
+    assert!(!report.contains("Rust compiler"));
 }

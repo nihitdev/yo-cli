@@ -40,6 +40,7 @@ pub struct ProjectInfo {
 pub struct GitSummary {
     pub branch: String,
     pub changed_files: usize,
+    pub diagnostics: git::GitDiagnostics,
 }
 
 pub fn collect(directory: &Path) -> Result<FetchReport, crate::process::CommandError> {
@@ -59,6 +60,7 @@ pub fn collect(directory: &Path) -> Result<FetchReport, crate::process::CommandE
         git: git::inspect(directory)?.map(|info| GitSummary {
             branch: info.branch,
             changed_files: info.changed_files,
+            diagnostics: info.diagnostics,
         }),
     })
 }
@@ -108,6 +110,10 @@ pub fn print(report: &FetchReport, ui: &Ui) -> io::Result<()> {
             "Working tree:",
             &git::change_status(git.changed_files),
         )?;
+        let diagnostics = git.diagnostics.summary();
+        if !diagnostics.is_empty() {
+            ui.info("!", "Git diagnostics:", &diagnostics)?;
+        }
     } else {
         ui.info("🌿", "Git:", "not a repository")?;
     }

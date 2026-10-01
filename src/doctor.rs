@@ -57,19 +57,54 @@ impl Report {
 }
 
 pub fn collect(directory: &Path) -> Report {
-    let mut checks = vec![
-        command_check("Rust compiler", "rustc", &["--version"]),
-        command_check("Cargo", "cargo", &["--version"]),
-        command_check("Git", "git", &["--version"]),
-        command_check("Rustfmt", "rustfmt", &["--version"]),
-        command_check("Clippy", "cargo", &["clippy", "--version"]),
-    ];
+    let mut checks = vec![command_check("Git", "git", &["--version"])];
+    for (label, program, arguments) in project_tools(directory) {
+        checks.push(command_check(label, program, &arguments));
+    }
 
     checks.push(config_check());
     checks.push(project_check(directory));
     checks.push(repository_check(directory));
 
     Report { checks }
+}
+
+type ToolCheck = (&'static str, &'static str, Vec<&'static str>);
+
+fn project_tools(directory: &Path) -> Vec<ToolCheck> {
+    match fetch::detect_project(directory).kind.as_str() {
+        "Rust" => vec![
+            ("Rust compiler", "rustc", vec!["--version"]),
+            ("Cargo", "cargo", vec!["--version"]),
+            ("Rustfmt", "rustfmt", vec!["--version"]),
+            ("Clippy", "cargo", vec!["clippy", "--version"]),
+        ],
+        "Node.js" => {
+            let manager = if directory.join("pnpm-lock.yaml").is_file() {
+                "pnpm"
+            } else if directory.join("yarn.lock").is_file() {
+                "yarn"
+            } else if directory.join("bun.lock").is_file() || directory.join("bun.lockb").is_file()
+            {
+                "bun"
+            } else {
+                "npm"
+            };
+            vec![
+                ("Node.js", "node", vec!["--version"]),
+                ("Package manager", manager, vec!["--version"]),
+            ]
+        }
+        "Python" => vec![(
+            "Python",
+            if cfg!(windows) { "python" } else { "python3" },
+            vec!["--version"],
+        )],
+        "Go" => vec![("Go", "go", vec!["version"])],
+        "Java" => vec![("Java", "java", vec!["--version"])],
+        ".NET" => vec![(".NET SDK", "dotnet", vec!["--version"])],
+        _ => Vec::new(),
+    }
 }
 
 pub fn print(report: &Report) {
@@ -164,14 +199,28 @@ fn project_check(directory: &Path) -> Check {
 
 fn repository_check(directory: &Path) -> Check {
     match git::inspect(directory) {
-        Ok(Some(info)) => Check {
-            label: "Git repository",
-            status: Status::Pass,
-            detail: format!(
-                "branch `{}`; {} changed file(s)",
-                info.branch, info.changed_files
-            ),
-        },
+        Ok(Some(info)) => {
+            let diagnostics = &info.diagnostics;
+            Check {
+                label: "Git repository",
+                status: if diagnostics.conflicts > 0
+                    || diagnostics.large_deletion
+                    || diagnostics.operation.is_some()
+                {
+                    Status::Warn
+                } else {
+                    Status::Pass
+                },
+                detail: format!(
+                    "branch `{}`; {}; {}",
+                    info.branch,
+                    git::change_status(info.changed_files),
+                    diagnostics.summary()
+                )
+                .trim_end_matches("; ")
+                .to_owned(),
+            }
+        }
         Ok(None) => Check {
             label: "Git repository",
             status: Status::Warn,
@@ -188,6 +237,33 @@ fn repository_check(directory: &Path) -> Check {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tools_follow_project_manifests_and_lockfiles() {
+        let dir = tempfile::tempdir().unwrap();
+        assert!(project_tools(dir.path()).is_empty());
+        for (manifest, expected) in [
+            ("package.json", "node"),
+            (
+                "pyproject.toml",
+                if cfg!(windows) { "python" } else { "python3" },
+            ),
+            ("go.mod", "go"),
+            ("pom.xml", "java"),
+            ("demo.csproj", "dotnet"),
+            ("Cargo.toml", "rustc"),
+        ] {
+            std::fs::write(dir.path().join(manifest), "{}").unwrap();
+            let tools = project_tools(dir.path());
+            assert_eq!(tools[0].1, expected);
+            if manifest == "package.json" {
+                assert!(!tools.iter().any(|(_, tool, _)| *tool == "rustc"));
+                std::fs::write(dir.path().join("pnpm-lock.yaml"), "").unwrap();
+                assert_eq!(project_tools(dir.path())[1].1, "pnpm");
+            }
+            std::fs::remove_file(dir.path().join(manifest)).unwrap();
+        }
+    }
 
     #[test]
     fn report_counts_statuses() {

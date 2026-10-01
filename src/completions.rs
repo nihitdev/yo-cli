@@ -60,6 +60,8 @@ const BASH: &str = r#"_yoo() {
   case "$command" in
     fetch|status|project)
       COMPREPLY=( $(compgen -W "--json --no-art --plain --theme" -- "$current") ) ;;
+    snapshot)
+      COMPREPLY=( $(compgen -W "list compare --current" -- "$current") ) ;;
     session)
       COMPREPLY=( $(compgen -W "--minutes" -- "$current") ) ;;
     *)
@@ -109,7 +111,7 @@ _yoo() {
           _arguments '--json[machine-readable JSON]' '--no-art[hide art]' '--plain[disable colours]' '--theme[override theme]:theme:($themes)' ;;
         session) _arguments '--minutes[session length]:minutes:' '1:minutes:' ;;
         edit) _arguments '--editor[use a specific editor]:editor:_command_names' ;;
-        snapshot) _values 'action' 'list' 'compare' ;;
+        snapshot) _values 'action' 'list' 'compare' '--current' ;;
         completions) _values 'shell' $shells ;;
       esac ;;
   esac
@@ -135,6 +137,7 @@ complete -c yoo -n '__fish_use_subcommand' -a version -d 'Print version'
 complete -c yoo -n '__fish_use_subcommand' -a help -d 'Print help'
 complete -c yoo -n '__fish_seen_subcommand_from completions' -a 'bash zsh fish powershell'
 complete -c yoo -n '__fish_seen_subcommand_from snapshot' -a 'list compare'
+complete -c yoo -n '__fish_seen_subcommand_from snapshot; and __fish_seen_subcommand_from compare' -l current -d 'Compare with current project'
 complete -c yoo -n '__fish_seen_subcommand_from fetch status project' -l json -d 'Print machine-readable JSON'
 complete -c yoo -n '__fish_seen_subcommand_from fetch status project' -l no-art -d 'Hide the ASCII logo'
 complete -c yoo -n '__fish_seen_subcommand_from fetch status project' -l plain -d 'Disable ANSI colours'
@@ -163,6 +166,7 @@ const POWERSHELL: &str = r#"Register-ArgumentCompleter -Native -CommandName yoo 
   if ($previous -eq 'completions') { $values = $shells }
   elseif ($previous -eq '--theme') { $values = $themes }
   elseif ($command -in @('fetch','status','project')) { $values = '--json','--no-art','--plain','--theme' }
+  elseif ($command -eq 'snapshot') { $values = 'list','compare','--current' }
   elseif ($command -eq 'session') { $values = '--minutes' }
   elseif ($command -eq 'edit') { $values = '--editor' }
   else { $values = $commands + @('--fast','--no-art','--plain','--name','--theme','-h','--help','-V','--version') }

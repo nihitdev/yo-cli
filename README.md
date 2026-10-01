@@ -99,6 +99,8 @@ Commands inspect the current directory. Use `cd path/to/project` first; position
 | `yoo snapshot` | Save a local snapshot of the current project |
 | `yoo snapshot list` | List saved snapshots in reverse chronological order |
 | `yoo snapshot compare` | Compare the two newest local snapshots |
+| `yoo snapshot compare OLD_ID NEW_ID` | Compare selected saved snapshots |
+| `yoo snapshot compare [ID] --current` | Compare a saved snapshot (latest by default) with the current project |
 | `yoo fetch` | Project plus development environment report |
 | `yoo status` | Alias for `yoo fetch` (environment and project report) |
 | `yoo session [MINUTES]` | Start a local coding-session timer |
@@ -125,6 +127,10 @@ Snapshots are saved as JSON files in `.yoo/snapshots/` inside the current
 project. They stay on your machine and are excluded from Git by the default
 `.gitignore` entry. `snapshot compare` compares the two newest saved snapshots;
 save another snapshot after making changes to track progress over time.
+`snapshot list` prints each snapshot's numeric ID. Use those IDs to select a
+comparison, or run `yoo snapshot compare --current` to compare the latest saved
+snapshot with the current project without writing a new snapshot. Comparisons
+also show changes to the latest commit.
 
 Check the installed CLI version with `yoo --version`:
 
@@ -140,9 +146,19 @@ Git inspection distinguishes clean and dirty repositories, repositories before
 their first commit, and non-Git directories. Git failures and timeouts are
 reported on stderr with exit status 1 (including in JSON mode), rather than
 being reported as a clean tree. Exit status 2 indicates invalid CLI arguments.
+Git reports include ahead/behind counts when an upstream is configured, active
+rebase/merge/cherry-pick/revert/bisect operations, conflicts, and tracked deletions.
+Counts use local refs; yoo does not fetch. Ten or more tracked deletions trigger
+an advisory warning to review before staging. `doctor` reports conflicts and
+active operations as warnings; yoo does not attempt Git recovery. JSON reports
+include these details under `git.diagnostics`.
 
 `yoo doctor` prints all checks and exits 1 if any check fails; warnings alone
-exit 0. The tool checks currently require Rust, Cargo, Git, Rustfmt, and Clippy.
+exit 0. Git is checked for every project.
+Checks now follow the detected project: Rust checks Rust, Cargo, Rustfmt and
+Clippy; Node.js checks Node and the package manager selected by its lockfile;
+Python, Go, Java and .NET check their respective runtime or SDK. Generic
+directories check Git without requiring a language toolchain.
 These are development health checks, not dependencies needed to launch `yoo`.
 
 Source totals include all supported source extensions across languages, respect

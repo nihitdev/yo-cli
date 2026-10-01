@@ -106,7 +106,7 @@ impl Snapshot {
 }
 
 pub fn save(directory: &Path) -> Result<Snapshot, Box<dyn std::error::Error>> {
-    let snapshot = Snapshot::collect(directory)?;
+    let mut snapshot = Snapshot::collect(directory)?;
     let snapshot_dir = directory.join(".yoo").join("snapshots");
     fs::create_dir_all(&snapshot_dir)?;
     let mut path = snapshot_path(&snapshot_dir, snapshot.timestamp);
@@ -115,10 +115,23 @@ pub fn save(directory: &Path) -> Result<Snapshot, Box<dyn std::error::Error>> {
         path = snapshot_path(&snapshot_dir, snapshot.timestamp + suffix);
         suffix += 1;
     }
+    snapshot.timestamp += suffix - 1;
     let mut temporary = tempfile::NamedTempFile::new_in(&snapshot_dir)?;
     temporary.write_all(&serde_json::to_vec_pretty(&snapshot)?)?;
     temporary.persist(&path)?;
     Ok(snapshot)
+}
+
+pub fn load(directory: &Path, id: &str) -> Result<Snapshot, Box<dyn std::error::Error>> {
+    if id.is_empty() || !id.bytes().all(|byte| byte.is_ascii_digit()) {
+        return Err("snapshot ID must contain only digits".into());
+    }
+    let timestamp = id.parse::<u128>()?;
+    let path = snapshot_path(&directory.join(".yoo/snapshots"), timestamp);
+    let contents = fs::read(&path).map_err(|error| {
+        io::Error::new(error.kind(), format!("cannot read snapshot {id}: {error}"))
+    })?;
+    Ok(serde_json::from_slice(&contents)?)
 }
 
 pub fn load_all(directory: &Path) -> Result<Vec<Snapshot>, Box<dyn std::error::Error>> {
@@ -144,7 +157,15 @@ pub fn load_all(directory: &Path) -> Result<Vec<Snapshot>, Box<dyn std::error::E
 }
 
 pub fn print_saved(snapshot: &Snapshot, ui: &Ui) -> io::Result<()> {
-    ui.info("📸", "Snapshot:", &format_timestamp(snapshot.timestamp))?;
+    ui.info(
+        "📸",
+        "Snapshot:",
+        &format!(
+            "{} · ID {}",
+            format_timestamp(snapshot.timestamp),
+            snapshot.timestamp
+        ),
+    )?;
     ui.info(
         "📁",
         "Project:",
@@ -189,6 +210,17 @@ pub fn print_compare(old: &Snapshot, new: &Snapshot, ui: &Ui) -> io::Result<()> 
             format_timestamp(new.timestamp)
         ),
     )?;
+    if old.latest_commit_hash != new.latest_commit_hash {
+        ui.info(
+            "📜",
+            "Commit:",
+            &format!(
+                "{} → {}",
+                display_option(&old.latest_commit_hash),
+                display_option(&new.latest_commit_hash)
+            ),
+        )?;
+    }
     if let Some((before, after)) = comparison.branch {
         ui.info("🌿", "Git branch:", &format!("{before} → {after}"))?;
     }
@@ -318,6 +350,23 @@ mod tests {
                 .collect::<Vec<_>>(),
             vec![30, 20, 10]
         );
+    }
+
+    #[test]
+    fn selects_saved_snapshots_and_rejects_paths() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(".yoo/snapshots");
+        fs::create_dir_all(&path).unwrap();
+        let saved = sample(10, 2, 3);
+        fs::write(path.join("10.json"), serde_json::to_vec(&saved).unwrap()).unwrap();
+        assert_eq!(load(dir.path(), "10").unwrap(), saved);
+        assert!(
+            load(dir.path(), "11")
+                .unwrap_err()
+                .to_string()
+                .contains("snapshot 11")
+        );
+        assert!(load(dir.path(), "../10").is_err());
     }
 
     #[test]
