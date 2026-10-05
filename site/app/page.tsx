@@ -33,6 +33,10 @@ const commands = [
   ["yoo edit", "Open the current project in your preferred editor"],
   ["yoo project", "Project metadata, source statistics, and Git details"],
   ["yoo fetch", "Development environment and current project"],
+  ["yoo snapshot", "Save project, Git, source-count, and tool-version information locally"],
+  ["yoo snapshot list", "List saved snapshots with their IDs"],
+  ["yoo snapshot compare", "Compare the two newest snapshots"],
+  ["yoo snapshot compare --current", "Compare the latest snapshot with the current project"],
   ["yoo session 25", "Local coding-session timer"],
   ["yoo completions bash", "Generate completions for your shell"],
 ];
@@ -67,10 +71,17 @@ const features = [
 const projectTypes = [
   ["Rust", "Cargo.toml", "Cargo"],
   ["Node.js", "package.json", "npm · pnpm · Yarn · Bun"],
-  ["Python", "pyproject.toml", "pip · uv · Poetry · Pipenv"],
+  ["Python", "pyproject.toml · requirements.txt · Pipfile · setup.py · setup.cfg", "pip · uv · Poetry · Pipenv"],
   ["Go", "go.mod", "Go modules"],
   ["Java", "pom.xml · Gradle", "Maven · Gradle"],
   [".NET", ".sln · .csproj", ".NET SDK"],
+  ["Zig", "build.zig · build.zig.zon", "Zig"],
+  ["Ruby", "Gemfile", "Bundler"],
+  ["PHP", "composer.json", "Composer"],
+  ["Swift", "Package.swift", "Swift Package Manager"],
+  ["Dart", "pubspec.yaml", "pub"],
+  ["Elixir", "mix.exs", "Mix"],
+  ["C/C++", "CMakeLists.txt", "CMake"],
 ];
 
 const screenshots = [
@@ -112,7 +123,7 @@ export default function Home() {
           <h1>What the hell is going on<br /><span>with this project?</span></h1>
           <p className="hero-lede">
             yoo is a fast, local-first CLI for project metadata, Git state, development environment
-            checks, session timers, and configurable reminders.
+            checks, local snapshots, session timers, and configurable reminders.
           </p>
           <div className="hero-actions">
             <a className="button primary" href="#install">Install yoo</a>
@@ -127,7 +138,7 @@ export default function Home() {
             <div className="terminal-bar">
               <div className="traffic"><i /><i /><i /></div>
               <span>~/projects/yoo</span>
-              <span className="version">v1.0.0</span>
+              <span className="version">Session preview</span>
             </div>
             <Image src="/hero.png" alt="yoo displaying a terminal project session summary" width={1366} height={768} priority />
           </div>
@@ -240,16 +251,46 @@ export default function Home() {
         <div className="section-heading compact">
           <p className="kicker">Project detection</p>
           <h2>Useful across your whole projects folder.</h2>
-          <p>yoo recognizes common repository markers and package managers automatically. Generated folders and dependencies are skipped while source files are counted.</p>
+          <p>From Rust and Zig to Ruby, Swift, Dart, and Elixir, yoo detects project markers and selects the matching toolchain checks. Source counts skip common generated folders and dependencies.</p>
         </div>
         <div className="detection-table" role="table" aria-label="Supported project types">
-          <div className="detection-row detection-head" role="row"><span>Project</span><span>Detected from</span><span>Package tooling</span></div>
+          <div className="detection-row detection-head" role="row"><span role="columnheader">Project</span><span role="columnheader">Detected from</span><span role="columnheader">Package / build tooling</span></div>
           {projectTypes.map(([project, marker, tooling]) => (
             <div className="detection-row" role="row" key={project}>
-              <strong>{project}</strong><code>{marker}</code><span>{tooling}</span>
+              <strong role="cell">{project}</strong><code role="cell">{marker}</code><span role="cell">{tooling}</span>
             </div>
           ))}
         </div>
+        <p className="detection-note">Run yoo from the project directory. In mixed projects, the first matching manifest wins. CMake is treated as a C/C++ project; Dart detection includes Flutter projects. <a className="text-link" href="https://github.com/nihitdev/yo-cli#project-detection">Detection details →</a></p>
+      </section>
+
+      <section className="section snapshots" id="snapshots">
+        <div className="section-heading compact">
+          <p className="kicker">Local snapshots</p>
+          <h2>See what changed since you started.</h2>
+          <p>Save a point in time, then compare Git state, source counts, project version, and tool versions as you work.</p>
+        </div>
+        <div className="snapshot-steps">
+          <article className="feature-card">
+            <span className="feature-number">01 · Save</span>
+            <h3>Capture the project.</h3>
+            <p>Record a local snapshot before a refactor or at the start of a session.</p>
+            <code>yoo snapshot</code>
+          </article>
+          <article className="feature-card">
+            <span className="feature-number">02 · Browse</span>
+            <h3>Find a saved moment.</h3>
+            <p>List snapshots newest first. Each has an ID you can use to select a comparison.</p>
+            <code>yoo snapshot list</code>
+          </article>
+          <article className="feature-card">
+            <span className="feature-number">03 · Compare</span>
+            <h3>Check your progress.</h3>
+            <p>Compare the latest snapshot with the current project without saving another file.</p>
+            <code>yoo snapshot compare --current</code>
+          </article>
+        </div>
+        <p className="detection-note">Snapshots stay in <code>.yoo/snapshots/</code>. The first save creates an ignore file to keep new snapshots out of Git; existing ignore rules are preserved. Snapshots record project information, not backups of your source files.</p>
       </section>
 
       <section className="section automation" id="automation">
@@ -263,11 +304,11 @@ export default function Home() {
           </div>
         </div>
         <pre className="json-card" aria-label="Example yoo JSON output"><code>{`{
-  "yoo_version": "1.0.0",
+  "yoo_version": "1.1.2",
   "project": {
     "name": "yoo",
     "language": "Rust",
-    "version": "1.0.0"
+    "version": "1.1.2"
   },
   "git": {
     "branch": "main",
@@ -318,7 +359,7 @@ default_minutes = 25`}</code></pre>
           <h2>Local by design.</h2>
           <p>
             yoo reads local project, environment, and Git information and prints it to your terminal.
-            It does not transmit or retain project data.
+            It does not upload project data. Snapshots are saved locally only when you ask.
           </p>
           <a className="text-link" href="https://github.com/nihitdev/yo-cli/blob/main/CONTRIBUTING.md">Contributing guide <span>→</span></a>
         </div>

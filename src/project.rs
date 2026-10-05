@@ -245,13 +245,21 @@ fn package_manager(directory: &Path, language: &str) -> Option<String> {
             }
         }
         ".NET" => Some(".NET SDK".to_owned()),
+        "Zig" => Some("Zig".to_owned()),
+        "Ruby" => Some("Bundler".to_owned()),
+        "PHP" => Some("Composer".to_owned()),
+        "Swift" => Some("Swift Package Manager".to_owned()),
+        "Dart" => Some("pub".to_owned()),
+        "Elixir" => Some("Mix".to_owned()),
+        "C/C++" => Some("CMake".to_owned()),
         _ => None,
     }
 }
 
 const SOURCE_EXTENSIONS: &[&str] = &[
     "rs", "js", "cjs", "mjs", "jsx", "ts", "tsx", "py", "go", "java", "kt", "kts", "cs", "fs",
-    "vb", "c", "cpp", "h", "hpp",
+    "vb", "c", "cpp", "h", "hpp", "cc", "cxx", "hxx", "zig", "rb", "php", "swift", "dart", "ex",
+    "exs",
 ];
 
 fn count_source(directory: &Path) -> SourceSummary {
@@ -335,6 +343,13 @@ fn should_skip_directory(path: &Path) -> bool {
             | "venv"
             | "vendor"
             | "__pycache__"
+            | ".zig-cache"
+            | "zig-cache"
+            | "zig-out"
+            | ".build"
+            | ".dart_tool"
+            | "_build"
+            | "deps"
     )
 }
 

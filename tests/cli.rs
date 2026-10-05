@@ -355,3 +355,121 @@ fn node_doctor_does_not_require_rust() {
     assert!(report.contains("Node.js"));
     assert!(!report.contains("Rust compiler"));
 }
+
+#[test]
+fn new_project_types_report_manifests_managers_and_source_counts() {
+    for (manifest, language, manager, extension, generated) in [
+        ("build.zig", "Zig", "Zig", "zig", ".zig-cache"),
+        ("build.zig.zon", "Zig", "Zig", "zig", "zig-out"),
+        ("Gemfile", "Ruby", "Bundler", "rb", "vendor"),
+        ("composer.json", "PHP", "Composer", "php", "vendor"),
+        (
+            "Package.swift",
+            "Swift",
+            "Swift Package Manager",
+            "swift",
+            ".build",
+        ),
+        ("pubspec.yaml", "Dart", "pub", "dart", ".dart_tool"),
+        ("mix.exs", "Elixir", "Mix", "ex", "_build"),
+        ("CMakeLists.txt", "C/C++", "CMake", "cxx", "build"),
+        ("requirements.txt", "Python", "pip", "py", ".venv"),
+        ("Pipfile", "Python", "Pipenv", "py", ".venv"),
+        ("setup.py", "Python", "pip", "py", ".venv"),
+        ("setup.cfg", "Python", "pip", "py", ".venv"),
+    ] {
+        let dir = tempfile::tempdir().unwrap();
+        fs::write(dir.path().join(manifest), "").unwrap();
+        fs::write(
+            dir.path().join(format!("main.{extension}")),
+            "first\nsecond\n",
+        )
+        .unwrap();
+        fs::create_dir(dir.path().join(generated)).unwrap();
+        fs::write(
+            dir.path()
+                .join(generated)
+                .join(format!("generated.{extension}")),
+            "ignored\n",
+        )
+        .unwrap();
+        let output = yoo(dir.path(), &["project", "--json"]);
+        assert!(
+            output.status.success(),
+            "{manifest}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(report["project"]["language"], language);
+        assert_eq!(report["project"]["manifest"], manifest);
+        assert_eq!(report["project"]["package_manager"], manager);
+        assert_eq!(report["source"]["lines"], 2);
+        let manifest_is_source =
+            ["build.zig", "Package.swift", "mix.exs", "setup.py"].contains(&manifest);
+        assert_eq!(
+            report["source"]["files"],
+            1 + usize::from(manifest_is_source)
+        );
+        let output = yoo(dir.path(), &["fetch", "--json"]);
+        assert!(output.status.success());
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(report["project"]["kind"], language);
+    }
+}
+
+#[test]
+fn snapshots_ignore_themselves_without_changing_project_ignore_rules() {
+    let root = tempfile::tempdir().unwrap();
+    assert!(
+        Command::new("git")
+            .args(["init", "-q"])
+            .current_dir(root.path())
+            .status()
+            .unwrap()
+            .success()
+    );
+    let project = root.path().join("nested");
+    fs::create_dir(&project).unwrap();
+    let existing = "# project rules\n*.log\n";
+    fs::write(root.path().join(".gitignore"), existing).unwrap();
+    for _ in 0..2 {
+        let output = Command::new(env!("CARGO_BIN_EXE_yoo"))
+            .args(["snapshot"])
+            .env("XDG_CONFIG_HOME", root.path().join("config"))
+            .env("HOME", root.path())
+            .env("USERPROFILE", root.path())
+            .current_dir(&project)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    let status = Command::new("git")
+        .args(["status", "--porcelain", "--untracked-files=all"])
+        .current_dir(root.path())
+        .output()
+        .unwrap();
+    assert!(status.status.success());
+    assert_eq!(
+        String::from_utf8(status.stdout).unwrap().trim(),
+        "?? .gitignore"
+    );
+    assert_eq!(
+        fs::read_to_string(root.path().join(".gitignore")).unwrap(),
+        existing
+    );
+    let snapshots: Vec<_> = fs::read_dir(project.join(".yoo/snapshots"))
+        .unwrap()
+        .map(Result::unwrap)
+        .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "json"))
+        .collect();
+    assert_eq!(snapshots.len(), 2);
+    for entry in snapshots {
+        let snapshot: serde_json::Value =
+            serde_json::from_slice(&fs::read(entry.path()).unwrap()).unwrap();
+        assert_eq!(snapshot["git_changed_files"], 1);
+    }
+}

@@ -22,6 +22,17 @@ The format follows the spirit of Keep a Changelog: user-visible changes are grou
 
 ## [Unreleased]
 
+### Project detection and snapshot fixes
+
+- Detect Zig, Ruby, PHP, Swift, Dart, Elixir and CMake-based C/C++ projects, with matching doctor checks and package/build tool labels.
+- Update the website with expanded project support, a snapshot walkthrough, corrected privacy copy, and mobile layout fixes.
+- Recognize Python projects using requirements.txt, Pipfile, setup.py or setup.cfg.
+- Count the added languages' source extensions and exclude their common generated directories.
+- Parse Cargo package metadata as TOML, including commented table headers and quoted keys.
+- Create a self-ignoring snapshot directory without modifying project ignore rules.
+- Preserve all snapshots when concurrent saves select the same timestamp.
+- Avoid repeating project detection and Git inspection when collecting snapshot tool versions.
+
 ### Added
 
 - Show Git upstream ahead/behind counts, active operations, conflicts, and warnings for large tracked deletions in terminal and JSON project reports.

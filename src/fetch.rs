@@ -46,16 +46,7 @@ pub struct GitSummary {
 pub fn collect(directory: &Path) -> Result<FetchReport, crate::process::CommandError> {
     Ok(FetchReport {
         yoo_version: env!("CARGO_PKG_VERSION").to_owned(),
-        environment: EnvironmentInfo {
-            os: display_os(),
-            architecture: env::consts::ARCH.to_owned(),
-            shell: detect_shell(),
-            terminal: detect_terminal(),
-            editor: detect_editor(),
-            rustc: command_version("rustc", &["--version"]),
-            cargo: command_version("cargo", &["--version"]),
-            git: command_version("git", &["--version"]),
-        },
+        environment: collect_environment(),
         project: detect_project(directory),
         git: git::inspect(directory)?.map(|info| GitSummary {
             branch: info.branch,
@@ -63,6 +54,19 @@ pub fn collect(directory: &Path) -> Result<FetchReport, crate::process::CommandE
             diagnostics: info.diagnostics,
         }),
     })
+}
+
+pub fn collect_environment() -> EnvironmentInfo {
+    EnvironmentInfo {
+        os: display_os(),
+        architecture: env::consts::ARCH.to_owned(),
+        shell: detect_shell(),
+        terminal: detect_terminal(),
+        editor: detect_editor(),
+        rustc: command_version("rustc", &["--version"]),
+        cargo: command_version("cargo", &["--version"]),
+        git: command_version("git", &["--version"]),
+    }
 }
 
 pub fn to_json(report: &FetchReport) -> Result<String, serde_json::Error> {
@@ -279,6 +283,27 @@ pub fn detect_project(directory: &Path) -> ProjectInfo {
         return project_from_marker(directory, fallback_name, ".NET", &manifest);
     }
 
+    // Keep established manifest precedence; inspect markers without executing
+    // project build scripts or inferring a language from arbitrary source files.
+    for (manifest, kind) in [
+        ("build.zig", "Zig"),
+        ("build.zig.zon", "Zig"),
+        ("Gemfile", "Ruby"),
+        ("composer.json", "PHP"),
+        ("Package.swift", "Swift"),
+        ("pubspec.yaml", "Dart"),
+        ("mix.exs", "Elixir"),
+        ("CMakeLists.txt", "C/C++"),
+        ("requirements.txt", "Python"),
+        ("Pipfile", "Python"),
+        ("setup.py", "Python"),
+        ("setup.cfg", "Python"),
+    ] {
+        if directory.join(manifest).is_file() {
+            return project_from_marker(directory, fallback_name, kind, manifest);
+        }
+    }
+
     ProjectInfo {
         name: fallback_name,
         kind: "Generic directory".to_owned(),
@@ -304,7 +329,8 @@ fn first_project_file(directory: &Path, predicate: impl Fn(&Path) -> bool) -> Op
     entries
         .filter_map(Result::ok)
         .map(|entry| entry.path())
-        .find(|path| predicate(path))
+        .filter(|path| path.is_file() && predicate(path))
+        .min()
 }
 
 fn directory_name(directory: &Path) -> String {
@@ -321,58 +347,12 @@ fn read_file(path: PathBuf) -> Option<String> {
 }
 
 pub fn find_toml_string(contents: &str, key: &str) -> Option<String> {
-    let mut in_package = false;
-
-    for line in contents.lines() {
-        let line = line.trim();
-
-        if line.starts_with('[') {
-            in_package = line == "[package]";
-            continue;
-        }
-
-        if !in_package || line.starts_with('#') {
-            continue;
-        }
-
-        let Some((found_key, value)) = line.split_once('=') else {
-            continue;
-        };
-
-        if found_key.trim() == key {
-            return parse_toml_string(value.trim());
-        }
-    }
-
-    None
-}
-
-fn parse_toml_string(value: &str) -> Option<String> {
-    let quote = value.chars().next()?;
-
-    if quote == '\'' {
-        let end = value[1..].find('\'')? + 1;
-        return Some(value[1..end].to_owned());
-    }
-
-    if quote != '"' {
-        return None;
-    }
-
-    let mut escaped = false;
-    for (offset, character) in value[1..].char_indices() {
-        if character == '"' && !escaped {
-            let end = offset + 2;
-            return serde_json::from_str(&value[..end]).ok();
-        }
-
-        escaped = character == '\\' && !escaped;
-        if character != '\\' {
-            escaped = false;
-        }
-    }
-
-    None
+    let manifest: toml::Value = toml::from_str(contents).ok()?;
+    manifest
+        .get("package")?
+        .get(key)?
+        .as_str()
+        .map(str::to_owned)
 }
 
 #[cfg(test)]
@@ -380,12 +360,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parses_only_package_toml_strings_without_extra_dependencies() {
+    fn parses_only_package_toml_strings() {
         let manifest = r#"
 [workspace.package]
 name = "wrong"
 
-[package]
+[package] # valid table comment
 name = 'yoo'
 version = "0.6.1" # inline comment
 "#;
@@ -395,6 +375,37 @@ version = "0.6.1" # inline comment
             find_toml_string(manifest, "version").as_deref(),
             Some("0.6.1")
         );
+    }
+
+    #[test]
+    fn toml_metadata_handles_quoted_keys_multiline_strings_and_invalid_input() {
+        let manifest = "[package] # comment\n\"name\" = \"\"\"demo\"\"\"\nversion = '1.2.3'\n";
+        assert_eq!(find_toml_string(manifest, "name").as_deref(), Some("demo"));
+        assert_eq!(
+            find_toml_string(manifest, "version").as_deref(),
+            Some("1.2.3")
+        );
+        assert_eq!(find_toml_string("[package]\nname = broken", "name"), None);
+        assert_eq!(
+            find_toml_string("[package]\nversion.workspace = true", "version"),
+            None
+        );
+    }
+
+    #[test]
+    fn detection_requires_files_and_preserves_manifest_precedence() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir(dir.path().join("build.zig")).unwrap();
+        fs::create_dir(dir.path().join("fake.csproj")).unwrap();
+        assert_eq!(detect_project(dir.path()).kind, "Generic directory");
+        fs::write(dir.path().join("build.zig.zon"), "").unwrap();
+        assert_eq!(detect_project(dir.path()).kind, "Zig");
+        fs::write(
+            dir.path().join("Cargo.toml"),
+            "[package]\nname = 'primary'\n",
+        )
+        .unwrap();
+        assert_eq!(detect_project(dir.path()).kind, "Rust");
     }
 
     #[test]

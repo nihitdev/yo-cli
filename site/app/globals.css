@@ -13,7 +13,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
 body {
   margin: 0;
   background: var(--bg);
@@ -202,9 +202,16 @@ h1 span { color: var(--muted); }
 
 .detection { border-top: 1px solid var(--line); }
 .detection-table { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-.detection-row { min-height: 62px; padding: 0 22px; display: grid; grid-template-columns: .6fr 1fr 1.2fr; align-items: center; gap: 24px; border-bottom: 1px solid var(--line); background: var(--panel); font-size: 14px; }
+.detection-row { min-height: 62px; padding: 0 22px; display: grid; grid-template-columns: minmax(0, .6fr) minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; gap: 24px; border-bottom: 1px solid var(--line); background: var(--panel); font-size: 14px; }
+.detection-row > * { min-width: 0; overflow-wrap: anywhere; padding-block: 14px; line-height: 1.6; }
 .detection-row:last-child { border-bottom: 0; }.detection-row code { color: var(--mauve); }.detection-row span { color: var(--muted); }
 .detection-head { min-height: 44px; color: #77778b; background: transparent; font: 600 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+
+.detection-note { margin: 22px 0 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+.detection-note code { color: var(--lavender); overflow-wrap: anywhere; }
+.snapshots { border-top: 1px solid var(--line); }
+.snapshot-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.snapshot-steps code { overflow-wrap: anywhere; line-height: 1.8; }
 
 .automation { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; border-top: 1px solid var(--line); }
 .automation-copy h2 { max-width: 600px; margin: 15px 0 20px; font-size: clamp(36px,4vw,54px); letter-spacing: -.045em; line-height: 1.05; }
@@ -241,7 +248,7 @@ footer { max-width: 1240px; margin: auto; padding: 50px 28px 70px; border-top: 1
   .hero { grid-template-columns: 1fr; padding-top: 72px; gap: 54px; }
   .hero-copy { max-width: 700px; }
   .hero::before { right: 0; }
-  .screenshot-grid { grid-template-columns: 1fr; }
+  .screenshot-grid, .snapshot-steps { grid-template-columns: 1fr; }
   .feature-grid { grid-template-columns: 1fr 1fr; }
   .package-status-grid { grid-template-columns: 1fr 1fr; }
   .install-layout, .principles, .automation, .configure-grid { grid-template-columns: 1fr; gap: 28px; }
@@ -257,6 +264,7 @@ footer { max-width: 1240px; margin: auto; padding: 50px 28px 70px; border-top: 1
   .hero-actions { flex-direction: column; align-items: stretch; text-align: center; }
   .project-facts { gap: 10px; }.project-facts span + span::before { margin-right: 10px; }
   .terminal-frame { transform: none; }
+  .accent-grid { right: 0; }
   .section { padding-top: 78px; padding-bottom: 78px; }
   .install-row { grid-template-columns: 1fr auto; gap: 9px 12px; }
   .install-row code { grid-column: 1 / -1; grid-row: 2; }
@@ -267,7 +275,8 @@ footer { max-width: 1240px; margin: auto; padding: 50px 28px 70px; border-top: 1
   .feature-grid { grid-template-columns: 1fr; }.feature-card { min-height: 250px; }
   .package-status-grid { grid-template-columns: 1fr; }
   .reference-note { align-items: flex-start; flex-direction: column; }
-  .detection-row { grid-template-columns: .65fr 1.35fr; gap: 12px; padding: 14px; }.detection-row span:last-child { grid-column: 2; }.detection-head span:last-child { display: none; }
+  .detection-row { grid-template-columns: minmax(0, .65fr) minmax(0, 1.35fr); gap: 12px; padding: 14px; }.detection-row span:last-child { grid-column: 2; }.detection-head span:last-child { display: none; }
+  .detection-row > * { padding-block: 0; }
   .principle-grid { grid-template-columns: 1fr; }.principle-grid div { border-right: 0; border-bottom: 1px solid var(--line) !important; }.principle-grid div:last-child{border-bottom:0!important}
   .final-cta { margin: 0 18px 78px; padding: 48px 24px; }
   footer { grid-template-columns: 1fr; padding-left: 18px; padding-right: 18px; }.footer-links { flex-wrap: wrap; }

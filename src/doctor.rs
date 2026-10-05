@@ -103,6 +103,22 @@ fn project_tools(directory: &Path) -> Vec<ToolCheck> {
         "Go" => vec![("Go", "go", vec!["version"])],
         "Java" => vec![("Java", "java", vec!["--version"])],
         ".NET" => vec![(".NET SDK", "dotnet", vec!["--version"])],
+        "Zig" => vec![("Zig compiler", "zig", vec!["version"])],
+        "Ruby" => vec![
+            ("Ruby", "ruby", vec!["--version"]),
+            ("Bundler", "bundle", vec!["--version"]),
+        ],
+        "PHP" => vec![
+            ("PHP", "php", vec!["--version"]),
+            ("Composer", "composer", vec!["--version"]),
+        ],
+        "Swift" => vec![("Swift", "swift", vec!["--version"])],
+        "Dart" => vec![("Dart", "dart", vec!["--version"])],
+        "Elixir" => vec![
+            ("Elixir", "elixir", vec!["--version"]),
+            ("Mix", "mix", vec!["--version"]),
+        ],
+        "C/C++" => vec![("CMake", "cmake", vec!["--version"])],
         _ => Vec::new(),
     }
 }
@@ -252,10 +268,21 @@ mod tests {
             ("pom.xml", "java"),
             ("demo.csproj", "dotnet"),
             ("Cargo.toml", "rustc"),
+            ("build.zig", "zig"),
+            ("build.zig.zon", "zig"),
+            ("Gemfile", "ruby"),
+            ("composer.json", "php"),
+            ("Package.swift", "swift"),
+            ("pubspec.yaml", "dart"),
+            ("mix.exs", "elixir"),
+            ("CMakeLists.txt", "cmake"),
         ] {
             std::fs::write(dir.path().join(manifest), "{}").unwrap();
             let tools = project_tools(dir.path());
             assert_eq!(tools[0].1, expected);
+            if expected == "zig" {
+                assert_eq!(tools[0].2, vec!["version"]);
+            }
             if manifest == "package.json" {
                 assert!(!tools.iter().any(|(_, tool, _)| *tool == "rustc"));
                 std::fs::write(dir.path().join("pnpm-lock.yaml"), "").unwrap();

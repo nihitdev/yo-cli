@@ -124,8 +124,9 @@ yoo session 25
 ```
 
 Snapshots are saved as JSON files in `.yoo/snapshots/` inside the current
-project. They stay on your machine and are excluded from Git by the default
-`.gitignore` entry. `snapshot compare` compares the two newest saved snapshots;
+project. On the first save, yoo creates `.yoo/snapshots/.gitignore` containing
+`*`, so snapshots and that ignore file stay out of Git without changing your
+project’s ignore rules. An existing snapshot ignore file is preserved. `snapshot compare` compares the two newest saved snapshots;
 save another snapshot after making changes to track progress over time.
 `snapshot list` prints each snapshot's numeric ID. Use those IDs to select a
 comparison, or run `yoo snapshot compare --current` to compare the latest saved
@@ -157,7 +158,9 @@ include these details under `git.diagnostics`.
 exit 0. Git is checked for every project.
 Checks now follow the detected project: Rust checks Rust, Cargo, Rustfmt and
 Clippy; Node.js checks Node and the package manager selected by its lockfile;
-Python, Go, Java and .NET check their respective runtime or SDK. Generic
+Python, Go, Java, .NET, Zig, Ruby, PHP, Swift, Dart and Elixir check their
+respective runtime or SDK; CMake projects check CMake. Ruby, PHP and Elixir
+also check Bundler, Composer and Mix respectively. Generic
 directories check Git without requiring a language toolchain.
 These are development health checks, not dependencies needed to launch `yoo`.
 
@@ -166,6 +169,39 @@ nested `.gitignore` rules, `.git/info/exclude`, and global Git excludes, and ski
 symlinks and common generated/vendor directories (`target`, `node_modules`,
 `dist`, `build`, `.next`, `.venv`, `venv`, `vendor`, `__pycache__`, `.git`). Counts
 also honor `.ignore` files. Files that cannot be read are skipped.
+
+## Project detection
+
+Detection reads markers in the current directory without running project build
+scripts. In mixed projects, the first matching marker below wins; yoo does not
+aggregate multiple languages or search parent directories for a manifest.
+
+| Project type | Markers (in precedence order) | Package/build tool |
+| --- | --- | --- |
+| Rust | `Cargo.toml` | Cargo |
+| Node.js | `package.json` | npm, pnpm, Yarn, Bun |
+| Python | `pyproject.toml` | pip, uv, Poetry, Pipenv |
+| Go | `go.mod` | Go modules |
+| Java | `pom.xml`, `build.gradle.kts`, `build.gradle` | Maven, Gradle |
+| .NET | `*.sln`, `*.csproj` (case-insensitive, first alphabetically) | .NET SDK |
+| Zig | `build.zig`, `build.zig.zon` | Zig |
+| Ruby | `Gemfile` | Bundler |
+| PHP | `composer.json` | Composer |
+| Swift | `Package.swift` | Swift Package Manager |
+| Dart | `pubspec.yaml` | pub |
+| Elixir | `mix.exs` | Mix |
+| C/C++ | `CMakeLists.txt` | CMake |
+| Python (fallback) | `requirements.txt`, `Pipfile`, `setup.py`, `setup.cfg` | pip, uv, Poetry, Pipenv |
+
+CMake is treated as a C/C++ project heuristic. Dart detection also recognizes
+Flutter projects through `pubspec.yaml`; the health check checks Dart.
+Rust and Node.js reports extract package names and versions; other types use
+the directory name and report the manifest without evaluating it. Cargo
+workspace-inherited metadata is not resolved.
+
+Source counts include Zig, Ruby, PHP, Swift, Dart and Elixir extensions and skip
+`.zig-cache`, `zig-cache`, `zig-out`, `.build`, `.dart_tool`, `_build` and `deps`,
+in addition to the generated/vendor directories listed above.
 
 ## Configuration
 

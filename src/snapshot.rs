@@ -44,7 +44,7 @@ pub struct SnapshotComparison {
 impl Snapshot {
     pub fn collect(directory: &Path) -> Result<Self, Box<dyn std::error::Error>> {
         let project_report = project::collect(directory)?;
-        let environment = fetch::collect(directory)?.environment;
+        let environment = fetch::collect_environment();
         let commit = if project_report.git.is_some() {
             git::latest_commit(directory)?
         } else {
@@ -106,20 +106,41 @@ impl Snapshot {
 }
 
 pub fn save(directory: &Path) -> Result<Snapshot, Box<dyn std::error::Error>> {
-    let mut snapshot = Snapshot::collect(directory)?;
     let snapshot_dir = directory.join(".yoo").join("snapshots");
     fs::create_dir_all(&snapshot_dir)?;
-    let mut path = snapshot_path(&snapshot_dir, snapshot.timestamp);
-    let mut suffix = 1;
-    while path.exists() {
-        path = snapshot_path(&snapshot_dir, snapshot.timestamp + suffix);
-        suffix += 1;
+    // A self-ignoring directory works in repositories and nested projects,
+    // without changing the project's own ignore rules. Respect existing rules.
+    match fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(snapshot_dir.join(".gitignore"))
+    {
+        Ok(mut file) => file.write_all(b"*\n")?,
+        Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
+        Err(error) => return Err(error.into()),
     }
-    snapshot.timestamp += suffix - 1;
-    let mut temporary = tempfile::NamedTempFile::new_in(&snapshot_dir)?;
-    temporary.write_all(&serde_json::to_vec_pretty(&snapshot)?)?;
-    temporary.persist(&path)?;
-    Ok(snapshot)
+    persist_snapshot(&snapshot_dir, Snapshot::collect(directory)?)
+}
+
+fn persist_snapshot(
+    snapshot_dir: &Path,
+    mut snapshot: Snapshot,
+) -> Result<Snapshot, Box<dyn std::error::Error>> {
+    loop {
+        let path = snapshot_path(snapshot_dir, snapshot.timestamp);
+        let mut temporary = tempfile::NamedTempFile::new_in(snapshot_dir)?;
+        temporary.write_all(&serde_json::to_vec_pretty(&snapshot)?)?;
+        match temporary.persist_noclobber(&path) {
+            Ok(_) => return Ok(snapshot),
+            Err(error) if error.error.kind() == io::ErrorKind::AlreadyExists => {
+                snapshot.timestamp = snapshot
+                    .timestamp
+                    .checked_add(1)
+                    .ok_or("snapshot ID overflow")?;
+            }
+            Err(error) => return Err(error.into()),
+        }
+    }
 }
 
 pub fn load(directory: &Path, id: &str) -> Result<Snapshot, Box<dyn std::error::Error>> {
@@ -316,6 +337,32 @@ mod tests {
                 git: Some("git 1".into()),
             },
         }
+    }
+
+    #[test]
+    fn concurrent_saves_with_identical_ids_preserve_every_snapshot() {
+        let dir = tempfile::tempdir().unwrap();
+        let barrier = std::sync::Barrier::new(8);
+        std::thread::scope(|scope| {
+            let mut handles = Vec::new();
+            for count in 0..8 {
+                let directory = dir.path();
+                let barrier = &barrier;
+                handles.push(scope.spawn(move || {
+                    barrier.wait();
+                    persist_snapshot(directory, sample(100, count, count)).unwrap()
+                }));
+            }
+            let mut ids = Vec::new();
+            for handle in handles {
+                let saved = handle.join().unwrap();
+                let bytes = fs::read(snapshot_path(dir.path(), saved.timestamp)).unwrap();
+                assert_eq!(serde_json::from_slice::<Snapshot>(&bytes).unwrap(), saved);
+                ids.push(saved.timestamp);
+            }
+            ids.sort_unstable();
+            assert_eq!(ids, (100..108).collect::<Vec<_>>());
+        });
     }
 
     #[test]
