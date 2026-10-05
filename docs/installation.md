@@ -97,6 +97,14 @@ winget install --id Nihitdev.yoo --exact
 Scoop metadata is generated with each release, but a public `nihitdev` bucket is
 not currently published. Use the installer or another Windows channel below.
 
+### Chocolatey
+
+```powershell
+choco install yoo
+```
+
+Chocolatey and WinGet community review can delay availability of a new version.
+
 ## Homebrew
 
 Supports Apple Silicon macOS and Linux x86_64 through the `nihitdev/tap`
@@ -187,7 +195,24 @@ Output is in `target/debian/`. Runtime library dependencies are generated from
 the binary. Release packages target x86_64, built on Ubuntu 22.04; native builds
 on other Linux architectures use the local toolchain.
 
+## Alpine
+
+Add `https://yo-cli.vercel.app/alpine` to `/etc/apk/repositories`, then install:
+
+```sh
+sudo apk add yoo
+```
+
 ## RPM
+
+### Hosted DNF repository
+
+```bash
+sudo dnf config-manager addrepo --from-repofile=https://yo-cli.vercel.app/rpm/yoo.repo
+sudo dnf install yoo
+```
+
+### Downloaded RPM
 
 Download `yoo-<version>-1.x86_64.rpm` and verify the release's `SHA256SUMS`:
 
@@ -236,7 +261,14 @@ rpmbuild -ba packaging/opensuse/yoo.spec
 Repository maintenance, signing-key setup, and the required release secrets are
 documented in [packaging/opensuse/README.md](../packaging/opensuse/README.md).
 
+## Void / XBPS
+
+`.xbps` packages are built and tested in CI and attached to GitHub Releases.
+There is no hosted XBPS repository.
+
 ## Snap
+
+Snap builds are attached to GitHub Releases; Snap Store publication is disabled.
 
 After the maintainer registers the name and publishes a stable channel:
 
@@ -279,7 +311,14 @@ the sandbox PATH. Git/tool detection and launching host editors are limited;
 configuration is stored under the app's sandbox directory. It does not grant
 host execution, network access or general host write access.
 
-There is no Flathub listing. Install the release bundle locally:
+There is no Flathub listing. Use the self-hosted repository:
+
+```bash
+flatpak remote-add --user yoo https://yo-cli.vercel.app/flatpak/yoo.flatpakrepo
+flatpak install --user yoo io.github.nihitdev.yoo
+```
+
+Or install the release bundle locally:
 
 ```bash
 flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo

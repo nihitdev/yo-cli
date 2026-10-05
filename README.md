@@ -1,242 +1,164 @@
-# yoo
+<p align="center">
+  <img src="docs/images/banner.svg" alt="yoo — know the project you’re in" width="100%" />
+</p>
 
-**What the hell is going on with this project?**
+<p align="center">
+  <strong>What the hell is going on with this project?</strong><br />
+  Your project, Git state, and dev tools — one command away.
+</p>
 
-A fast, local-first CLI for understanding your project and development environment. `yoo` reads project files, Git state, installed tooling, and your local configuration, then reports what matters in the terminal.
+<p align="center">
+  <a href="https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml"><img src="https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://crates.io/crates/yoo"><img src="https://img.shields.io/crates/v/yoo?color=cba6f7" alt="crates.io" /></a>
+  <a href="https://www.npmjs.com/package/@nihit_dev/yoo"><img src="https://img.shields.io/npm/v/%40nihit_dev%2Fyoo?color=89b4fa" alt="npm" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-a6e3a1" alt="GPL-3.0-or-later" /></a>
+</p>
 
-[![CI](https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/nihitdev/yo-cli/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/nihitdev/yo-cli?sort=semver)](https://github.com/nihitdev/yo-cli/releases)
-[![crates.io](https://img.shields.io/crates/v/yoo.svg)](https://crates.io/crates/yoo)
-[![npm](https://img.shields.io/npm/v/%40nihit_dev%2Fyoo)](https://www.npmjs.com/package/@nihit_dev/yoo)
-[![License](https://img.shields.io/github/license/nihitdev/yo-cli)](LICENSE)
-[![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-8b8b9a)](docs/installation.md)
+<p align="center">
+  <a href="https://yo-cli.vercel.app"><strong>Website</strong></a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="docs/README.md">Docs</a> ·
+  <a href="https://github.com/nihitdev/yo-cli/releases">Releases</a>
+</p>
 
-## Why yoo?
+---
 
-- **Local-first:** project data stays on your machine.
-- **Fast:** one small Rust executable with no daemon or account.
-- **Useful context:** project identity, Git status, toolchain health, and session reminders in one place.
-- **Terminal-native:** readable output by default, stable JSON when another tool needs it.
-- **Cross-platform:** Linux, macOS, and Windows, with package channels for each.
-- **No telemetry or AI requirement.**
+## Your terminal, with context
+
+**Built in Rust. Runs on Linux, macOS, and Windows.** No account, daemon, telemetry, or AI service. Your project data stays on your machine.
+
+![yoo showing a developer session in the terminal](docs/images/hero.png)
+
+| Know where you are | Know what changed | Know what’s missing |
+| :--- | :--- | :--- |
+| Project type, package manager, source counts, and metadata. | Branch, pending changes, conflicts, and local snapshots. | Toolchain checks that follow the project you’re in. |
+| `yoo project` | `yoo snapshot compare --current` | `yoo doctor` |
 
 ## Quick start
 
 ```bash
 cargo install yoo
-cd path/to/a/project
+cd your-project
 yoo --fast
 ```
 
-The verified installer is convenient when Rust is not already installed:
+**No Rust installed?** Use npm:
+
+```bash
+npm install -g @nihit_dev/yoo
+```
+
+<details>
+<summary><strong>More ways to install — script, Homebrew, WinGet, AUR, and more</strong></summary>
+
+### Verified installer
+
+Linux x86-64 and Apple Silicon macOS. Downloads a release binary and checks its SHA-256 checksum.
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf https://yo-cli.vercel.app/yo-setup | sh
 ```
 
-## Installation
+| Channel | Command |
+| :--- | :--- |
+| Homebrew | `brew tap nihitdev/tap` then `brew install yoo` |
+| Windows / WinGet | `winget install --id Nihitdev.yoo --exact` |
+| Arch / AUR | `yay -S yoo-bin` |
+| Cargo Binstall | `cargo binstall yoo` |
+| pnpm | `pnpm add -g @nihit_dev/yoo` |
+| Bun | `bun add -g @nihit_dev/yoo` |
+| Nix | `nix run github:nihitdev/yo-cli` |
 
-Choose one method. The full platform notes and verification steps are in [docs/installation.md](docs/installation.md).
+**[All installation methods →](docs/installation.md)** — APT, RPM, Alpine, openSUSE, Flatpak, release downloads, supported architectures, updates, and removal.
 
-### Linux
-
-| Channel | Install | Status |
-| --- | --- | --- |
-| Arch / AUR | `yay -S yoo-bin` or `paru -S yoo-bin` | Community package |
-| APT (Debian/Ubuntu) | `curl -fsSL https://yo-cli.vercel.app/apt/setup.sh \| sudo sh` then `sudo apt install yoo` | Self-hosted signed repository |
-| DNF (Fedora/RHEL) | `sudo dnf config-manager addrepo --from-repofile=https://yo-cli.vercel.app/rpm/yoo.repo` then `sudo dnf install yoo` | Self-hosted signed repository |
-| Alpine | Add `https://yo-cli.vercel.app/alpine` to `/etc/apk/repositories`, then `sudo apk add yoo` | Self-hosted APK repository |
-| openSUSE Tumbleweed | `sudo zypper ar -f https://yo-cli.vercel.app/opensuse yoo && sudo zypper refresh && sudo zypper install yoo` | Self-hosted signed repository |
-| Nix | `nix run github:nihitdev/yo-cli` | GitHub flake |
-| Flatpak | `flatpak remote-add --user yoo https://yo-cli.vercel.app/flatpak/yoo.flatpakrepo && flatpak install --user yoo io.github.nihitdev.yoo` | Self-hosted repository |
-| Cargo Binstall | `cargo binstall yoo` | Prebuilt GitHub Release binary |
-
-If you already use the APT repository, rerun its setup command whenever the
-repository signing key is rotated. Existing systems trust the key they first
-installed and will reject repository updates signed by a replacement key.
-
-`.deb`, `.rpm`, `.apk`, `.xbps`, and `.snap` files are also attached to each GitHub Release for direct installation. Void packages are built and tested in CI; there is no hosted XBPS repository, and Snap Store publication is disabled.
-
-### macOS
-
-```bash
-brew tap nihitdev/tap
-brew install yoo
-```
-
-Or use `cargo install yoo`, `cargo binstall yoo`, or the verified installer.
-
-### Windows
-
-```powershell
-winget install --id Nihitdev.yoo --exact
-choco install yoo
-```
-
-Scoop metadata is generated with releases, but the community bucket is not currently published. Chocolatey and WinGet community review can delay availability of a new version.
-
-### JavaScript
-
-The npm package downloads the matching native release binary during installation. pnpm and Bun use the same package:
-
-```bash
-npm install -g @nihit_dev/yoo
-pnpm add -g @nihit_dev/yoo
-bun add -g @nihit_dev/yoo
-```
-
-Snap builds are attached to GitHub Releases. Snap Store publishing is currently disabled; install a downloaded artifact with `snap install --dangerous` when needed.
+</details>
 
 ## Commands
 
-Commands inspect the current directory. Use `cd path/to/project` first; positional project paths are not supported.
+Start here. Run commands from the directory you want to inspect.
 
-| Command | Purpose |
-| --- | --- |
-| `yoo` | Session summary with project and Git context |
-| `yoo doctor` | Check local tools, project detection, and configuration |
-| `yoo project` | Project metadata, source counts, and Git details |
-| `yoo snapshot` | Save a local snapshot of the current project |
-| `yoo snapshot list` | List saved snapshots in reverse chronological order |
-| `yoo snapshot compare` | Compare the two newest local snapshots |
-| `yoo snapshot compare OLD_ID NEW_ID` | Compare selected saved snapshots |
-| `yoo snapshot compare [ID] --current` | Compare a saved snapshot (latest by default) with the current project |
-| `yoo fetch` | Project plus development environment report |
-| `yoo status` | Alias for `yoo fetch` (environment and project report) |
-| `yoo session [MINUTES]` | Start a local coding-session timer |
-| `yoo tip` / `yoo tips` | Show a configured reminder or tip pack |
-| `yoo edit` | Open the current project in the configured editor |
-| `yoo init` / `yoo config` | Create configuration and a sample tip pack / print the configuration file path |
-| `yoo completions SHELL` | Generate Bash, Zsh, Fish, or PowerShell completions |
+| I want to… | Run |
+| :--- | :--- |
+| Get oriented | `yoo --fast` |
+| Inspect the project | `yoo project` |
+| Check my dev setup | `yoo doctor` |
+| See my environment | `yoo fetch` |
+| Save a point in time | `yoo snapshot` |
+| Compare it with now | `yoo snapshot compare --current` |
+| Start a focused session | `yoo session 25` |
+| Open my editor | `yoo edit` |
+| Feed a script | `yoo project --json` |
 
-Useful output flags include `--fast`, `--plain`, `--no-art`, `--theme NAME`, and `--json` for `project` and `fetch`.
+**[Full command reference →](docs/commands.md)** — flags, snapshot IDs, tips, completions, JSON, and exit codes.
 
-```bash
-yoo doctor
-yoo project --json
-yoo fetch --plain
-yoo snapshot
-# make changes, then capture another point in time
-yoo snapshot
-yoo snapshot list
-yoo snapshot compare
-yoo session 25
-```
+<details>
+<summary><strong>See project reports and toolchain checks</strong></summary>
 
-Snapshots are saved as JSON files in `.yoo/snapshots/` inside the current
-project. On the first save, yoo creates `.yoo/snapshots/.gitignore` containing
-`*`, so snapshots and that ignore file stay out of Git without changing your
-project’s ignore rules. An existing snapshot ignore file is preserved. `snapshot compare` compares the two newest saved snapshots;
-save another snapshot after making changes to track progress over time.
-`snapshot list` prints each snapshot's numeric ID. Use those IDs to select a
-comparison, or run `yoo snapshot compare --current` to compare the latest saved
-snapshot with the current project without writing a new snapshot. Comparisons
-also show changes to the latest commit.
+### Project overview
 
-Check the installed CLI version with `yoo --version`:
+![Project metadata, source counts, and Git information](docs/images/projects.png)
 
-```text
-yoo 1.1.2
-```
+### Doctor
 
-`project --json` and `fetch --json` include `yoo_version`. Their `project.version`
-field is the inspected project's version, when available. `--json` cannot be
-combined with `--plain`, `--no-art`, or `--theme`.
+![yoo doctor checking the development environment](docs/images/doctor.png)
 
-Git inspection distinguishes clean and dirty repositories, repositories before
-their first commit, and non-Git directories. Git failures and timeouts are
-reported on stderr with exit status 1 (including in JSON mode), rather than
-being reported as a clean tree. Exit status 2 indicates invalid CLI arguments.
-Git reports include ahead/behind counts when an upstream is configured, active
-rebase/merge/cherry-pick/revert/bisect operations, conflicts, and tracked deletions.
-Counts use local refs; yoo does not fetch. Ten or more tracked deletions trigger
-an advisory warning to review before staging. `doctor` reports conflicts and
-active operations as warnings; yoo does not attempt Git recovery. JSON reports
-include these details under `git.diagnostics`.
-
-`yoo doctor` prints all checks and exits 1 if any check fails; warnings alone
-exit 0. Git is checked for every project.
-Checks now follow the detected project: Rust checks Rust, Cargo, Rustfmt and
-Clippy; Node.js checks Node and the package manager selected by its lockfile;
-Python, Go, Java, .NET, Zig, Ruby, PHP, Swift, Dart and Elixir check their
-respective runtime or SDK; CMake projects check CMake. Ruby, PHP and Elixir
-also check Bundler, Composer and Mix respectively. Generic
-directories check Git without requiring a language toolchain.
-These are development health checks, not dependencies needed to launch `yoo`.
-
-Source totals include all supported source extensions across languages, respect
-nested `.gitignore` rules, `.git/info/exclude`, and global Git excludes, and skip
-symlinks and common generated/vendor directories (`target`, `node_modules`,
-`dist`, `build`, `.next`, `.venv`, `venv`, `vendor`, `__pycache__`, `.git`). Counts
-also honor `.ignore` files. Files that cannot be read are skipped.
+</details>
 
 ## Project detection
 
-Detection reads markers in the current directory without running project build
-scripts. In mixed projects, the first matching marker below wins; yoo does not
-aggregate multiple languages or search parent directories for a manifest.
+**13 project types.** Matching tool checks. Source counts that respect ignore rules.
 
-| Project type | Markers (in precedence order) | Package/build tool |
-| --- | --- | --- |
-| Rust | `Cargo.toml` | Cargo |
-| Node.js | `package.json` | npm, pnpm, Yarn, Bun |
-| Python | `pyproject.toml` | pip, uv, Poetry, Pipenv |
-| Go | `go.mod` | Go modules |
-| Java | `pom.xml`, `build.gradle.kts`, `build.gradle` | Maven, Gradle |
-| .NET | `*.sln`, `*.csproj` (case-insensitive, first alphabetically) | .NET SDK |
-| Zig | `build.zig`, `build.zig.zon` | Zig |
-| Ruby | `Gemfile` | Bundler |
-| PHP | `composer.json` | Composer |
-| Swift | `Package.swift` | Swift Package Manager |
-| Dart | `pubspec.yaml` | pub |
-| Elixir | `mix.exs` | Mix |
-| C/C++ | `CMakeLists.txt` | CMake |
-| Python (fallback) | `requirements.txt`, `Pipfile`, `setup.py`, `setup.cfg` | pip, uv, Poetry, Pipenv |
+| | | | |
+| :--- | :--- | :--- | :--- |
+| 🦀 Rust | ⚡ Zig | 🟨 Node.js | 🐍 Python |
+| 🐹 Go | ☕ Java | 💎 Ruby | 🐘 PHP |
+| 🐦 Swift | 🎯 Dart | 💧 Elixir | ⚙️ C/C++ |
+| 🟣 .NET | | | |
 
-CMake is treated as a C/C++ project heuristic. Dart detection also recognizes
-Flutter projects through `pubspec.yaml`; the health check checks Dart.
-Rust and Node.js reports extract package names and versions; other types use
-the directory name and report the manifest without evaluating it. Cargo
-workspace-inherited metadata is not resolved.
+Detection uses manifests in the current directory. C/C++ detection uses CMake; Dart includes Flutter projects. In mixed projects, the first matching manifest wins.
 
-Source counts include Zig, Ruby, PHP, Swift, Dart and Elixir extensions and skip
-`.zig-cache`, `zig-cache`, `zig-out`, `.build`, `.dart_tool`, `_build` and `deps`,
-in addition to the generated/vendor directories listed above.
+**[Markers, precedence, and source-count rules →](docs/project-detection.md)**
 
 ## Configuration
 
-Run `yoo init` to create the default configuration without overwriting an
-existing file. Run `yoo config` to print its exact location, then edit that file.
-See [examples/config.toml](examples/config.toml) for supported settings.
+```bash
+yoo init                         # Create your config
+yoo config                       # Print its location
+yoo --fast --theme catppuccin     # Try a theme
+```
 
-Default locations:
+<details>
+<summary><strong>Nine themes, your editor, your pace</strong></summary>
 
-- Linux: `$XDG_CONFIG_HOME/yoo/config.toml`, or `~/.config/yoo/config.toml`.
-- macOS: `~/Library/Application Support/yoo/config.toml`.
-- Windows: `%USERPROFILE%\.config\yoo\config.toml`.
+**neon · ocean · mono · dracula · tokyo-night · gruvbox · nord · rose-pine · catppuccin**
 
-The editor setting accepts a single executable name or path, not a shell command
-with arguments. `yoo edit --editor` overrides it for one invocation; otherwise
-`VISUAL`, `EDITOR`, and automatic detection are used when it is empty.
+```toml
+[appearance]
+theme = "catppuccin"
+ascii = true
+colors = true
+
+[editor]
+command = "code"
+
+[session]
+default_minutes = 25
+```
+
+Choose a theme, tune the timer, hide the ASCII art, or add your own YAML tip packs.
+
+**[Configuration guide](docs/configuration.md)** · **[Full example](examples/config.toml)** · **[Shell completions](docs/completions.md)**
+
+</details>
 
 ## Troubleshooting
 
-Run `yoo doctor` for tool, configuration, project, and Git diagnostics. Use
-`yoo config` to locate invalid configuration. If Git inspection fails, check
-`git status` in the same directory; commands have a five-second execution timeout.
-For installation and PATH issues, see [the installation guide](docs/installation.md).
+Run `yoo doctor` for local diagnostics and `yoo config` to find your configuration. **[Installation help](docs/installation.md)** · **[Git errors and exit codes](docs/commands.md)** · **[Report an issue](https://github.com/nihitdev/yo-cli/issues)**
 
-## Themes
+<details>
+<summary><strong>Build from source</strong></summary>
 
-`yoo` includes **neon**, **ocean**, **mono**, **dracula**, **tokyo-night**, **gruvbox**, **nord**, **rose-pine**, and **catppuccin**. Set one in the file reported by `yoo config`, or pass `--theme NAME`.
-
-## Privacy
-
-Normal operation is local. `yoo` does not require an account, daemon, cloud service, telemetry, or network connection. It reads the current project and development environment and prints the result; project data is not uploaded.
-
-## Building from source
-
-Rust 1.85 or newer and Cargo are required for the CLI:
+Requires Rust 1.85 or newer. Node.js is only needed for the website and npm wrapper.
 
 ```bash
 git clone https://github.com/nihitdev/yo-cli.git
@@ -245,14 +167,22 @@ cargo build --release --locked
 cargo test --locked
 ```
 
-Node.js is only needed when working on the npm wrapper or the website in `site/`.
+Check your installed version with `yoo --version`:
 
-Release maintainers should follow [docs/releasing.md](docs/releasing.md). Packaging notes live in [packaging/README.md](packaging/README.md).
+```text
+yoo 1.1.2
+```
 
-## Contributing
+**[Contributing](CONTRIBUTING.md)** · **[Release guide](docs/releasing.md)** · **[Packaging](packaging/README.md)**
 
-Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before making a change. Security reports belong in [SECURITY.md](SECURITY.md).
+</details>
 
-## License
+---
 
-GPL-3.0-or-later. See [LICENSE](LICENSE).
+<p align="center">
+  Made for the moment you open a repo and wonder where to start.<br /><br />
+  <a href="CONTRIBUTING.md">Contribute</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="SECURITY.md">Security</a> ·
+  <a href="LICENSE">GPL-3.0-or-later</a>
+</p>

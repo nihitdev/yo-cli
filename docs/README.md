@@ -5,9 +5,10 @@ This directory contains installation, configuration, and shell-integration docum
 ## Guides
 
 - [Installation](installation.md) — installation methods, checksum verification, updates, and removal.
+- [Project detection](project-detection.md) — supported markers, precedence, and source-count rules.
 - [Shell completions](completions.md) — enable command and option completion in Bash, Zsh, Fish, and PowerShell.
-- [Configuration](../README.md#configuration) — create and customize the local TOML configuration.
-- [Commands](../README.md#commands) — see the command overview and common examples.
+- [Configuration](configuration.md) — create and customize the local TOML configuration.
+- [Commands](commands.md) — see the command overview and common examples.
 - [Troubleshooting](../README.md#troubleshooting) — resolve common installation and runtime issues.
 
 ## Project resources

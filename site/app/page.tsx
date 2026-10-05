@@ -243,7 +243,7 @@ export default function Home() {
             <strong>More built in</strong>
             <p><code>yoo status</code>, <code>yoo tip</code>, <code>yoo tips</code>, <code>yoo init</code>, <code>yoo config</code>, and <code>yoo help</code>.</p>
           </div>
-          <a className="text-link" href="https://github.com/nihitdev/yo-cli#commands">Full command reference <span>→</span></a>
+          <a className="text-link" href="https://github.com/nihitdev/yo-cli/blob/main/docs/commands.md">Full command reference <span>→</span></a>
         </div>
       </section>
 
@@ -261,7 +261,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-        <p className="detection-note">Run yoo from the project directory. In mixed projects, the first matching manifest wins. CMake is treated as a C/C++ project; Dart detection includes Flutter projects. <a className="text-link" href="https://github.com/nihitdev/yo-cli#project-detection">Detection details →</a></p>
+        <p className="detection-note">Run yoo from the project directory. In mixed projects, the first matching manifest wins. CMake is treated as a C/C++ project; Dart detection includes Flutter projects. <a className="text-link" href="https://github.com/nihitdev/yo-cli/blob/main/docs/project-detection.md">Detection details →</a></p>
       </section>
 
       <section className="section snapshots" id="snapshots">
@@ -348,7 +348,7 @@ default_minutes = 25`}</code></pre>
             <div className="theme-swatches" aria-label="Theme color samples">
               <i /><i /><i /><i /><i /><i /><i /><i /><i />
             </div>
-            <a className="text-link" href="https://github.com/nihitdev/yo-cli#configuration">Configuration guide <span>→</span></a>
+            <a className="text-link" href="https://github.com/nihitdev/yo-cli/blob/main/docs/configuration.md">Configuration guide <span>→</span></a>
           </div>
         </div>
       </section>

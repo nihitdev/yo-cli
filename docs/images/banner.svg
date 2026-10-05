@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="330" viewBox="0 0 1200 330" role="img" aria-labelledby="title desc">
+  <title id="title">yoo — know your project</title>
+  <desc id="desc">Local project context. Right in your terminal. A Rust CLI for project information, Git diagnostics, and development tool checks.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#1e1e2e"/><stop offset="1" stop-color="#11111b"/></linearGradient>
+    <linearGradient id="accent"><stop stop-color="#cba6f7"/><stop offset="1" stop-color="#89b4fa"/></linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#313244" stroke-width="1"/></pattern>
+  </defs>
+  <rect width="1200" height="330" rx="20" fill="url(#bg)"/>
+  <rect x="760" width="440" height="330" fill="url(#grid)" opacity=".5"/>
+  <rect x="48" y="42" width="4" height="246" rx="2" fill="url(#accent)"/>
+  <g font-family="ui-monospace, SFMono-Regular, Consolas, monospace">
+    <text x="82" y="73" fill="#a6e3a1" font-size="14" letter-spacing="3">LOCAL. OPEN SOURCE. YOUR TERMINAL.</text>
+    <text x="76" y="186" fill="#cdd6f4" font-size="116" font-weight="700" letter-spacing="-9">yoo<tspan fill="#cba6f7">_</tspan></text>
+    <text x="82" y="239" fill="#cdd6f4" font-size="24">Know the project you’re in.</text>
+    <text x="82" y="271" fill="#a6adc8" font-size="16">Project context · Git diagnostics · Toolchain checks</text>
+    <rect x="815" y="101" width="302" height="132" rx="12" fill="#181825" stroke="#45475a"/>
+    <circle cx="838" cy="123" r="4" fill="#f38ba8"/><circle cx="852" cy="123" r="4" fill="#f9e2af"/><circle cx="866" cy="123" r="4" fill="#a6e3a1"/>
+    <text x="838" y="166" fill="#a6e3a1" font-size="18">❯ <tspan fill="#cdd6f4">yoo project</tspan></text>
+    <text x="838" y="203" fill="#a6adc8" font-size="14">Less digging. More building.</text>
+  </g>
+</svg>
