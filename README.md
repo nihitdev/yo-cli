@@ -48,30 +48,54 @@ yoo --fast
 npm install -g @nihit_dev/yoo
 ```
 
-<details>
-<summary><strong>More ways to install — script, Homebrew, WinGet, AUR, and more</strong></summary>
+## Install
 
-### Verified installer
+Pick the method that matches your system. The first three are the quickest for most developers.
 
-Linux x86-64 and Apple Silicon macOS. Downloads a release binary and checks its SHA-256 checksum.
+1. **Cargo** — build and install from crates.io (Linux, macOS, Windows): `cargo install yoo`
+2. **Cargo Binstall** — download a prebuilt release binary: `cargo binstall yoo`
+3. **Arch Linux** — install the AUR package: `yay -S yoo-bin` (or `paru -S yoo-bin`)
+4. **Homebrew** — macOS or Linux: `brew tap nihitdev/tap && brew install yoo`
+5. **WinGet** — Windows: `winget install --id Nihitdev.yoo --exact`
+6. **Chocolatey** — Windows: `choco install yoo`
+7. **npm** — `npm install -g @nihit_dev/yoo` (also available through pnpm and Bun):
 
-```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://yo-cli.vercel.app/yo-setup | sh
-```
+   ```sh
+   pnpm add -g @nihit_dev/yoo
+   bun add -g @nihit_dev/yoo
+   ```
 
-| Channel | Command |
-| :--- | :--- |
-| Homebrew | `brew tap nihitdev/tap` then `brew install yoo` |
-| Windows / WinGet | `winget install --id Nihitdev.yoo --exact` |
-| Arch / AUR | `yay -S yoo-bin` |
-| Cargo Binstall | `cargo binstall yoo` |
-| pnpm | `pnpm add -g @nihit_dev/yoo` |
-| Bun | `bun add -g @nihit_dev/yoo` |
-| Nix | `nix run github:nihitdev/yo-cli` |
+8. **Nix** — run without installing: `nix run github:nihitdev/yo-cli`
+9. **Verified installer** — Linux x86-64 and Apple Silicon macOS; verifies the downloaded binary:
 
-**[All installation methods →](docs/installation.md)** — APT, RPM, Alpine, openSUSE, Flatpak, release downloads, supported architectures, updates, and removal.
+   ```sh
+   curl --proto '=https' --tlsv1.2 -LsSf https://yo-cli.vercel.app/yo-setup | sh
+   ```
 
-</details>
+10. **APT** — Debian and Ubuntu:
+
+   ```sh
+   curl -fsSL https://yo-cli.vercel.app/apt/setup.sh | sudo sh
+   sudo apt install yoo
+   ```
+
+11. **DNF** — Fedora and RHEL:
+
+   ```sh
+   sudo dnf config-manager addrepo --from-repofile=https://yo-cli.vercel.app/rpm/yoo.repo
+   sudo dnf install yoo
+   ```
+
+12. **Alpine Linux** — add `https://yo-cli.vercel.app/alpine` to `/etc/apk/repositories`, then run `sudo apk add yoo`.
+13. **openSUSE Tumbleweed** — `sudo zypper ar -f https://yo-cli.vercel.app/opensuse yoo && sudo zypper refresh && sudo zypper install yoo`
+14. **Flatpak** — add the yoo repository, then install the app:
+
+   ```sh
+   flatpak remote-add --user yoo https://yo-cli.vercel.app/flatpak/yoo.flatpakrepo
+   flatpak install --user yoo io.github.nihitdev.yoo
+   ```
+
+Release packages (`.deb`, `.rpm`, `.apk`, and `.xbps`) are also available from [GitHub Releases](https://github.com/nihitdev/yo-cli/releases). Snap artifacts are attached there too; Snap Store publishing is disabled. Installation details, checksums, updates, and removal steps are in the **[installation guide](docs/installation.md)**.
 
 ## Commands
 
