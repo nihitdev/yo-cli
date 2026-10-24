@@ -54,31 +54,19 @@ cargo install yoo --locked
 cargo binstall yoo
 ```
 
-### npm — prebuilt binary
-
-Requires Node.js 18 or newer. Supports Linux x64, Windows x64, and Apple Silicon
-macOS. The installer verifies the release checksum before installing.
-
-```sh
-npm install -g @nihit_dev/yoo
-```
-
-<details>
-<summary><strong>More install options: pnpm, Bun, Homebrew, Windows, Nix, and Linux packages</strong></summary>
-
-#### pnpm
+### pnpm
 
 ```sh
 pnpm add -g @nihit_dev/yoo
 ```
 
-#### Bun
+### Bun
 
 ```sh
 bun add -g @nihit_dev/yoo
 ```
 
-#### Homebrew
+### Homebrew
 
 ```sh
 brew tap nihitdev/tap
@@ -88,19 +76,19 @@ brew tap nihitdev/tap
 brew install yoo
 ```
 
-#### Windows (WinGet)
+### Windows (WinGet)
 
 ```powershell
 winget install --id Nihitdev.yoo --exact
 ```
 
-#### Nix — run without installing
+### Nix — run without installing
 
 ```sh
 nix run github:nihitdev/yo-cli
 ```
 
-#### Verified shell installer
+### Verified shell installer
 
 Linux x86-64 and Apple Silicon macOS; installs to `~/.local/bin`.
 
@@ -108,7 +96,7 @@ Linux x86-64 and Apple Silicon macOS; installs to `~/.local/bin`.
 curl --proto '=https' --tlsv1.2 -LsSf https://yo-cli.vercel.app/yo-setup | sh
 ```
 
-#### Debian and Ubuntu (APT)
+### Debian and Ubuntu (APT)
 
 ```sh
 curl -fsSL https://yo-cli.vercel.app/apt/setup.sh | sudo sh
@@ -118,11 +106,18 @@ curl -fsSL https://yo-cli.vercel.app/apt/setup.sh | sudo sh
 sudo apt install yoo
 ```
 
+### npm — prebuilt binary
+
+Requires Node.js 18 or newer. Supports Linux x64, Windows x64, and Apple Silicon
+macOS. The installer verifies the release checksum before installing.
+
+```sh
+npm install -g @nihit_dev/yoo
+```
+
 Other packages, including RPM, APK, XBPS, and Flatpak, are covered in the
 [installation guide](docs/installation.md). Download release binaries and
 checksums from [GitHub Releases](https://github.com/nihitdev/yo-cli/releases).
-
-</details>
 
 ## Try it
 
