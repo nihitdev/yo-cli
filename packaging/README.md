@@ -7,8 +7,8 @@ remain unchanged.
 
 A tagged release runs the reusable `packaging.yml` workflow, builds Linux .deb,
 .rpm, Snap and Flatpak artifacts, and checks Nix on Linux/macOS. Publication
-collects all artifacts, generates `yoo-packaging.tar.gz` (Homebrew formula plus
-AUR PKGBUILD/.SRCINFO), then generates `SHA256SUMS` over every downloadable file.
+collects all artifacts, generates `yoo-packaging.tar.gz` (Homebrew, AUR, WinGet,
+Scoop, Chocolatey, and Void metadata), then generates `SHA256SUMS` over every downloadable file.
 Hashes describe the actual build; byte-for-byte reproducibility is not claimed.
 The installer continues looking up raw binary names in the same checksum file.
 
@@ -20,7 +20,8 @@ hash editing is required:
 bash scripts/package-metadata.sh /path/to/release-assets
 ```
 
-The directory must contain both platform tarballs for the Cargo version. Verify
+The directory must contain the Linux and macOS tarballs, Windows ZIP, and raw
+`yoo-windows-x86_64.exe` for the Cargo version. Verify
 downloaded inputs against that release's `SHA256SUMS` first. Release automation
 uses artifacts from the same workflow, writes metadata into `target`, and does
 not commit into the source repository. To refresh snapshots later, run the

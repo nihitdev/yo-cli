@@ -24,7 +24,7 @@ Add that line to `~/.bashrc`, `~/.zshrc`, or the appropriate shell startup file 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
   https://yo-cli.vercel.app/yo-setup |
-  YOO_VERSION=1.0.0 sh
+  YOO_VERSION=1.1.3 sh
 ```
 
 ### Use a custom destination
@@ -64,7 +64,7 @@ cargo install cargo-binstall
 Build and install from crates.io:
 
 ```bash
-cargo install yoo
+cargo install yoo --locked
 ```
 
 ## npm, pnpm, or Bun

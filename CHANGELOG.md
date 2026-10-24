@@ -4,6 +4,19 @@ All notable changes to `yoo` are documented here.
 
 The format follows the spirit of Keep a Changelog: user-visible changes are grouped by release and by type.
 
+## [1.1.3] - 2026-10-24
+
+### Changed
+
+- Rewrite the README and npm package guide with copyable install commands, practical command examples, and fresh terminal screenshots.
+- Add a Rust toolchain file, Cargo aliases, contributor documentation, and local repository checks.
+
+### Fixed
+
+- Refresh packaged Bash, Zsh, and Fish completions for snapshot commands, with CI checks for drift.
+- Verify Chocolatey downloads against the executable checksum and include its metadata in release bundles.
+- Keep the Rust 1.85 compatibility check independent of Dependabot action updates.
+
 ## [1.1.2] - 2026-09-25
 
 ### Added

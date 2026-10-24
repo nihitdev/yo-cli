@@ -15,6 +15,12 @@ artifacts, plus native Alpine, openSUSE, and Void packages, and attaches them
 to the release. Generated AUR, Homebrew, WinGet, Scoop, and Chocolatey metadata
 is included in `yoo-packaging.tar.gz`.
 
+After the GitHub Release is ready, npm publication uses trusted publishing and
+crates.io publication uses `CARGO_REGISTRY_TOKEN`. Both skip versions that already
+exist. Keep `packages/npm/package.json` and the README version example aligned
+with `Cargo.toml` before tagging. Never publish the npm version before its GitHub
+binary assets and `SHA256SUMS` are available.
+
 Repository publication jobs update the static repositories under
 `site/public/` after the release. They skip safely when their credentials are
 not configured and write the exact status to the Actions job summary.
