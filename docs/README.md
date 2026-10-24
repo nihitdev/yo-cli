@@ -16,5 +16,6 @@ This directory contains installation, configuration, and shell-integration docum
 - [Latest release](https://github.com/nihitdev/yo-cli/releases/latest)
 - [Changelog](../CHANGELOG.md)
 - [Contributing](../CONTRIBUTING.md)
+- [Code structure](architecture.md)
 - [Issue tracker](https://github.com/nihitdev/yo-cli/issues)
 - [GPL-3.0-or-later license](../LICENSE)

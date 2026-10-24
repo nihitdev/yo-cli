@@ -1,0 +1,25 @@
+# Keep text consistent across Linux, macOS, and Windows checkouts.
+* text=auto
+*.rs text eol=lf
+*.toml text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.lock text eol=lf
+
+# Package repositories contain signed metadata and binary artifacts whose bytes
+# must be preserved, including files that resemble text.
+site/public/apt/** -text
+site/public/alpine/** -text
+site/public/rpm/** -text
+site/public/opensuse/** -text
+site/public/flatpak/** -text
+*.gpg -text
+*.pub -text

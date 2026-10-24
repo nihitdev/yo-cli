@@ -7,6 +7,9 @@
 - [ ] `cargo fmt --check`
 - [ ] `cargo test --locked`
 - [ ] `cargo clippy --locked --all-targets -- -D warnings`
+- [ ] `npm test --prefix packages/npm`
+- [ ] `bash scripts/check-shell.sh`
+- [ ] `bash scripts/check-completions.sh`
 - [ ] Relevant packaging validation
 
 ## Release impact

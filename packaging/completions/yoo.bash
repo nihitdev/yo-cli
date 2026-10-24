@@ -18,6 +18,8 @@ _yoo() {
   case "$command" in
     fetch|status|project)
       COMPREPLY=( $(compgen -W "--json --no-art --plain --theme" -- "$current") ) ;;
+    snapshot)
+      COMPREPLY=( $(compgen -W "list compare --current" -- "$current") ) ;;
     session)
       COMPREPLY=( $(compgen -W "--minutes" -- "$current") ) ;;
     *)

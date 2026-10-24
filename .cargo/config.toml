@@ -1,0 +1,3 @@
+[alias]
+lint = "clippy --locked --all-targets -- -D warnings"
+test-all = "test --locked --all-targets"

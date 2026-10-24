@@ -38,7 +38,7 @@ _yoo() {
           _arguments '--json[machine-readable JSON]' '--no-art[hide art]' '--plain[disable colours]' '--theme[override theme]:theme:($themes)' ;;
         session) _arguments '--minutes[session length]:minutes:' '1:minutes:' ;;
         edit) _arguments '--editor[use a specific editor]:editor:_command_names' ;;
-        snapshot) _values 'action' 'list' 'compare' ;;
+        snapshot) _values 'action' 'list' 'compare' '--current' ;;
         completions) _values 'shell' $shells ;;
       esac ;;
   esac

@@ -1,0 +1,5 @@
+[toolchain]
+# Follow the same stable channel as CI; Cargo.toml declares the minimum version.
+channel = "stable"
+profile = "minimal"
+components = ["clippy", "rustfmt"]

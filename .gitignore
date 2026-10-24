@@ -20,3 +20,4 @@ result
 *.snap
 
 .flatpak-builder/
+build-flatpak/
