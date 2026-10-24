@@ -46,6 +46,7 @@ The format follows the spirit of Keep a Changelog: user-visible changes are grou
 ### Fixed
 
 - Bound command output capture independently of inherited handles, and clean up command process trees.
+- Use the raw Windows executable's checksum for Chocolatey and include its metadata in the release packaging bundle.
 - Report Git failures/timeouts explicitly and recognize repositories before their first commit.
 - Verify npm downloads against release checksums with timeouts, bounded redirects, and atomic installation.
 - Return a failing exit status from `doctor` when checks fail.

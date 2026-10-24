@@ -32,6 +32,7 @@ cargo test-all
 cargo lint
 npm test --prefix packages/npm
 bash scripts/check-shell.sh
+node --test scripts/package-metadata.test.mjs
 bash scripts/check-completions.sh
 ```
 

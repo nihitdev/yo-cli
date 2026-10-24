@@ -11,6 +11,8 @@ linux_sha=$(sha256sum "$assets/$linux" | cut -d ' ' -f1)
 mac_sha=$(sha256sum "$assets/$mac" | cut -d ' ' -f1)
 windows="yoo-v$version-windows-x86_64.zip"
 windows_sha=$(sha256sum "$assets/$windows" | cut -d ' ' -f1)
+windows_exe="yoo-windows-x86_64.exe"
+windows_exe_sha=$(sha256sum "$assets/$windows_exe" | cut -d ' ' -f1)
 mkdir -p "$out/aur" "$out/homebrew"
 for item in aur/PKGBUILD homebrew/yoo.rb; do
   sed -e "s/@VERSION@/$version/g" -e "s/@LINUX_SHA@/$linux_sha/g" \
@@ -110,8 +112,8 @@ NUSPEC
 cat > "$out/chocolatey/tools/chocolateyinstall.ps1" <<CHOCOLATEY
 \$ErrorActionPreference = 'Stop'
 \$toolsDir = \$(Split-Path -parent \$MyInvocation.MyCommand.Definition)
-\$url = 'https://github.com/nihitdev/yo-cli/releases/download/v$version/yoo-windows-x86_64.exe'
-Get-ChocolateyWebFile -PackageName 'yoo' -FileFullPath (Join-Path \$toolsDir 'yoo.exe') -Url \$url -Checksum '$windows_sha' -ChecksumType 'sha256'
+\$url = 'https://github.com/nihitdev/yo-cli/releases/download/v$version/$windows_exe'
+Get-ChocolateyWebFile -PackageName 'yoo' -FileFullPath (Join-Path \$toolsDir 'yoo.exe') -Url \$url -Checksum '$windows_exe_sha' -ChecksumType 'sha256'
 Install-BinFile -Name 'yoo' -Path (Join-Path \$toolsDir 'yoo.exe')
 CHOCOLATEY
 

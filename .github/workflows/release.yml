@@ -185,10 +185,10 @@ jobs:
       - name: List release files
         run: ls -lah release
 
-      - name: Generate Homebrew and AUR publication bundle
+      - name: Generate package publication bundle
         run: |
           bash scripts/package-metadata.sh release target/package-metadata
-          tar -czf release/yoo-packaging.tar.gz -C target/package-metadata homebrew aur winget scoop void
+          tar -czf release/yoo-packaging.tar.gz -C target/package-metadata homebrew aur winget scoop chocolatey void
 
       - name: Generate SHA-256 checksums
         run: bash scripts/package-checksums.sh release

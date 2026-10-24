@@ -82,6 +82,7 @@ jobs:
           mkdir -p target/metadata-windows
           cp LICENSE target/metadata-windows/
           : > target/metadata-windows/yoo.exe
+          cp target/metadata-windows/yoo.exe target/metadata-assets/yoo-windows-x86_64.exe
           (cd target/metadata-windows && zip -q "../metadata-assets/yoo-v$version-windows-x86_64.zip" yoo.exe LICENSE)
           bash scripts/package-metadata.sh target/metadata-assets target/metadata
           ruby -c target/metadata/homebrew/yoo.rb
@@ -108,6 +109,7 @@ jobs:
           mkdir -p target/metadata-windows
           cp LICENSE target/metadata-windows/
           : > target/metadata-windows/yoo.exe
+          cp target/metadata-windows/yoo.exe target/metadata-assets/yoo-windows-x86_64.exe
           (cd target/metadata-windows && zip -q "../metadata-assets/yoo-v$version-windows-x86_64.zip" yoo.exe LICENSE)
           bash scripts/package-metadata.sh target/metadata-assets /tmp/yoo-generated
           chown -R builder:builder /tmp/yoo-generated
