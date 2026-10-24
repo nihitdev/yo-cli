@@ -34,13 +34,10 @@ required to use the tool.
 Choose one installation method. Use GitHub’s copy button in the top-right
 corner of each command block.
 
-### npm — prebuilt binary
-
-Requires Node.js 18 or newer. Supports Linux x64, Windows x64, and Apple Silicon
-macOS. The installer verifies the release checksum before installing.
+### Arch Linux (AUR)
 
 ```sh
-npm install -g @nihit_dev/yoo
+yay -S yoo-bin
 ```
 
 ### Cargo — build from source
@@ -51,14 +48,23 @@ Requires Rust 1.85 or newer. Use this on other supported Rust targets too.
 cargo install yoo --locked
 ```
 
-### Already have Cargo Binstall?
+### Cargo Binstall — prebuilt binary
 
 ```sh
 cargo binstall yoo
 ```
 
+### npm — prebuilt binary
+
+Requires Node.js 18 or newer. Supports Linux x64, Windows x64, and Apple Silicon
+macOS. The installer verifies the release checksum before installing.
+
+```sh
+npm install -g @nihit_dev/yoo
+```
+
 <details>
-<summary><strong>More install options: Homebrew, Arch, Windows, Nix, and Linux packages</strong></summary>
+<summary><strong>More install options: pnpm, Bun, Homebrew, Windows, Nix, and Linux packages</strong></summary>
 
 #### pnpm
 
@@ -80,12 +86,6 @@ brew tap nihitdev/tap
 
 ```sh
 brew install yoo
-```
-
-#### Arch Linux (AUR)
-
-```sh
-yay -S yoo-bin
 ```
 
 #### Windows (WinGet)
