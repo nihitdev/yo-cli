@@ -339,12 +339,13 @@ jobs:
 
   publish-alpine:
     needs: publish
+    permissions:
+      contents: write
     uses: ./.github/workflows/alpine-repository.yml
     with:
       tag: ${{ github.ref_name }}
     secrets:
       ALPINE_SIGNING_KEY: ${{ secrets.ALPINE_SIGNING_KEY }}
-      ALPINE_PUBLISH_TOKEN: ${{ secrets.ALPINE_PUBLISH_TOKEN }}
 
   release-summary:
     if: always()

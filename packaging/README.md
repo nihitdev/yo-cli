@@ -109,8 +109,9 @@ Validated on Linux x86_64:
   the locked Cargo build and tests, plus a zypper install from the static
   `site/public/opensuse` repository with GPG checks enabled.
 - Alpine-native APK build in an Alpine container; the generated APK is attached
-  to tagged releases. With `ALPINE_SIGNING_KEY` and `ALPINE_PUBLISH_TOKEN`, the
-  release workflow also regenerates and signs the hosted APKINDEX.
+  to tagged releases. With `ALPINE_SIGNING_KEY`, the release workflow also
+  regenerates and signs the hosted APKINDEX, then commits it using the automatic
+  repository `GITHUB_TOKEN` with `contents: write` permission.
 
 Local native/AUR packages and the publication bundle are under
 `target/packaging-dist/`, with `SHA256SUMS`. These are validation outputs;

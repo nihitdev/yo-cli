@@ -37,7 +37,7 @@ Existing repository secrets should retain their names:
 | `APT_SIGNING_KEY`, `APT_SIGNING_PASSPHRASE` | Sign and publish the hosted APT repository. |
 | `RPM_SIGNING_KEY`, `RPM_SIGNING_PASSPHRASE`, `RPM_PUBLISH_TOKEN` | Sign and publish Fedora and openSUSE repositories. |
 | `HOMEBREW_TAP_TOKEN` | Update `nihitdev/homebrew-tap`. |
-| `ALPINE_SIGNING_KEY`, `ALPINE_PUBLISH_TOKEN` | Sign and publish the hosted APK repository. |
+| `ALPINE_SIGNING_KEY` | Sign the hosted APK repository. Publication uses the automatic `GITHUB_TOKEN` with `contents: write`. |
 
 Cross-repository submissions remain optional. If credentials are absent, the
 workflow produces metadata artifacts and reports `SKIPPED - MISSING CREDENTIALS`
@@ -59,7 +59,11 @@ Scoop metadata is generated but not pushed. Void XBPS packages are built and
 smoke-tested in Void Linux and attached to the GitHub Release, but there is no
 official or hosted XBPS repository. Alpine APKs are built in an
 Alpine container and attached to releases; hosted APKINDEX publication uses the
-optional Alpine signing and publication secrets.
+optional Alpine signing key.
+
+Alpine publishing only needs the signing key: GitHub issues a repository token
+for each publishing job, so no `ALPINE_PUBLISH_TOKEN` personal access token is
+required.
 
 Never commit or print private keys. Repository update jobs use temporary key
 directories and only commit public repository metadata.
