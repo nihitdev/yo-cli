@@ -382,7 +382,7 @@ jobs:
             echo '- GITHUB RELEASE ARTIFACT: YES'
             echo "| Alpine/APK | $ALPINE | Signed APKINDEX publication |"
             echo '| WinGet | BUILT | Manifest included in yoo-packaging.tar.gz; community PR remains external |'
-            echo '| Scoop | BUILT | Manifest included; no nihitdev/scoop-bucket repository exists |'
+            echo '| Scoop | BUILT | Manifest included; nihitdev/scoop-nihitdev updates independently |'
             echo
             echo 'WinGet manifests, Scoop metadata, and package metadata are attached in yoo-packaging.tar.gz.'
           } >> "$GITHUB_STEP_SUMMARY"

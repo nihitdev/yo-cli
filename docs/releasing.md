@@ -54,8 +54,11 @@ commits its keyring and setup script atomically with the new repository
 signatures. Existing APT clients must rerun the hosted setup command to trust
 the replacement key.
 
-The repository currently has no `nihitdev/scoop-bucket` remote to update, so
-Scoop metadata is generated but not pushed. Void XBPS packages are built and
+The official Scoop bucket is
+[`nihitdev/scoop-nihitdev`](https://github.com/nihitdev/scoop-nihitdev). It has its
+own hourly manifest updater and a manual `Autoupdate manifests` workflow.
+This release workflow includes Scoop metadata in the publication bundle;
+the bucket updates independently. Void XBPS packages are built and
 smoke-tested in Void Linux and attached to the GitHub Release, but there is no
 official or hosted XBPS repository. Alpine APKs are built in an
 Alpine container and attached to releases; hosted APKINDEX publication uses the

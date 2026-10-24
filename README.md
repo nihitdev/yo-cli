@@ -82,6 +82,16 @@ brew install yoo
 winget install --id Nihitdev.yoo --exact
 ```
 
+### Windows (Scoop)
+
+```powershell
+scoop bucket add nihitdev https://github.com/nihitdev/scoop-nihitdev
+```
+
+```powershell
+scoop install nihitdev/yoo
+```
+
 ### Nix — run without installing
 
 ```sh

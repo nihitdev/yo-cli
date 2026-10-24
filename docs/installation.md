@@ -94,8 +94,18 @@ winget install --id Nihitdev.yoo --exact
 
 ### Scoop
 
-Scoop metadata is generated with each release, but a public `nihitdev` bucket is
-not currently published. Use the installer or another Windows channel below.
+Add the official [nihitdev bucket](https://github.com/nihitdev/scoop-nihitdev):
+
+```powershell
+scoop bucket add nihitdev https://github.com/nihitdev/scoop-nihitdev
+```
+
+```powershell
+scoop install nihitdev/yoo
+```
+
+The bucket has its own hourly manifest updater. A new release may take time to
+appear there after its GitHub assets are published.
 
 ### Chocolatey
 

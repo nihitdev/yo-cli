@@ -62,8 +62,9 @@ changing completions, run `cargo build --release --locked` followed by
   hosted XBPS repository.
 - **WinGet, Scoop, and Chocolatey:** release metadata is generated from the
   immutable Windows asset. Chocolatey can be submitted automatically; WinGet
-  manifests are ready for a community PR, and Scoop publication requires a
-  maintained bucket repository.
+  manifests are ready for a community PR. The official
+  [Scoop bucket](https://github.com/nihitdev/scoop-nihitdev) maintains its own
+  hourly manifest updater.
 
 See [installation and sandbox limitations](../docs/installation.md). Optional
 publication jobs run only after the GitHub Release exists; absent credentials
