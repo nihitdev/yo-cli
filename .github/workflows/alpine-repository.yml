@@ -66,10 +66,12 @@ jobs:
           printf '%s\n' "$ALPINE_SIGNING_KEY" > target/alpine-key.rsa
           chmod 600 target/alpine-key.rsa
           trap 'rm -f target/alpine-key.rsa' EXIT
-          docker run --rm -v "$GITHUB_WORKSPACE:/workspace" -e APK_FILE="/workspace/$APK_FILE" alpine:3.22 sh -euxc '
+          docker run --rm -v "$GITHUB_WORKSPACE:/workspace" -w /workspace -e APK_FILE="/workspace/$APK_FILE" alpine:3.22 sh -euxc '
             apk add --no-cache alpine-sdk
             ALPINE_SIGNING_KEY_FILE=/workspace/target/alpine-key.rsa sh /workspace/scripts/alpine-repository.sh "$APK_FILE"
           '
+          test -f "site/public/alpine/x86_64/$(basename "$APK_FILE")"
+          test -s site/public/alpine/x86_64/APKINDEX.tar.gz
       - name: Commit public repository for Vercel Git deployment
         if: steps.credentials.outputs.enabled == 'true'
         env:
