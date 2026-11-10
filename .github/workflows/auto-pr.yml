@@ -20,7 +20,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Open a pull request for this branch
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { owner, repo } = context.repo;
