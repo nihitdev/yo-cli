@@ -62,6 +62,10 @@ sed "s/@FINGERPRINT@/$APT_SIGNING_FINGERPRINT/g" packaging/apt/setup.sh.in > "$s
     -o APT::FTPArchive::Release::Acquire-By-Hash=yes \
     -o "APT::FTPArchive::Release::Valid-Until=$(date -u -R -d '+30 days')" \
     release dists/stable > Release.new
+  # Cleartext signature extraction omits the final line ending. Canonicalize
+  # once, before either signature, so both forms verify against identical bytes.
+  release_content=$(< Release.new)
+  printf '%s' "$release_content" > Release.new
   mv Release.new dists/stable/Release
   for mode in detached clear; do
     args=(--armor --detach-sign --output dists/stable/Release.gpg)
@@ -71,7 +75,10 @@ sed "s/@FINGERPRINT@/$APT_SIGNING_FINGERPRINT/g" packaging/apt/setup.sh.in > "$s
         --local-user "$APT_SIGNING_FINGERPRINT" --digest-algo SHA256 \
         "${args[@]}" dists/stable/Release
   done
-  gpgv --keyring "$stage/yoo-archive-keyring.gpg" dists/stable/InRelease
+  gpgv --keyring "$stage/yoo-archive-keyring.gpg" \
+    --output "$stage/Release.verified" dists/stable/InRelease
+  cmp "$stage/Release.verified" dists/stable/Release
+  rm "$stage/Release.verified"
   gpgv --keyring "$stage/yoo-archive-keyring.gpg" dists/stable/Release.gpg dists/stable/Release
 )
 # Vercel deploys this whole tree atomically; do not upload files individually.

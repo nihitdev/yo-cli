@@ -1,0 +1,20 @@
+Acquire-By-Hash: yes
+Architectures: amd64
+Codename: stable
+Components: main
+Date: Mon, 19 Oct 2026 10:55:09 +0000
+Label: yoo
+Origin: yoo
+Suite: stable
+MD5Sum:
+ 328d3fc85fe945b60b844dda4b5b4403             1700 main/binary-amd64/Packages
+ a66c78a5110be45dc11561dc09981f44              806 main/binary-amd64/Packages.gz
+SHA1:
+ 447091dd530bb5e226a95a34b153e3bcc96e61de             1700 main/binary-amd64/Packages
+ 175620b232dbe89f5757bc9c3de3edb1f7af6653              806 main/binary-amd64/Packages.gz
+SHA256:
+ 7b94c8ff9ef0b838aa0ded3dc42026a66bb086dd636f463d3582cdc81b5e5cb4             1700 main/binary-amd64/Packages
+ 00696f104f3c07a2426feaf8e2c9f109b5b8dee505d276293e096bb6070c2789              806 main/binary-amd64/Packages.gz
+SHA512:
+ d58a05af20755c9d9ef42f5e2dd945ab920fa812c187fe0adef37179557d0ac3396f8b11047bcbd6ac3c703b9c4b594163da89719e65188a729f980aed6eb5cf             1700 main/binary-amd64/Packages
+ d3d19720401881878353fe4b743b4eb6e66d16ded2cd10b2041910b2a7c411a7eed65da9a44048b609e175dab875f746b4c626aab2d929828d6fa556a090e921              806 main/binary-amd64/Packages.gz

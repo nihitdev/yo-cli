@@ -27,18 +27,20 @@ if [[ -d "$output" ]]; then cp -a "$output/." "$staging/"; fi
 mkdir -p "$staging/packages"
 destination="$staging/packages/$package_name"
 
-cp "$rpm_file" "$destination"
-rpm --define "_gpg_name $RPM_SIGNING_KEY_ID" \
-  --define "_gpg_sign_cmd_extra_args --batch --pinentry-mode loopback --passphrase-file $passfile" \
-  --resign "$destination"
-rpm --checksig --verbose "$destination"
-
 public_fingerprint=$(gpg --batch --show-keys --with-colons site/public/rpm/RPM-GPG-KEY-yoo |
   awk -F: '$1 == "fpr" {print $10; exit}')
 [[ "$public_fingerprint" == "$RPM_SIGNING_KEY_ID" ]] || {
   echo 'RPM_SIGNING_KEY_ID does not match the committed public key' >&2
   exit 1
 }
+rpm --import site/public/rpm/RPM-GPG-KEY-yoo
+
+cp "$rpm_file" "$destination"
+rpm --define "_gpg_name $RPM_SIGNING_KEY_ID" \
+  --define "_gpg_sign_cmd_extra_args --batch --pinentry-mode loopback --passphrase-file $passfile" \
+  --resign "$destination"
+rpm --checksig --verbose "$destination"
+
 cp site/public/rpm/RPM-GPG-KEY-yoo "$staging/RPM-GPG-KEY-yoo"
 cp packaging/opensuse/yoo.repo "$staging/yoo.repo"
 createrepo_c --update --checksum sha256 --unique-md-filenames "$staging"
@@ -46,8 +48,12 @@ createrepo_c --update --checksum sha256 --unique-md-filenames "$staging"
 gpg --batch --yes --pinentry-mode loopback --passphrase-file "$passfile" \
   --local-user "$RPM_SIGNING_KEY_ID" --digest-algo SHA256 --armor --detach-sign \
   --output "$staging/repodata/repomd.xml.asc" "$staging/repodata/repomd.xml"
-gpgv --keyring <(gpg --batch --export "$RPM_SIGNING_KEY_ID") \
+# gpgv must be able to seek in its keyring; a process-substitution pipe
+# can produce "No public key" even when the exported key is correct.
+gpg --batch --export "$RPM_SIGNING_KEY_ID" > "$staging/verification-keyring.gpg"
+gpgv --keyring "$staging/verification-keyring.gpg" \
   "$staging/repodata/repomd.xml.asc" "$staging/repodata/repomd.xml"
+rm "$staging/verification-keyring.gpg"
 
 mkdir -p "$output"
 cp -a "$staging/." "$output/"

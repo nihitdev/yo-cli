@@ -21,5 +21,6 @@ site/public/alpine/** -text
 site/public/rpm/** -text
 site/public/opensuse/** -text
 site/public/flatpak/** -text
+scripts/fixtures/apt-newline/** -text
 *.gpg -text
 *.pub -text
