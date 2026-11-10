@@ -141,6 +141,5 @@ jobs:
           git add site/public/apt
           if ! git diff --cached --quiet; then
             git commit -m 'Update signed yoo APT repository'
-            # Never force-push: a concurrent source change must be reviewed/retried.
-            git push origin "HEAD:$BRANCH"
+            bash scripts/push-repository-update.sh "site/public/apt"
           fi

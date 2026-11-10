@@ -35,6 +35,16 @@ The format follows the spirit of Keep a Changelog: user-visible changes are grou
 
 ## [Unreleased]
 
+### Release automation
+
+- Canonicalize APT Release bytes before signing and reject differences between Release and the verified InRelease payload.
+
+- Publish the signed APT and openSUSE repositories after GitHub Releases, following Alpine publication.
+- Build and install-test Void XBPS packages from the checkout and attach them to releases.
+- Generate Void templates with SHA-256 source checksums and the correct source directory.
+- Use the built-in GitHub token for openSUSE publication and safely retry repository pushes over unrelated changes.
+- Validate the RPM signing key and import its public key before package signature verification.
+
 ### Project detection and snapshot fixes
 
 - Detect Zig, Ruby, PHP, Swift, Dart, Elixir and CMake-based C/C++ projects, with matching doctor checks and package/build tool labels.

@@ -83,5 +83,5 @@ jobs:
           git add site/public/alpine
           if ! git diff --cached --quiet; then
             git commit -m 'Update signed yoo Alpine repository'
-            git push origin "HEAD:$BRANCH"
+            bash scripts/push-repository-update.sh "site/public/alpine"
           fi

@@ -22,7 +22,7 @@ jobs:
         with:
           node-version-file: .node-version
       - run: bash scripts/check-shell.sh
-      - run: node --test scripts/package-metadata.test.mjs
+      - run: node --test scripts/*.test.mjs
       - run: bash scripts/check-completions.sh
 
   check:

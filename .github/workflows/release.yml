@@ -347,6 +347,30 @@ jobs:
     secrets:
       ALPINE_SIGNING_KEY: ${{ secrets.ALPINE_SIGNING_KEY }}
 
+  publish-apt:
+    if: ${{ !cancelled() && needs.publish.result == 'success' }}
+    needs: [publish, publish-alpine]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/apt-repository.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets:
+      APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+      APT_SIGNING_PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+
+  publish-opensuse:
+    if: ${{ !cancelled() && needs.publish.result == 'success' }}
+    needs: [publish, publish-apt]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/opensuse-repository.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets:
+      RPM_SIGNING_KEY: ${{ secrets.RPM_SIGNING_KEY }}
+      RPM_SIGNING_PASSPHRASE: ${{ secrets.RPM_SIGNING_PASSPHRASE }}
+
   release-summary:
     if: always()
     needs:
@@ -355,6 +379,8 @@ jobs:
       - publish-cargo
       - publish-aur
       - publish-alpine
+      - publish-apt
+      - publish-opensuse
     runs-on: ubuntu-latest
     steps:
       - name: Write release status summary
@@ -364,6 +390,8 @@ jobs:
           CARGO: ${{ needs.publish-cargo.result }}
           AUR: ${{ needs.publish-aur.outputs.status || needs.publish-aur.result }}
           ALPINE: ${{ needs.publish-alpine.result }}
+          APT: ${{ needs.publish-apt.result }}
+          OPENSUSE: ${{ needs.publish-opensuse.result }}
         run: |
           {
             echo "## yoo ${GITHUB_REF_NAME} release"
@@ -375,14 +403,17 @@ jobs:
             echo "| crates.io | $CARGO | Versioned crate published using CARGO_REGISTRY_TOKEN |"
             echo "| AUR | $AUR | AUR SSH publishing is optional; warnings are recorded in the publisher job summary |"
             echo '| Snap | BUILT | Store publishing disabled; .snap attached to GitHub Release |'
+            echo "| Alpine/APK | $ALPINE | Signed APKINDEX publication |"
+            echo "| APT | $APT | Signed Debian repository publication |"
+            echo "| openSUSE | $OPENSUSE | Signed RPM repository publication |"
+            echo "| Void/XBPS | $PUBLISH | Built and install-tested; attached to GitHub Release |"
+            echo '| WinGet | BUILT | Manifest included in yoo-packaging.tar.gz; community PR remains external |'
+            echo '| Scoop | BUILT | Manifest included; nihitdev/scoop-nihitdev updates independently |'
             echo
             echo '### Snap status'
             echo '- BUILD AUTOMATED: YES'
             echo '- STORE PUBLISHING: DISABLED'
             echo '- GITHUB RELEASE ARTIFACT: YES'
-            echo "| Alpine/APK | $ALPINE | Signed APKINDEX publication |"
-            echo '| WinGet | BUILT | Manifest included in yoo-packaging.tar.gz; community PR remains external |'
-            echo '| Scoop | BUILT | Manifest included; nihitdev/scoop-nihitdev updates independently |'
             echo
             echo 'WinGet manifests, Scoop metadata, and package metadata are attached in yoo-packaging.tar.gz.'
           } >> "$GITHUB_STEP_SUMMARY"
