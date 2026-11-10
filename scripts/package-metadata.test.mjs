@@ -86,3 +86,12 @@ test('the release bundle contains Chocolatey metadata and its installer', t => {
   assert.ok(files.includes('chocolatey/yoo.nuspec'));
   assert.ok(files.includes('chocolatey/tools/chocolateyinstall.ps1'));
 });
+
+test('Void template uses the source archive SHA-256 required by XBPS', t => {
+  const { result, output } = fixture(t);
+  assert.equal(result.status, 0, result.stderr);
+  const template = readFileSync(join(output, 'void/template'), 'utf8');
+  assert.match(template, new RegExp(`^checksum=${sha256('source archive fixture')}$`, 'm'));
+  assert.ok(template.includes('wrksrc="yo-cli-${version}"'));
+  assert.ok(!template.includes('@SOURCE_SHA'));
+});

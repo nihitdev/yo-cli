@@ -2,27 +2,30 @@
 # Build yoo as an XBPS package inside a Void Linux container.
 set -euo pipefail
 
-version=$(awk -F'"' '/^\[package\]/{p=1; next} p && /^version = /{print $2; exit}' /workspace/Cargo.toml)
+workspace=${WORKSPACE:-/workspace}
+void_packages=${VOID_PACKAGES_DIR:-/tmp/void-packages}
+
+version=$(awk -F'"' '/^\[package\]/{p=1; next} p && /^version = /{print $2; exit}' "$workspace/Cargo.toml")
 if [[ -n "${RELEASE_TAG:-}" ]]; then
   [[ "$RELEASE_TAG" == "v$version" ]]
 fi
 
-wget -q "https://github.com/nihitdev/yo-cli/archive/refs/tags/v$version.tar.gz" -O /tmp/yoo-source.tar.gz
-checksum=$(sha512sum /tmp/yoo-source.tar.gz | cut -d ' ' -f1)
-mkdir -p /tmp/void-packages/srcpkgs/yoo
+# Use the exact checkout for releases, pull requests, and manual builds.
+source_archive="$workspace/target/yoo-void-source.tar.gz"
+checksum=$(sha256sum "$source_archive" | cut -d ' ' -f1)
+source_cache="$void_packages/hostdir/sources/yoo-$version"
+mkdir -p "$source_cache"
+cp "$source_archive" "$source_cache/v$version.tar.gz"
+mkdir -p "$void_packages/srcpkgs/yoo"
 sed -e "s/^version=.*/version=$version/" \
   -e "s/^checksum=.*/checksum=$checksum/" \
-  /workspace/packaging/void/template.in > /tmp/void-packages/srcpkgs/yoo/template
+  "$workspace/packaging/void/template.in" > "$void_packages/srcpkgs/yoo/template"
 
-cd /tmp/void-packages
+cd "$void_packages"
 ./xbps-src binary-bootstrap
 ./xbps-src -Q pkg yoo
-mkdir -p /workspace/dist-void
-find hostdir/binpkgs -maxdepth 1 -type f -name 'yoo-*.xbps' -exec cp {} /workspace/dist-void/ \;
-package=$(find /workspace/dist-void -maxdepth 1 -type f -name 'yoo-*.xbps' -print -quit)
+mkdir -p "$workspace/dist-void"
+find hostdir/binpkgs -maxdepth 1 -type f -name 'yoo-*.xbps' -exec cp {} "$workspace/dist-void/" \;
+package=$(find "$workspace/dist-void" -maxdepth 1 -type f -name 'yoo-*.xbps' -print -quit)
 [[ -n "$package" ]]
 tar -tf "$package" | grep -qx './usr/bin/yoo'
-if [[ "${RUN_INSTALL_TEST:-0}" == 1 ]]; then
-  xbps-install -y -R /tmp/void-packages/hostdir/binpkgs yoo
-  [[ "$(yoo --version)" == "yoo $version" ]]
-fi

@@ -2,6 +2,7 @@
 pkgname=yoo
 version=@VERSION@
 revision=1
+wrksrc="yo-cli-${version}"
 build_style=cargo
 hostmakedepends="pkg-config"
 short_desc="Local CLI for project, Git, and development environment information"
@@ -9,7 +10,7 @@ maintainer="Nihit <nihitdev@users.noreply.github.com>"
 license="GPL-3.0-or-later"
 homepage="https://github.com/nihitdev/yo-cli"
 distfiles="https://github.com/nihitdev/yo-cli/archive/refs/tags/v${version}.tar.gz"
-checksum=@SOURCE_SHA512@
+checksum=@SOURCE_SHA256@
 
 post_install() {
 	vlicense LICENSE

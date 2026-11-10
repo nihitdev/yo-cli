@@ -11,17 +11,17 @@ homepage = "https://nihitdev.github.io"
 documentation = "https://docs.rs/yoo"
 readme = "README.md"
 include = [
-  "src/**",
-  "tests/**",
-  "Cargo.lock",
-  "README.md",
-  "LICENSE",
-  "CHANGELOG.md",
-  "CONTRIBUTING.md",
-  "SECURITY.md",
-  "docs/*.md",
-  "examples/config.toml",
-  "packaging/README.md",
+  "/src/**",
+  "/tests/**",
+  "/Cargo.lock",
+  "/README.md",
+  "/LICENSE",
+  "/CHANGELOG.md",
+  "/CONTRIBUTING.md",
+  "/SECURITY.md",
+  "/docs/*.md",
+  "/examples/config.toml",
+  "/packaging/README.md",
 ]
 keywords = ["cli", "terminal", "developer", "productivity", "environment"]
 categories = ["command-line-utilities"]

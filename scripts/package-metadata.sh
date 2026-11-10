@@ -123,8 +123,8 @@ if curl --fail --location --retry 3 --silent --show-error \
   "https://github.com/nihitdev/yo-cli/archive/refs/tags/v$version.tar.gz" \
   --output "$source_archive"; then
   mkdir -p "$out/void"
-  source_sha512=$(sha512sum "$source_archive" | cut -d ' ' -f1)
-  sed -e "s/@VERSION@/$version/g" -e "s/@SOURCE_SHA512@/$source_sha512/g" \
+  source_sha256=$(sha256sum "$source_archive" | cut -d ' ' -f1)
+  sed -e "s/@VERSION@/$version/g" -e "s/@SOURCE_SHA256@/$source_sha256/g" \
     packaging/void/template.in > "$out/void/template"
 elif [[ "${GITHUB_REF_TYPE:-}" == tag ]]; then
   echo "Unable to download source archive for release tag v$version" >&2

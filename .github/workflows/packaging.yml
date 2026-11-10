@@ -13,6 +13,7 @@ on:
       - 'snap/**'
       - 'flake.*'
       - 'scripts/package-*.sh'
+      - 'scripts/void-build.sh'
       - 'scripts/flatpak-source.sh'
       - 'scripts/opensuse-repository.sh'
       - '.github/workflows/*'
@@ -205,6 +206,42 @@ jobs:
         with:
           name: alpine-package
           path: dist-alpine/*.apk
+          if-no-files-found: error
+
+  void:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build and install XBPS natively on Void Linux
+        env:
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+        run: |
+          set -euo pipefail
+          version=$(bash scripts/package-version.sh)
+          mkdir -p target dist-void
+          git archive --format=tar.gz --prefix="yo-cli-$version/" \
+            --output=target/yoo-void-source.tar.gz HEAD
+          docker run --rm --privileged \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            -e RELEASE_TAG \
+            ghcr.io/void-linux/void-glibc-full:latest \
+            bash -euxo pipefail -c '
+              xbps-install -Syu xbps
+              xbps-install -Syu
+              xbps-install -y git base-devel zstd
+              useradd -m builder
+              chown builder:builder /workspace/dist-void
+              su builder -c "git clone --depth 1 https://github.com/void-linux/void-packages.git /tmp/void-packages"
+              su builder -c "bash /workspace/scripts/void-build.sh"
+              xbps-install -y -R /tmp/void-packages/hostdir/binpkgs yoo
+              version=$(bash /workspace/scripts/package-version.sh)
+              test "$(yoo --version)" = "yoo $version"
+            '
+          test -n "$(find dist-void -name 'yoo-*.xbps' -print -quit)"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: void-package
+          path: dist-void/*.xbps
           if-no-files-found: error
 
   snap:
