@@ -5,7 +5,7 @@ Acquire-By-Hash: yes
 Architectures: amd64
 Codename: stable
 Components: main
-Date: Mon, 19 Oct 2026 10:55:09 +0000
+Date: Mon, 09 Nov 2026 14:01:47 +0000
 Label: yoo
 Origin: yoo
 Suite: stable
@@ -23,17 +23,17 @@ SHA512:
  d3d19720401881878353fe4b743b4eb6e66d16ded2cd10b2041910b2a7c411a7eed65da9a44048b609e175dab875f746b4c626aab2d929828d6fa556a090e921              806 main/binary-amd64/Packages.gz
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEr85bchHZ5/L3pybSeap0lj0o8DIFAmrV9w4ACgkQeap0lj0o
-8DJuGBAAi9po+nv7uTwjNnCvZDJmVPJ+NxeouQVGZMdjQqQlEmQYhQch8E6Yv/7J
-v/5rMamTAZKur0MvNdR/feBWfWwQD91R9e34Jm2wCdL39D+kxJO55Ihzrp+MI6N3
-h6f/luFp76jzDsvC0yDCuRGX8IW1iFo3+dX2sc7Ub4OZfjVz1PigiCZVyPwu1hyX
-yvVxdctkWgm1UQVkm1KOZnfh3MZCcPdvU4xjJcSxj7oVtA/SJ1BQ9TlTb+uQ6pgZ
-XYSUyrqlz4ef1BauNppL82wUIC8wj+6LbzsC3O6yHjToC3u7FVtviKtrAMwa/s7I
-nJqyXBpwWnZ3s6YGilN2wCYbPGYYGOIXBLmy802bO20RwxZICWmtZroJT7+7vf8f
-OX1Vjzriyy5AoDE3CxdPC4A0HTjj/jRuFOdQmfMZt8Eq5cEXuMl0vkn+bA6w5HY4
-/PIUkNT3xjhXQbuIQuIfBAMU5gJlxdrmiHuBRnQL/Od5y0lv6YUKw4sjkWZIuKkX
-JYDboyRd1yD7gNS50G+1jkChCIbT3kKTN0ZGss6JQOHnjXntdy+uRJ5kUBGXIhEF
-ogzqe/FgdMh+LpTUKOuD8UEpvVpDgnC/6b1loZbh16XCcliXV3gwIUdKvFmSwb3u
-B8K+VyA9arcJHqlMthwx+Pv44RRskrnR1K0Ik4FsGPwCCWMEixw=
-=ZgFt
+iQIzBAEBCAAdFiEEr85bchHZ5/L3pybSeap0lj0o8DIFAmrx0kwACgkQeap0lj0o
+8DKh8hAAnlikx2q9wxQv1mMWb0hgAmcQPM+yWusNTev3pctUqRuPys+1AmZsTV0d
+UKxqH2dY5ZD+pqMpFNPbmFuYWmz0FbSdsvKnOfQOCoje+VPIyZ6Y9a2q/BuJVkPa
+ICelNF/f/H/Y0Hakx3gUnw7b4+hgBGpNmnl8nml2Dp8yG0rBbzYg30onyGWoRWid
+vodL+SaanRRvzqDPzMqNvo35/X2dHcrxaYvt0T+nJZGbdqCPF8QGfcwkk2su1Zko
+bUO7pxNgB10Pzre2WsxDUNHZr0qaCtYPW5+DOiXsepXaUoTNZqcVAt3XKWuufpfQ
+1xdeuhddIe6D1dLk+FGh4ElNe/DTm0334XhVUqUWTw7D0fZ3KhfXxw6vV6XxdGzv
+OmugZZ0uN3b1ktcc0djfpH6go4XlsIJcQCz5WZH6KZpbMg/BQ3AXuHdxc3hSzKDY
+pgx1kPME/j+XpVFp7IiagamaxSMKeiM54gb/0RNQDTdbY+hOMFLsta8oBARgyIMp
+rsmztj/tgtBHajLkf+iZKJVt3Ce7lxYS1zqhoAQGz9K+GfzOv8nKVsE2fVWTQhQG
+irgreYI1raHbX8AQhfdbk8Pf35b4filwcbN3YMf+cgrlhJZw/GuRwIkkLuXtia0V
+ANuV59+hMf/d7VmKIrgnH85PYRZIORCk1KWx13S9D/8DWyXm7B0=
+=PvCM
 -----END PGP SIGNATURE-----
